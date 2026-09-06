@@ -1,13 +1,15 @@
 # Timbertrail
 
-## Test release 0.8.0 — spinning fishing v1
+## Test release 0.8.1 — livelier fishing, gentler tension
+
+Pike and zander now swim with articulated bodies, sweeping tails, moving fins and opening jaws, rather than sliding fish illustrations. They follow, inspect and dash at the lure, sometimes rejecting it. Hooked fish alternate between away-runs, dives, circling and short rests; occasional surface jumps keep the line attached to the mouth and splash on reentry. Tension builds gradually according to species, size and remaining strength, with time to react before a break. The reel brake gives a clearer ratchet under high load, even while reeling. The fishing meter sits at the bottom beneath the player/pier; ordinary movement hints temporarily hide there.
 
 Sienilampi's pier now has playable casting, sinking/retrieval, living pike and zander, nibble/rejection behavior and tension-controlled fish fights. Eight dedicated seated poses hold a separately rendered bending rod; the line shares its tip anchor. Lure splashes, quiet reel/brake sounds and tension-driven bubbles give feedback. A landed fish opens a species/weight card using the supplied illustrations, with a gold trophy for the upper 20% of that species' possible weight range. Very large fish are rare, not one in five catches. Personal bests survive saves; existing journeys are preserved.
 
 1. Craft/equip the **Spinning rod** (3 branches + 2 cords, knife required), travel to Sienilampi, and click the pier chair.
 2. Point over water ahead: the cursor becomes a fish. Hold the left mouse button to charge; release to cast. Longer charge means greater distance.
 3. Hold to reel; release to let the lure sink. Reeling first takes up slack. Try a short sinking pause for pike, or about 25–30 seconds for deeper zander.
-4. With a fish hooked, reel while watching tension. Release when it rises toward red, then resume as it drops. Excess tension breaks the line; prolonged slack loses the hook. Escape, Stop fishing or moving cancels.
+4. With a fish hooked, reel while watching tension and listening for the brake. Release when tension rises toward red, then resume as it drops. Strong runs can pay line out; sustained excess tension breaks the line, and prolonged slack loses the hook. Escape, Stop fishing or moving cancels.
 5. Landing adds 1–8 raw fillet portions, scaled to weight, for the existing campfire/kitchen recipes. The catch card pauses time. Closing it lets you cast again.
 
 The v1 simulation uses a fixed 120 Hz step and a stylized 2D underwater cutaway, not full hydrodynamics. Forest/river keep their earlier bobber interaction; the cabin spring is drinking-only. Perch remains reserved for a later update. Physics, input/cancel paths, save compatibility, rendering anchors and audio scheduling are automated-tested, with native Canvas visual review. Actual browser animation feel and subjective sound quality still need the user's playtest.

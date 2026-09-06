@@ -66,7 +66,9 @@
   function syncFishingHUD(){
     const f=engine.fishing,spinning=f?.kind==='spinning'||PEFishing.ready(engine),card=$('fishing-card'),meter=$('fishing-meter'),detail=$('fishing-detail');
     card.hidden=!f&&!spinning;card.classList.toggle('spinning',spinning);card.classList.toggle('bite',f?.stage==='bite');meter.hidden=detail.hidden=!spinning;$('cancel-fishing').hidden=!f;$('reel-button').hidden=spinning;
+    shell.classList.toggle('spinning-ready',spinning);
     if(spinning){
+      card.style.setProperty('--fishing-x',clamp((engine.state.player.x-engine.state.camera)/W*100,22,78)+'%');
       const stage=f?.stage||'ready',label={ready:'Hold the left mouse button over the water to charge a cast.',charge:'Release to cast. A longer hold casts farther.',flight:'Watch the lure splash down.',wet:f?.nibble?'A nibble! Keep retrieving gently.':'Hold to reel. Release to let the lure sink.',fight:f?.tension>.82?'Ease off! Release the mouse to protect the line.':f?.slack>25?'Reel in the slack — keep contact with the fish.':'Fish on! Reel, but ease off during its runs.'}[stage];
       $('fishing-label').textContent=L.text(label);const n=Math.round(100*Math.min(1,stage==='charge'?f.power:f?.tension||0));
       meter.setAttribute('aria-label',L.text(stage==='charge'?'Cast power':'Line tension'));meter.setAttribute('aria-valuenow',String(n));meter.classList.toggle('danger',stage==='fight'&&f.tension>.82);$('fishing-meter-fill').style.width=n+'%';

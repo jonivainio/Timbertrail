@@ -3,7 +3,7 @@ const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('ass
 const dir=path.resolve(__dirname,'..');
 const decode=t=>t.replaceAll('&amp;','&').replaceAll('&lt;','<').replaceAll('&gt;','>');
 class Element {
- constructor(tag,doc){this.tagName=tag.toUpperCase();this.ownerDocument=doc;this.children=[];this.parentElement=null;this.attributes={};this.dataset={};this.style={};this.listeners={};this.hidden=false;this.disabled=false;this.scrollTop=0;this._text='';this.width=300;this.height=150;}
+ constructor(tag,doc){this.tagName=tag.toUpperCase();this.ownerDocument=doc;this.children=[];this.parentElement=null;this.attributes={};this.dataset={};this.style={setProperty(k,v){this[k]=v;}};this.listeners={};this.hidden=false;this.disabled=false;this.scrollTop=0;this._text='';this.width=300;this.height=150;}
  get id(){return this.attributes.id||'';}set id(v){this.setAttribute('id',v);}get className(){return this.attributes.class||'';}set className(v){this.attributes.class=v;}
  get classList(){const el=this;return{contains:k=>el.className.split(/\s+/).includes(k),add(...ks){el.className=[...new Set([...el.className.split(/\s+/),...ks])].join(' ').trim();},remove(...ks){el.className=el.className.split(/\s+/).filter(k=>!ks.includes(k)).join(' ');},toggle(k,v){const yes=v===undefined?!this.contains(k):v;yes?this.add(k):this.remove(k);return yes;}};}
  setAttribute(k,v){v=String(v);this.attributes[k]=v;if(k.startsWith('data-'))this.dataset[k.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=v;if(k==='hidden')this.hidden=true;if(k==='disabled')this.disabled=true;if(k==='width'||k==='height')this[k]=Number(v);}
@@ -142,6 +142,9 @@ context.PEArt.Renderer.prototype.draw=()=>{};
 const F=context.PEFishing,cv=$('game'),prepareFishing=()=>{engine.transition=null;engine.enterRegion('pond',context.PERegions.pond.chair);engine.state.camera=engine.state.player.x-384;engine.state.player.sitting=true;engine.state.inventory.rod=1;engine.state.equipped='rod';engine.emit('change');};
 prepareFishing();const castPoint={clientX:184,clientY:370,button:0,pointerId:21,target:cv};
 assert.equal($('fishing-card').hidden,false);assert.equal($('reel-button').hidden,true);assert.match($('fishing-label').textContent,/charge a cast/);
+assert.equal($('fishing-card').style['--fishing-x'],'40%','HUD horizontally follows player above pier');engine.state.camera-=96;engine.emit('change');assert.equal($('fishing-card').style['--fishing-x'],'50%');engine.state.camera+=96;engine.emit('change');
+const fishingCSS=fs.readFileSync(path.join(dir,'fishing.css'),'utf8');assert.ok(fishingCSS.includes('left:var(--fishing-x,40%)'));assert.ok(fishingCSS.includes('bottom:3%'));assert.ok(fishingCSS.includes('transform:translateX(-50%)'));
+assert.ok($('game-shell').classList.contains('spinning-ready'));assert.ok(fishingCSS.includes('.spinning-ready .onboarding{display:none}'));engine.state.player.sitting=false;engine.emit('change');assert.equal($('game-shell').classList.contains('spinning-ready'),false,'walking hints return after standing');prepareFishing();
 $('game-shell').dispatch('pointermove',castPoint);raf(performance.now()+100);assert.match(cv.style.cursor,/data:image\/svg/);
 cv.dispatch('pointerdown',castPoint);assert.equal(engine.fishing.stage,'charge');assert.equal(cv.capture,21);
 engine.update(.05);engine.emit('change');assert.ok(Number($('fishing-meter').getAttribute('aria-valuenow'))>0);

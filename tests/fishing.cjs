@@ -5,7 +5,17 @@ function cast(e,power=.8){assert.ok(F.press(e,e.state.player.x-200,370));step(e,
 function hooked(id='pike',w=8,seed=1){const e=setup(seed),f=cast(e),fish=F.shoal(e).find(a=>a.species===id);e.pondFish=[fish];Object.assign(fish,{weight:w,mode:'hooked',stamina:1,timer:0});Object.assign(f,{stage:'fight',fish,age:0,held:true,slackTime:0,strain:0,run:-1,runY:0,surge:1});Object.assign(f.lure,{x:e.state.player.x-240,y:PERegions.pond.surface+75,vx:0,vy:0});const t=F.pose(e).tip;f.lineLength=Math.hypot(f.lure.x-t.x,f.lure.y-t.y)+6;return e;}
 function fight(e,policy,dt=1/60){let t=0,maxTension=0,maxBubbles=0;while(e.fishing&&t<120){e.fishing.held=policy(e.fishing);step(e,dt,dt);t+=dt;if(e.fishing){maxTension=Math.max(maxTension,e.fishing.tension);maxBubbles=Math.max(maxBubbles,e.fishing.bubbles.length);for(const k of ['x','y','vx','vy'])assert.ok(Number.isFinite(e.fishing.lure[k]),'finite '+k);}}return{t,maxTension,maxBubbles,landed:!!e.lastCatch,notice:e.events.filter(v=>v.type==='notice').at(-1)?.text};}
 const control=f=>f.tension<.72||f.slack>20;
+function dynamicsTests(){
+ const heavy=hooked('pike',14,11),light=hooked('zander',.8,11);
+ for(const e of [heavy,light]){Object.assign(e.fishing,{behavior:'run',run:-1,runY:0,surge:1,lineLength:30,tension:0});e.fishing.fish.timer=10;step(e,.75);}
+ assert.ok(heavy.fishing.tension>light.fishing.tension+.02,'strong fish load the line faster');assert.ok(heavy.fishing.tension<.2,'no instantaneous red tension from a load spike');
+ const response=hooked('pike',10);Object.assign(response.fishing,{behavior:'run',run:-1,runY:0,surge:1,tension:.85,held:false});response.fishing.fish.timer=10;const x=response.fishing.lure.x;step(response,1.5);assert.ok(response.fishing.lure.x<x-15,'released fish visibly runs away');assert.ok(response.fishing.tension<.6,'release gives meaningful relief');assert.ok(response.fishing.dragRate>0);
+ for(const id of ['pike','zander']){const e=hooked(id,4),f=e.fishing;Object.assign(f,{behavior:'surface',run:-.5,runY:-1.8,surge:1,jumpCooldown:0,tension:.3,held:false});f.fish.timer=5;f.lure.y=PERegions.pond.surface+6;f.lineLength=300;step(e,.25);assert.ok(f.airborne&&f.lure.y<PERegions.pond.surface-10,id+' breaches surface');assert.equal(f.fish.x,f.lure.x);assert.equal(f.fish.y,f.lure.y);assert.ok(f.spray.length>0);assert.equal(e.lastCatch,null);assert.equal(f.points.at(-1).x,f.fish.x);assert.equal(f.points.at(-1).y,f.fish.y,'line endpoint follows airborne mouth');step(e,1.3);assert.equal(f.airborne,false);assert.ok(f.lure.y>=PERegions.pond.surface);assert.ok(e.events.filter(v=>v.type==='sound'&&v.name==='fishSplash').length>=2,'takeoff and landing splash');assert.ok(f.jumpCooldown>10);}
+ const a=setup(),school=F.shoal(a);let last=school[0].beat;F.ambient(a,.05);assert.notEqual(school[0].beat,last,'body animation advances in free swimming');
+ console.log('PASS gradual strength-dependent tension, relief/away run, both species jumping/reentry, attached airborne hook and swimming animation clocks.');
+}
 if(require.main===module){
+ dynamicsTests();
  const e=setup();assert.ok(F.ready(e));for(const [x,y]of[[e.state.player.x+50,370],[e.state.player.x-100,30],[NaN,370]])assert.equal(F.canCast(e,x,y),false);
  e.state.equipped=null;assert.equal(F.press(e,e.state.player.x-100,370),false);e.state.equipped='rod';e.state.player.sitting=false;assert.equal(F.ready(e),false);e.state.player.sitting=true;
  const short=cast(setup(),.05),long=cast(setup(),1);assert.ok(short.lure.x-long.lure.x>180);assert.ok(long.ripples.length);assert.ok(long.lure.y>=PERegions.pond.surface);
@@ -24,12 +34,13 @@ if(require.main===module){
  let landed=0;for(let seed=1;seed<=40;seed++){const e=hooked(seed%2?'pike':'zander',1+seed%(seed%2?14:9),seed);if(fight(e,control).landed)landed++;}assert.ok(landed>=34,'controllable fights across seeds');
  // Actual casts and unmodified shoals: shallow retrieves and long sinking pauses.
  // No injected hook, fish position, weight, random values or inventory awards.
- const natural={pike:0,zander:0,empty:0};let followed=false,rejected=false;
+ const natural={pike:0,zander:0,empty:0},modes=new Set(),behaviors=new Set();let followed=false,rejected=false,jumped=false;
  for(let day=1;day<=24;day++){const e=setup(day);e.state.day=day;cast(e,.75);let t=0;
-  while(e.fishing&&t<100){const f=e.fishing;f.held=f.stage==='fight'?control(f):f.wetTime>(day%2?5:30);step(e,1/60,1/60);t+=1/60;followed||=e.pondFish.some(a=>a.mode==='follow');rejected||=f.nibble>0;}
+  while(e.fishing&&t<100){const f=e.fishing;f.held=f.stage==='fight'?control(f):f.wetTime>(day%2?5:30);step(e,1/60,1/60);t+=1/60;followed||=e.pondFish.some(a=>a.mode==='follow');rejected||=f.nibble>0;for(const fish of e.pondFish)modes.add(fish.mode);if(f.behavior)behaviors.add(f.behavior);jumped||=!!f.airborne;}
   natural[e.lastCatch?.species||'empty']++;
  }
  assert.ok(natural.pike>=4&&natural.zander>=4&&natural.empty>0,JSON.stringify(natural));assert.ok(followed&&rejected,'fish follow and sometimes reject instead of automatically hooking');
+ for(const mode of ['follow','inspect','strike','reject'])assert.ok(modes.has(mode),'natural lure behavior: '+mode);for(const behavior of ['run','dive','circle','rest','surface'])assert.ok(behaviors.has(behavior),'natural fight behavior: '+behavior);assert.ok(jumped,'natural fights include surface jumps without forcing state');
  const ambient=setup(),shoal=F.shoal(ambient),oldX=shoal[0].x;F.ambient(ambient,.05);assert.notEqual(shoal[0].x,oldX,'fish roam without casting');ambient.enterRegion('forest',565);assert.equal(ambient.pondFish,null,'travel discards transient shoal');
  console.log('PASS fishing charge/range, splash/sink/slack, trophy distribution, both species landing, line break/slack escape, persistence, fixed timestep, cancellation; controlled fights',landed+'/40; natural casts',natural);
 }
