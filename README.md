@@ -1,5 +1,9 @@
 # Timbertrail
 
+## Pixabay sound update
+
+53 sound events now use 27 locally hosted Pixabay recordings: fishing, footsteps, gathering/tools, cabin interactions, Journal/UI, Kajo, and birds/water/wind/rain. Reel and brake loops follow the existing fishing load model and stop on release/cancel/pause/mute. Clips are trimmed, peak/RMS bounded and softly faded; the full bank is about 2.3 MB. Music and night insect synthesis remain unchanged. All files decoded successfully in an actual browser; perceived quality and balance still need a listening playtest. Sources, edits and explicit listening-review status are in `assets/audio/library.json`; see `assets/PIXABAY-AUDIO.md`.
+
 ## Test release 0.8.1 — livelier fishing, gentler tension
 
 Pike and zander now swim with articulated bodies, sweeping tails, moving fins and opening jaws, rather than sliding fish illustrations. They follow, inspect and dash at the lure, sometimes rejecting it. Hooked fish alternate between away-runs, dives, circling and short rests; occasional surface jumps keep the line attached to the mouth and splash on reentry. Tension builds gradually according to species, size and remaining strength, with time to react before a break. The reel brake gives a clearer ratchet under high load, even while reeling. The fishing meter sits at the bottom beneath the player/pier; ordinary movement hints temporarily hide there.
@@ -37,7 +41,7 @@ Restore roof, facade and yard, then click the door. Inside, A/D pans a 1.5× clo
 
 Completed, verified requested changes are committed and pushed to main under the user’s ongoing GitHub-update instruction. Canvas snapshots and automated tests do not replace an in-browser layout/listening playtest.
 
-A quiet, original pixel-art wilderness survival prototype. Static HTML/CSS and vanilla JavaScript; Canvas 2D rendering and procedural Web Audio. No runtime dependencies or backend.
+A quiet pixel-art wilderness survival prototype. Static HTML/CSS and vanilla JavaScript; Canvas 2D rendering and Web Audio with locally hosted Pixabay samples and procedural fallback. No runtime dependencies or backend.
 
 ## Play
 
@@ -47,7 +51,7 @@ Start with berries, no tools. Craft a flint knife, cord and flint axe. Trade hid
 
 ## Development and checks
 
-Pixabay sound workflow: [Finnish instructions, search candidates and import steps](assets/PIXABAY-AUDIO.md). Run `npm run sounds -- search` for action-specific searches. Reviewed local clips can replace procedural effects through `assets/audio/library.json`; the initial library is empty. Pixabay's documented public API does not include sounds. Sample loading requires HTTP/Pages; blocked or missing samples retain procedural audio.
+Pixabay sound workflow: [Finnish instructions, search candidates and import steps](assets/PIXABAY-AUDIO.md). Run `npm run sounds -- search` for action-specific searches. Reviewed local clips can replace procedural effects through `assets/audio/library.json`; the library now contains 53 prepared events from 27 Pixabay recordings (about 2.3 MB). Pixabay's documented public API does not include sounds. Sample loading requires HTTP/Pages; blocked or missing samples retain procedural audio.
 
 Node.js 22 or later; no npm install required.
 

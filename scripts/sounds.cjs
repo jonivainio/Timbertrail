@@ -2,16 +2,19 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const root=path.resolve(__dirname,'..');
 const searches={reelWind:['Virvelin kelaus','spinning reel','fishing reel winding'],reelDrag:['Virvelin jarru','fishing reel drag','reel fish pulling'],cast:['Heitto','fishing rod whoosh'],lureSplash:['Vieheen loiskahdus','small water splash'],lineSnap:['Siiman katkeaminen','fishing line snap'],axe:['Kirves','axe wood chop'],step:['Askeleet','footsteps forest'],door:['Ovi','wooden door'],fireCrackle:['Tulen rätinä','small fire crackle']};
-const events=new Set('uiOpen uiClose pageTurn pageFlip uiTick deny drink pour door shutter chestOpen cloth storage floorStep step wood stone rustle pickup gatherWood gatherStone gatherGrass gatherFruit gatherMushroom skin axe water fire fireCrackle eat equip craft task bow impact cast lureSplash fishNibble fishHook lineSnap reelDrag reelWind catch miss sleep trade dog travel'.split(' '));
+const events=new Set('uiOpen uiClose pageTurn pageFlip uiTick deny drink pour door shutter chestOpen cloth storage floorStep step wood stone rustle pickup gatherWood gatherStone gatherGrass gatherFruit gatherMushroom skin axe water fire fireCrackle eat equip craft task bow impact cast lureSplash fishNibble fishHook fishSplash lineSnap reelDrag reelWind catch miss sleep trade dog travel birds stream wind rain'.split(' '));
 function validate(entry){
   if(!entry||!events.has(entry.event))throw Error('Unknown sound event');
   const u=new URL(entry.source);
   if(u.protocol!=='https:'||u.hostname!=='pixabay.com'||!/^\/sound-effects\/(?!search\/)[a-z0-9-]+-\d+\/$/.test(u.pathname)||u.search||u.hash)throw Error('Use the individual Pixabay sound page URL');
   for(const k of ['title','creator','notes'])if(typeof entry[k]!=='string'||!entry[k].trim())throw Error('Missing '+k);
-  if(entry.reviewed!==true)throw Error('Listen and check the source/license, then set reviewed: true');
+  if(entry.reviewed!==true)throw Error('Check the source/license and technical audio validity, then set reviewed: true');
+  if(entry.listeningReviewed!==undefined&&typeof entry.listeningReviewed!=='boolean')throw Error('Invalid listening review status');
+  if(entry.loop!==undefined&&typeof entry.loop!=='boolean')throw Error('Invalid loop flag');
+  if(entry.loop&&!['reelWind','reelDrag','wind','rain'].includes(entry.event))throw Error('Only continuous reel/weather events may loop');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(entry.downloadedOn)||!Number.isFinite(Date.parse(entry.downloadedOn)))throw Error('Missing download date YYYY-MM-DD');
   for(const [k,min,max]of [['offset',0,600],['duration',.02,10],['gain',.001,1]])if(!Number.isFinite(entry[k])||entry[k]<min||entry[k]>max)throw Error('Invalid '+k);
-  if(entry.event==='reelDrag'&&entry.duration>.12||entry.event==='reelWind'&&entry.duration>.26)throw Error('Reel clips must fit the existing cadence: drag <= 0.12 s, wind <= 0.26 s');
+  if(!entry.loop&&(entry.event==='reelDrag'&&entry.duration>.12||entry.event==='reelWind'&&entry.duration>.26))throw Error('One-shot reel clips must fit the existing cadence: drag <= 0.12 s, wind <= 0.26 s');
 }
 function audioType(data){
   if(data.length<16)throw Error('Empty or invalid audio file');
@@ -35,7 +38,7 @@ function importSound(recipePath,base=root){
   if(stat.size>20*1024*1024)throw Error('Audio exceeds 20 MB; trim it first');
   const data=fs.readFileSync(source),ext=audioType(data),sha256=crypto.createHash('sha256').update(data).digest('hex');
   const entries=readLibrary(base),file=recipe.event+'-'+sha256+ext;
-  const entry={};for(const k of ['event','title','creator','source','downloadedOn','reviewed','notes','offset','duration','gain'])entry[k]=recipe[k];
+  const entry={};for(const k of ['event','title','creator','source','downloadedOn','reviewed','listeningReviewed','loop','notes','offset','duration','gain'])if(recipe[k]!==undefined)entry[k]=recipe[k];
   Object.assign(entry,{file,sha256,license:'Pixabay Content License',licenseUrl:'https://pixabay.com/service/terms/'});
   const dir=path.join(base,'assets/audio'),target=path.join(dir,file);
   if(!fs.existsSync(target))fs.copyFileSync(source,target,fs.constants.COPYFILE_EXCL);

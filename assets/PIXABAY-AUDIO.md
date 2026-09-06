@@ -1,52 +1,47 @@
-# Pixabay-äänet Timbertrailiin
+# Pixabay-äänet Timbertrailissa
 
-Tarkistettu 6.9.2026: [Pixabayn julkinen API](https://pixabay.com/api/docs/) tarjoaa kuvia ja videoita, ei dokumentoitua äänitehostehakua. API-avainta ei tarvita. Käytämme tavallista verkkohakua ja Pixabayn omaa latauspainiketta, sitten paikallista tuontia. Työkalu ei ole automaattinen Pixabay-latauspalvelu.
+## Käyttöönotto 6.9.2026
 
-## Käyttäjälle
+Peli käyttää 53:een äänitapahtumaan sovitettuja näytteitä 27 Pixabay-tallenteesta. Mukana ovat kalastus, metsä- ja lattia-askeleet, kerääminen ja työkalut, mökin toiminnot, kirja ja valintapalaute, Kajo sekä linnut, puro, tuuli ja sade. Musiikki ja yön hyönteisäänet säilyvät synteettisinä. Kaikkien asennettujen äänten nimet, tekijät, yksittäiset Pixabay-lähdesivut, latauspäivä, leikkauskohdat ja tarkistustila löytyvät [äänirekisteristä](audio/library.json).
 
-Voit pyytää esimerkiksi ”etsi Pixabaystä parempi virvelin jarruääni”. Avustaja käyttää alla olevia hakuja, tarkistaa lähdesivut ja etsii sopivat ehdokkaat. Jos lataus vaatii kirjautumisen tai ihmistarkistuksen, tee se itse selaimessa. Salasanaa tai API-avainta ei anneta avustajalle.
+Näytteet on leikattu, muutettu 24 kHz:n mono-WAV-tiedostoiksi, tasattu ja häivytetty. Pankin koko on noin 2,3 MB. Kelauksen, jarrun, tuulen ja sateen näytteissä on saumaa tasaava 120 ms:n limitys. Kelaus/jarru seuraavat kalastuksen kuormitusta, ja ne pysähtyvät toiminnon päättyessä, tauolla ja mykistettäessä. Tulesta soi vain yksittäisiä lyhyitä räsähdyksiä pitkillä hiljaisilla väleillä.
 
-Ladatun MP3-tiedoston voi tallentaa projektin `work/audio/`-kansioon. Anna myös äänen Pixabay-sivun linkki. Avustaja hoitaa tuonnin, ajoituksen ja voimakkuuden. Alkuperäiset lataukset ja mahdollinen lisenssitodistus säilytetään paikallisesti `work/audio/`-kansiossa. Pelin äänenvoimakkuus ja mykistys koskevat myös näitä ääniä.
+**Kuunteluarvio on tekemättä.** `reviewed: true` tarkoittaa lähteen ja teknisen tiedoston tarkistusta; `listeningReviewed: false` kertoo tämän rajan erikseen. Kaikki 53 näytettä on dekoodattu oikeassa selaimessa, ja siellä on tarkistettu myös kelaus–jarru-vaihto, keskeytys, tauko ja mykistys. Tämä ei todista äänen miellyttävyyttä tai luonnollisuutta. Esimerkiksi jarrun lähde on perhokela, ja sen sopivuus virveliin tulee arvioida pelissä kuunnellen.
 
-## Haku ja ensimmäiset ehdokkaat
+## Hakeminen ja lataaminen
 
-`npm run sounds -- search` näyttää toimintoihin sopivat hakulinkit. `npm run sounds -- search reelWind` hakee kelaukseen, `reelDrag` jarruun. Myös vapaa englanninkielinen hakusana toimii: `npm run sounds -- search "wooden chest"`.
+[Pixabayn julkisessa API:ssa](https://pixabay.com/api/docs/) ei ole dokumentoitua äänitehostehakua (tarkistettu 6.9.2026). API-avainta ei tarvita. `npm run sounds -- search` näyttää hakulinkkejä; `npm run sounds -- search reelWind` tai vapaa hakusana tarkentaa hakua.
 
-Nämä ovat **kuuntelemattomia ehdokkaita**, eivät peliin asennettuja tai äänenlaadultaan hyväksyttyjä:
+Hakutuloksen oikean reunan latauspainiketta voi käyttää suoraan. Tallenna samalla tuloksen nimi, tekijä ja lähdesivun linkki. Suosi ilmaista Pixabay-tulosta, älä sponsoroitua mainosta. Kirjautuminen voi olla tarpeen; salasanaa tai evästeitä ei kopioida projektin tiedostoihin.
 
-| Toiminto | Ehdokas | Tekijä |
-| --- | --- | --- |
-| Kelaus | [Fishing reel](https://pixabay.com/sound-effects/film-special-effects-fishing-reel-302355/) | AudioPapkin |
-| Kelaus | [Spinning reel](https://pixabay.com/sound-effects/technology-spinning-reel-27903/) | tosha73 (Freesound), Pixabay: freesound_community |
-| Jarru | [Fly Reel Fish Pulling Saricione](https://pixabay.com/sound-effects/film-special-effects-fly-reel-fish-pulling-saricione-94671/) | paulprit (Freesound), Pixabay: freesound_community |
+Tässä työssä sisäinen selain näytti latausvahvistuksen kirjoittamatta useimpia tiedostoja levylle. Ratkaisu oli käynnistää valitun tuloksen esikuuntelu, tunnistaa selaimen kyseisellä sivulla havaitsema julkinen MP3-tiedosto ja tallentaa se paikallisesti. Älä arvaa osoitteita tai käytä dokumentoimattomia haku-API-kutsuja. Jos sivu vaatii ihmistarkistuksen tai estää pääsyn, jätä se käyttäjän hoidettavaksi. Pelin runtime käyttää vain paikallisia tiedostoja, ei Pixabay-CDN:ää.
 
-Viimeinen on perhokelan ääni: arvioi kuuntelemalla sopivuus virveliin. Pelkkä nimi ei riitä valintaan.
+Alkuperäiset lataukset, analyysit ja valmistelureseptit ovat paikallisessa `work/audio/`-kansiossa, joka ei siirry Gitiin tai julkaisuun. Julkaisu kopioi vain rekisteröidyt pelinäytteet. Älä jaa alkuperäisten tallenteiden latauskokoelmaa: [Content License](https://pixabay.com/service/license-summary/) ja [täydet ehdot](https://pixabay.com/service/terms/) koskevat käyttöä osana peliä. Muut mahdolliset oikeudet on arvioitava lähdekohtaisesti.
 
-## Tuonti avustajalle
+## Yhden äänen vaihtaminen
 
-1. Avaa hakulinkit tai hae verkosta `site:pixabay.com/sound-effects/` ja toimintoon sopivat sanat. Tarkista yksittäinen lähdesivu, tekijä ja lisenssi. Valitse oikea ilmainen Pixabay-tulos, ei sponsoroitua mainosta.
-2. Lataa normaalilla latauspainikkeella. Älä käytä keksittyä audio-API:a tai pysyviä CDN-linkkejä. Jos kirjautuminen/ihmistarkistus estää lataamisen, kerro täsmällisesti käyttäjältä tarvittava vaihe.
-3. Kuuntele ja valitse puhdas kohta ilman puhetta/musiikkia. Säilytä latauksen lähdetiedot ja mahdollinen todistus. [Content License](https://pixabay.com/service/license-summary/) sallii ilmaisen käytön ja muokkauksen ehtojensa mukaisesti; [täydet ehdot](https://pixabay.com/service/terms/) kieltävät erillisen jakelun sellaisenaan. Käytä ääntä osana peliä, älä julkaise alkuperäisten äänien latauskirjastoa. Muiden oikeuksia tai yksittäisen tallenteen alkuperää ei voi päätellä pelkästä hakutuloksesta.
-4. Tee paikallinen `work/audio/recipe.json`. Esimerkki alla on täytettävä ja kuunneltava ennen kuin `reviewed` muutetaan todeksi. `file` on suhteessa reseptiin; muut ajat sekunteja. `notes` kuvaa kuuntelun ja muokkaukset.
+Tallenna MP3/WAV/OGG ja paikallinen `work/audio/recipe.json`. Esimerkki on täytettävä ennen tuontia:
 
 ```json
 {
   "event": "reelWind",
-  "file": "fishing-reel.mp3",
+  "file": "prepared-reel.wav",
   "title": "Fishing reel",
   "creator": "AudioPapkin",
   "source": "https://pixabay.com/sound-effects/film-special-effects-fishing-reel-302355/",
   "downloadedOn": "2026-09-06",
   "reviewed": false,
-  "notes": "Täytä kuuntelun jälkeen: valittu kohta ja lähteen/lisenssin tarkistus.",
+  "listeningReviewed": false,
+  "loop": true,
+  "notes": "Täytä lähde- ja teknisen tarkistuksen sekä mahdollisen kuuntelun jälkeen.",
   "offset": 0,
-  "duration": 0.24,
-  "gain": 0.3
+  "duration": 1.68,
+  "gain": 0.55
 }
 ```
 
-5. `npm run sounds -- import work/audio/recipe.json` kopioi tiedoston yksilöllisellä sisältötiivisteellä ja päivittää `assets/audio/library.json`-rekisterin. Sama toiminto korvautuu rekisterissä, vanhaa tiedostoa ei poisteta. Tuonti tarkistaa metatiedot, tiedoston otsakkeen ja kokorajan; se ei kuuntele ääntä eikä tarkista tekijänoikeuksia automaattisesti.
-6. Testaa peli HTTP-palvelimella tai Pagesissa. `audio-samples.js` esilataa rekisterin Web Audioon. Latautuva, puuttuva tai selaimelle sopimaton ääni käyttää vanhaa synteettistä ääntä; myöhässä valmistunutta toimintoa ei soiteta jälkikäteen. `file://`-avaus voi estää tallenneäänien latauksen. Kelauksen näyte saa kestää enintään 0,26 s ja jarrun 0,12 s nykyisen toistorytmin vuoksi. Lyhyet häivytykset vähentävät napsahduksia. Tämä on lyhyiden toimintotehosteiden tuki, ei jatkuvien luontoäänien tai musiikin tuonti.
-7. Säädä kuunnellen voimakkuus ja katkaisukohta. Tarkista erityisesti kelauksen/jarrun toisto, vapautus, tauko ja mykistys. Aja projektin neljä julkaisutarkistusta. Build kopioi vain rekisteröidyt äänet; alkuperäiset lataukset ja reseptit eivät siirry Pagesiin.
+`file` on suhteessa reseptiin. `offset` ja `duration` ovat sekunteja. `loop: true` on tuettu vain tapahtumille `reelWind`, `reelDrag`, `wind` ja `rain`. Muut ovat kertanäytteitä. Ilman loop-asetusta kelan näyte saa kestää enintään 0,26 s ja jarrun 0,12 s. Valmistele loopin sauma ennen tuontia. Käytä lyhyitä puhtaita toimintotehosteita.
 
-Alkutilassa rekisteri on tyhjä: tämän järjestelyn mukana ei ole vielä ladattu Pixabay-ääniä.
+Tarkistettu resepti tuodaan komennolla `npm run sounds -- import work/audio/recipe.json`. Komento kopioi tiedoston sisältötiivisteellä nimettynä ja vaihtaa tapahtuman rekisterimerkinnän; vanhaa tiedostoa ei poisteta. `npm run sounds -- check` tarkistaa rekisterin ja tiedostojen eheyden. Työkalu ei kuuntele tai tarkista oikeuksia automaattisesti.
+
+Testaa HTTP-palvelimella tai Pagesissa; `file://` voi estää näytteiden lataamisen. Epäonnistunut tai kesken oleva lataus käyttää synteettistä varatehostetta eikä soita vanhaa tapahtumaa jälkikäteen. Aja projektin testit, salaisuustarkistus, build ja tuotantoasset-tarkistus ennen julkaisua. Tarkista pelissä kuunnellen erityisesti loopit, askeleet, toistuvat keräilyäänet, etäisyydet ja äänenvoimakkuus.

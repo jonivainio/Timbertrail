@@ -2,7 +2,7 @@
 
 ## Pixabay sound acquisition
 
-See `assets/PIXABAY-AUDIO.md` for source research, Finnish user steps and the reusable assistant workflow. `scripts/sounds.cjs` offers search URLs, reviewed local import and integrity/provenance checks. `assets/audio/library.json` is the authority; `audio-samples.js` preloads registered clips when Web Audio starts, with immediate procedural fallback while pending or on failure. Samples use the existing SFX bus, master pause, mute and volume. Short reel samples fit the 0.17/0.28-second loaded/quiet scheduling cadence; no persistent loops or saved-state changes. Build copies registered audio only. The initial registry contains no downloaded or listening-approved Pixabay clips. Automated checks do not verify actual decoding or perceived sound quality.
+See `assets/PIXABAY-AUDIO.md` for acquisition and import. The registry contains 53 prepared events from 27 Pixabay recordings (24 kHz mono PCM, about 2.3 MB). `audio-samples.js` preloads with four workers and keeps procedural fallback while pending or unavailable. Reel/brake and wind/rain use bounded looping buffer sources with circular seam overlap; state changes fade and stop them, never restart them every frame. Keep the 0.8.1 fishing loaded/quiet decision authoritative. Birds/stream use the ambience bus; actions use SFX; both retain master pause/mute/volume. Music and night insects remain procedural. No save changes. `reviewed` denotes source/technical validation; `listeningReviewed: false` explicitly records pending subjective QA. Tests cover actual PCM payload/range/headroom/seams and mock loop lifetime; an actual browser decoded all 53 files and verified reel/brake transition, cancel, pause and mute. These are not listening claims.
 
 ## Spinning fishing v1 (0.8.1)
 
