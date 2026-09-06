@@ -1,0 +1,20 @@
+/* User art is unchanged; the common transparent canvas aligns all three frames. */
+#title-card .menu-quote{font-family:"Segoe Script","Apple Chancery","URW Chancery L",cursive;font-weight:400;font-style:normal;font-size:clamp(14px,1.45cqw,21px);line-height:1.65;text-shadow:0 2px 5px #0a1710;max-width:340px}
+#title-card .menu-quote .quote-author{display:block;text-align:right;font:inherit;font-size:.85em;margin-top:3px;opacity:.9}
+#title-card .menu-scroll{background:transparent url('assets/menu_banner.png') center/100% 150% no-repeat;border:0;box-shadow:none;border-radius:0;padding:16px 11%;min-height:clamp(48px,5.8cqw,82px);margin:10px 0;transform:none;filter:drop-shadow(0 5px 5px #07110999);font-weight:600}
+#title-card .menu-scroll:before,#title-card .menu-scroll:after{display:none}
+#title-card .menu-scroll.secondary{transform:none;filter:drop-shadow(0 5px 5px #07110999) brightness(.96)}
+#title-card .menu-scroll:hover:not(:disabled),#title-card .menu-scroll:focus-visible{transform:translateY(-3px) scale(1.035);filter:drop-shadow(0 9px 7px #071109b0) brightness(1.08);box-shadow:none;outline:0}
+#title-card .menu-scroll:focus-visible{outline:2px solid #eed5a5;outline-offset:3px}
+#title-card .menu-scroll:active:not(:disabled){transform:scale(1.01)}
+.world-tip.parchment-tip{min-width:190px;max-width:min(52%,340px)}
+.world-tip .field-scroll{border:0;box-shadow:none;border-radius:0;background:none;transform:none;animation:none;min-height:64px;padding:17px 26px;display:flex;flex-direction:column;justify-content:center;isolation:isolate}
+.world-tip .field-scroll:before{display:block;content:"";position:absolute;inset:0;width:auto;border:0;border-radius:0;box-shadow:none;transform:none;background:transparent url('assets/pick_banner3.png') center/108% 150% no-repeat;z-index:-1;animation:parchment-frames .18s steps(1,end) both}
+.world-tip .field-scroll:after{display:none}
+.world-tip .field-scroll>strong,.world-tip .field-scroll>small,.world-tip .field-scroll>.tip-action,.world-tip .field-scroll>.scroll-wheel-hint{animation:parchment-ink .18s steps(1,end) both}
+.world-tip .field-scroll>strong{font-size:clamp(12px,1.15cqw,16px)}
+.world-tip .field-scroll>.tip-action{font:clamp(8px,.74cqw,11px)/1.3 Georgia,serif;color:#695339;margin-top:3px}
+.world-tip .scroll-choice{padding-right:62px}.world-tip .scroll-wheel-hint{right:30px}
+@keyframes parchment-frames{0%{background-image:url('assets/pick_banner1.png')}33.333%{background-image:url('assets/pick_banner2.png')}66.667%,100%{background-image:url('assets/pick_banner3.png')}}
+@keyframes parchment-ink{0%,66.666%{opacity:0}66.667%,100%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.world-tip .field-scroll:before,.world-tip .field-scroll>*{animation:none!important}#title-card .menu-scroll:hover:not(:disabled),#title-card .menu-scroll:focus-visible{transform:none;transition:none}}

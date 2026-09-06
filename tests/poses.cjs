@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict');
+global.PE=require('../engine.js');const art=require('../equipment.js');
+const images=[],transforms=[];
+const ctx=new Proxy({drawImage(...args){images.push(args);},scale(...args){transforms.push(args);}},{get:(o,k)=>o[k]||(()=>{})});
+const layer={width:140,height:116,getContext:()=>ctx};
+const renderer={c:ctx,sprites:{},petImage:{id:'pet'},seatedImage:{id:'seated'},makeCanvas:()=>layer,sprite(){throw Error('Static actions must use their own complete illustration');}};
+const e=new PE.Engine();e.start();e.state.player.x=2000;e.state.dog.x=2024;e.commandDog('pet');
+art.drawActor(renderer,e);const first=images.find(a=>a[0]===renderer.petImage);assert.ok(first);
+images.length=0;e.action.time=1.6;art.drawActor(renderer,e);assert.deepEqual(images.find(a=>a[0]===renderer.petImage),first,'petting does not animate replacement arms');
+e.action=null;e.state.player.sitting=true;e.state.player.facing=-1;images.length=0;art.drawActor(renderer,e);assert.ok(images.some(a=>a[0]===renderer.seatedImage));assert.ok(transforms.some(a=>a[0]===-1),'complete seated pose mirrors toward the pond');
+console.log('PASS dedicated seated/petting illustrations, stable pet pose and mirrored sitting.');

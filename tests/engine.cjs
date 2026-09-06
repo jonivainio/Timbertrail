@@ -133,3 +133,44 @@ for(let i=0;i<7200;i++){cold.state.player.hunger=100;cold.state.player.thirst=10
 assert.ok(cold.state.player.warmth>7&&cold.state.player.warmth<17,'forest nights approach, but do not reach, freezing');
 const beforeWarmth=cold.state.player.warmth;cold.state.structures.push({type:'fire',x:cold.state.player.x,lit:true,fuel:100});cold.update(.05);assert.ok(cold.state.player.warmth>beforeWarmth);
 console.log('PASS dog approach/petting/retrieval, recoverable carcass, real running state and cold forest nights.');
+const materialEvents=[],gathering=new Engine(ev=>materialEvents.push(ev));gathering.start();gathering.state.completed.firstGather=true;
+for(const [type,sound]of Object.entries({wood:'gatherWood',firewood:'gatherWood',stone:'gatherStone',fiber:'gatherGrass',berries:'gatherFruit',mushroom:'gatherMushroom',carcass:'skin'})){
+ materialEvents.length=0;gathering.completeAction({id:'sound-'+type,type,x:600,species:'rabbit'});assert.ok(materialEvents.some(e=>e.type==='sound'&&e.name===sound),type+' routes to material foley');assert.ok(!materialEvents.some(e=>e.type==='sound'&&['pickup','stone','rustle'].includes(e.name)));
+}
+console.log('PASS gathering and skinning use material-specific sound events.');
+const affection=new Engine();affection.start();affection.state.player.x=2000;affection.state.dog.x=2024;affection.commandDog('pet');
+for(let i=0;i<10;i++)affection.update(.05);assert.equal(affection.effects.filter(e=>e.kind==='heart').length,1);const heart=affection.effects.find(e=>e.kind==='heart'),heartY=heart.y;
+affection.update(.05);assert.ok(heart.y<heartY,'heart floats upward');for(let i=0;i<30;i++)affection.update(.05);assert.ok(!affection.effects.some(e=>e.kind==='heart'),'single heart fades out quickly, without looping');
+console.log('PASS petting emits one rising, short-lived heart.');
+for(const need of ['hunger','thirst','warmth','energy']){
+ const survival=new Engine();survival.start();survival.state.dayTime=.85;survival.state.animals=[];survival.state.player.health=80;survival.state.player[need]=0;survival.update(.05);
+ assert.ok(Math.abs(survival.state.player.health-(80-.05*require('../engine.js').needDamage[need]))<1e-8,need+' uses its own damage rate, even before automatic recovery');
+}
+const depleted=new Engine();depleted.start();depleted.state.animals=[];Object.assign(depleted.state.player,{hunger:0,thirst:0,health:100});for(let i=0;i<20;i++)depleted.update(.05);assert.ok(Math.abs(depleted.state.player.health-99.53)<1e-7,'empty needs stack');
+Object.assign(depleted.state.player,{hunger:0,thirst:0,warmth:0,energy:0,health:100});depleted.state.dayTime=.85;depleted.update(.05);assert.ok(Math.abs(depleted.state.player.health-99.97325)<1e-8,'distinct shortage damage adds predictably');
+const fed=new Engine();fed.start();Object.assign(fed.state.player,{hunger:.5,thirst:.5,warmth:.5,energy:10,health:70});fed.update(.05);assert.ok(fed.state.player.health>70,'positive needs do not cause damage');
+const collapseEvents=[],collapsed=new Engine(e=>collapseEvents.push(e));collapsed.start();collapsed.enterRegion('pond',5100);collapsed.state.cabinRepairs.roof=true;collapsed.state.inventory.wood=17;Object.assign(collapsed.state.player,{health:.001,hunger:0,energy:0});collapsed.action={target:{type:'repair',part:'facade'},time:0,duration:6};collapsed.state.drops.push({id:'carried',type:'carcass',species:'grouse',x:5100,carriedBy:'dog'});collapsed.update(.05);
+assert.equal(collapsed.state.currentMap,'pond');assert.equal(collapsed.state.player.x,require('../regions.js').cabin.x);assert.equal(collapsed.state.player.health,65);assert.equal(collapsed.state.player.energy,65);assert.equal(collapsed.state.inventory.wood,17);assert.equal(collapsed.state.cabinRepairs.roof,true);assert.equal(collapsed.action,null);assert.ok(!collapsed.state.drops[0].carriedBy);assert.ok(collapseEvents.some(e=>e.type==='notice'&&e.text.startsWith('You collapsed.')));
+collapsed.state.structures.push({type:'shelter',x:5500});collapsed.state.player.x=5600;collapsed.recoverFromCollapse();assert.equal(collapsed.state.player.x,5500,'prefer the current-region shelter');
+const emptySave=new Engine();emptySave.load({version:6,player:{hunger:0,thirst:0,warmth:0,energy:0,health:15}});for(const k of ['hunger','thirst','warmth','energy'])assert.equal(emptySave.state.player[k],0,'reload cannot refill an empty need');
+console.log('PASS all four health-drain triggers, stacked/capped damage, positive needs, collapse recovery and empty-meter saves.');
+const tired=new Engine();tired.start();tired.state.animals=[];tired.state.player.energy=.2;tired.keys={KeyD:true,ShiftLeft:true};tired.update(.05);
+assert.equal(tired.state.player.energy,0);assert.equal(tired.state.player.running,false);assert.equal(tired.sprintExhausted,true);assert.deepEqual(tired.needBubble.needs,['energy']);
+for(let i=0;i<180;i++){tired.update(.05);assert.equal(tired.state.player.running,false,'held Shift cannot alternate walk/run during recovery');}
+assert.ok(tired.state.player.energy>=15);assert.equal(tired.needBubble,null,'short bubble expires without repeating');
+delete tired.keys.ShiftLeft;tired.update(.05);tired.keys.ShiftLeft=true;tired.update(.05);assert.equal(tired.state.player.running,true,'recovered energy and a fresh sprint request permit running');
+for(const need of ['hunger','thirst','warmth','energy']){const n=new Engine();n.start();n.state.animals=[];n.state.player[need]=0;n.update(.05);assert.deepEqual(n.needBubble.needs,[need]);for(let i=0;i<100;i++)n.update(.05);assert.equal(n.needBubble,null);n.state.player[need]=20;n.update(.05);n.state.player[need]=0;n.update(.05);assert.deepEqual(n.needBubble.needs,[need],'replenishing rearms the warning');}
+const many=new Engine();many.start();Object.assign(many.state.player,{hunger:0,thirst:0,warmth:0,energy:0});many.update(.05);assert.equal(many.needBubble.needs.length,4,'simultaneous needs share one bubble');many.recoverFromCollapse();assert.equal(many.needBubble,null);
+console.log('PASS exhaustion sprint latch, fresh sprint input, timed need bubbles, rearming and combined warnings.');
+for(const type of ['fire','oldfire','shelter','trap']){
+ const events=[],n=new Engine(e=>events.push(e));n.start();n.state.animals=[];n.state.structures=[{id:'test-building',type,x:1800,lit:type==='fire',fuel:500}];n.state.player.x=1660;const structure=n.state.structures[0],before={...n.state.inventory};
+ assert.deepEqual(n.structureActions(structure),['use','dismantle']);assert.equal(n.confirmDismantle(),false,'cannot dismantle without a request');
+ n.interact({...structure,command:'dismantle'});assert.ok(n.walkTarget);for(let i=0;i<40;i++)n.update(.05);assert.ok(n.pendingDismantle);assert.equal(n.state.structures.length,1);assert.equal(n.state.drops.length,0);assert.ok(events.some(e=>e.type==='panel'&&e.panel==='dismantle'));
+ const expected=n.dismantleReturn(structure);n.pendingDismantle=null;assert.equal(n.confirmDismantle(),false,'cancel preserves the structure');n.interact({...structure,command:'dismantle'});n.activeFire=structure.id;assert.equal(n.confirmDismantle(),true);assert.equal(n.confirmDismantle(),false,'a second click cannot duplicate salvage');assert.equal(n.activeFire,null);assert.equal(n.state.structures.length,0);assert.deepEqual(n.state.inventory,before);assert.deepEqual(Object.fromEntries(n.state.drops.map(d=>[d.type,d.amount])),expected);assert.ok(n.state.drops.every(d=>Math.abs(d.x-structure.x)<50));
+ const reload=new Engine();reload.start(JSON.parse(n.save()));assert.equal(reload.state.structures.length,0,'an empty camp stays dismantled after reload');assert.deepEqual(Object.fromEntries(reload.state.drops.map(d=>[d.type,d.amount])),expected);
+ for(const drop of [...reload.state.drops]){reload.state.player.x=drop.x;reload.interact(drop);for(let i=0;i<20;i++)reload.update(.05);assert.equal(reload.state.inventory[drop.type],before[drop.type]+drop.amount);}
+ assert.equal(reload.state.drops.length,0);
+}
+const priced=new Engine();priced.start();priced.state.structures=[{id:'custom',type:'shelter',x:900,buildCost:{firewood:10,wood:6,fiber:8,cord:4}}];const preserved=new Engine();preserved.start(JSON.parse(priced.save()));assert.deepEqual(preserved.dismantleReturn(preserved.state.structures[0]),{firewood:5,wood:3,fiber:4,cord:2});
+preserved.pendingDismantle={id:preserved.state.structures[0].id,map:'pond'};assert.equal(preserved.confirmDismantle(),false,'a stale request cannot remove a different-region structure');
+console.log('PASS dismantle confirmation/cancel, click-to-approach, 50% ground salvage, collection, costs and persistence.');

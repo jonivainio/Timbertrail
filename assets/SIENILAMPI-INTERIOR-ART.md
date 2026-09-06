@@ -1,0 +1,18 @@
+# Sienilampi interior art
+
+Original room generated with built-in imagegen for this project; no third-party game assets extracted. The user's Old Moose Cabin screenshot and the developer's [announcements](https://steamcommunity.com/app/3483740/allnews/) informed the cozy functional brief, not a replica layout.
+
+Output: `sienilampi-interior.png`. The fireplace is unlit in the painting; actors, firelight/flames and shutter state are runtime layers. A localized second imagegen edit added the water canister. Original generated outputs remain in the tool's generated-image directory.
+
+## Room prompt
+
+Use case: stylized-concept. Asset type: original 16:9 full-screen side-view interior background for Timbertrail, a Nordic woodland pixel-art survival game. A very cozy restored Finnish log cabin, beautiful detailed hand-painted pixel art, rich weathered warm brown logs, muted forest green and rust-red woven textiles, lived-in authentic wood grain and small domestic details. Wide straight-on theatrical cutaway view of ONE room, no wall obscuring it, mild perspective only in furniture, entire room visible. Layout for clickable gameplay: sturdy CLOSED exterior door at far left around x=12%; compact rustic kitchen counter and shelves with copper pans at x=29%; large irregular fieldstone fireplace at x=51% with a dark UNLIT firebox at lower center and stacked logs next to it; comfortable green armchair and a low coffee table with a small enamel mug at x=67%; window with open wooden shutters at x=73% upper wall showing quiet forest and lake; simple timber bed with wool quilt and pillows at far right x=89%, and a closed wooden iron-banded storage chest at its foot x=81% lower right. A woven dog basket with a blanket near the armchair, EMPTY, dog is added separately. A hanging unlit oil lantern, books, dried herbs, striped rag rugs and an old landscape painting add homeliness. Broad unobstructed horizontal wooden-plank walking strip at the bottom (last 16% of image), furniture feet around y=80%. Ceiling rafters frame the top lightly. Soft diffuse ambient daylight, warm wood but NO flames or orange fire glow, no strong sunbeams, no fog. Night/fire/lantern effects will be layered by the game. Crisp detailed pixel clusters; not vector, not cartoon outlines, not photorealistic. No people, no animals, no UI, no lettering, no watermark. This is an original Nordic cabin composition, not a replica of any existing game's room.
+
+## Canister edit prompt
+
+Edit this original pixel-art game room with ONE tiny localized addition only. Preserve exact canvas size, composition, all objects, all architectural positions, colors, pixel detail, perspective, empty foreground floor and lighting. Add a small weathered pale sage/enamel drinking-water canister with a cork lid and side handle standing on the floor at the RIGHT FRONT corner of the low coffee table, just left of the chest. On a normalized 960x540 canvas its occupied rectangle must be x762 to794, y368 to420 (actual image is larger: scale these positions proportionally). It must be small, no taller than the table plus a tiny bit, in exactly the room's detailed textured pixel-art style, subtle aged enamel, warm shadow contacting rug/floor. Existing mug on table must remain intact and in place. Do not add people, animals, fire, labels or text. Do not move or repaint any existing furniture, door, window, hearth or bed. Leave fireplace unlit.
+
+## Canteen icon
+
+`icon-canteen.png` is an unchanged copy of the user's supplied `C:/Users/joniv/Downloads/canteen`. `item-icons.js` crops transparent margins at draw time. No third-party asset source.
+

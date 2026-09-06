@@ -119,7 +119,7 @@
     lc.drawImage(cached,0,0);
   }
   function bowAim(engine){
-    const p=engine.state.player,crouch=!!p.crouching,groundY=root.PE?root.PE.ground(p.x):0,localGrip=crouch?[17,-29]:[20,-42],worldGrip=[p.x+(p.facing||1)*localGrip[0],groundY+localGrip[1]],a=engine.attack;
+    const p=engine.state.player,crouch=!!p.crouching,groundY=root.PE?root.PE.ground(p.x,engine.state.currentMap):0,localGrip=crouch?[17,-29]:[20,-42],worldGrip=[p.x+(p.facing||1)*localGrip[0],groundY+localGrip[1]],a=engine.attack;
     if(!a)return{localGrip,worldGrip,angle:0};const dx=(a.wx-worldGrip[0])*(p.facing||1),dy=a.wy-worldGrip[1];return{localGrip,worldGrip,angle:Math.atan2(dy,Math.max(1,dx))};
   }
   function bowAction(renderer,lc,engine){
@@ -134,19 +134,26 @@
     const frame=(engine.action.time/engine.action.duration)<.58?4:5;basePose(renderer,lc,frame);
   }
   function petAction(renderer,lc,engine){
-    baseSprite(renderer,lc,3);eraseArm(lc,true);
-    const p=engine.state.player,d=engine.state.dog,head=[67+(d.x+d.facing*13-p.x)*p.facing,101+root.PE.ground(d.x)-root.PE.ground(p.x)-27];
-    const wrist=[head[0]+Math.sin(engine.action.time*7)*2,head[1]-1];rigArm(lc,[72,68],wrist,true,-1,12);hand(lc,wrist);
+    if(!renderer.petImage){baseSprite(renderer,lc,3);return;}
+    const p=engine.state.player,d=engine.state.dog,dy=root.PE.ground(d.x,engine.state.currentMap)-root.PE.ground(p.x,engine.state.currentMap),k=Math.max(.04,Math.min(.055,(27-dy)/565));
+    // One complete illustration: the palm meets Kajo's head, boots stay grounded.
+    const palmX=67+(d.x+d.facing*13-p.x)*p.facing;
+    lc.drawImage(renderer.petImage,palmX-1200*k,101-1100*k,1402*k,1122*k);
+  }
+  function seatedPose(renderer,lc){
+    if(!renderer.seatedImage){baseSprite(renderer,lc,0);return;}
+    const k=.037;lc.drawImage(renderer.seatedImage,67-350*k,101-1475*k,1024*k,1536*k);
   }
   function drawActor(renderer,engine){
     if(!renderer||!renderer.sprites)return false;
-    const c=renderer.c,s=engine.state,p=s.player,y=root.PE?root.PE.ground(p.x):0,type=TOOLS.has(s.equipped)?s.equipped:null;
+    const c=renderer.c,s=engine.state,p=s.player,y=root.PE?root.PE.ground(p.x,engine.state.currentMap):0,type=TOOLS.has(s.equipped)?s.equipped:null;
     shadow(c,p.x,y,16);const [layer,lc]=makeLayer(renderer);
     if(engine.action&&['tree','log'].includes(engine.action.target.type))axeAction(renderer,lc,engine);
     else if(engine.action&&engine.action.target.type==='carcass')carcassAction(renderer,lc,engine);
     else if(engine.action&&engine.action.target.type==='pet')petAction(renderer,lc,engine);
     else if(engine.action&&renderer.poses)gatherAction(renderer,lc,engine);
     else if(engine.attack&&type==='bow')bowAction(renderer,lc,engine);
+    else if(p.sitting)seatedPose(renderer,lc);
     else drawIdle(renderer,lc,p,type);
     c.save();c.translate(Math.round(p.x),Math.round(y));c.scale(p.facing||1,1);c.drawImage(layer,-67,-101);c.restore();return true;
   }
@@ -159,7 +166,7 @@
     c.save();c.translate(x+size*.5-cx*k,y+size*.5-cy*k);c.scale(k,k);tool(c,type,angle,1);c.restore();
   }
   function projectileOrigin(engine){const p=engine.state.player,aim=bowAim(engine);return{x:aim.worldGrip[0]+(p.facing||1)*Math.cos(aim.angle)*31,y:aim.worldGrip[1]+Math.sin(aim.angle)*31};}
-  function fishingLineOrigin(engine){const p=engine.state.player,y=root.PE?root.PE.ground(p.x):0,{grip}=idleGrip(p),tip=rotatePoint([40,0],heldAngle('rod'),heldScale('rod')),local=[grip[0]-67+tip[0],grip[1]-101+tip[1]];return{x:p.x+(p.facing||1)*local[0],y:y+local[1]};}
+  function fishingLineOrigin(engine){const p=engine.state.player,y=root.PE?root.PE.ground(p.x,engine.state.currentMap):0,{grip}=idleGrip(p),tip=rotatePoint([40,0],heldAngle('rod'),heldScale('rod')),local=[grip[0]-67+tip[0],grip[1]-101+tip[1]];return{x:p.x+(p.facing||1)*local[0],y:y+local[1]};}
   const api={isTool:type=>TOOLS.has(type),drawIcon,drawActor,projectileOrigin,fishingLineOrigin,loadAssets,setAssets,_drawTool:tool};
   root.PEEquipment=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

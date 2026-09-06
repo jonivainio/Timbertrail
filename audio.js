@@ -8,7 +8,7 @@ soundOn=preferences.soundOn;
 const musicWindow=seconds=>{const phase=((seconds-18)%240+240)%240;return seconds>=18&&phase<42;};
 function applyMix(){if(!audioBus)return;const t=audio.currentTime;audioBus.ambience.gain.setTargetAtTime(soundOn?preferences.soundVolume*.7:0,t,.12);audioBus.sfx.gain.setTargetAtTime(soundOn?preferences.soundVolume*.78:0,t,.12);audioBus.music.gain.setTargetAtTime(preferences.musicOn?preferences.musicVolume*.48:0,t,.5);}
 function configure(patch){for(const key of ['soundOn','musicOn'])if(typeof patch[key]==='boolean')preferences[key]=patch[key];for(const key of ['soundVolume','musicVolume'])if(Number.isFinite(patch[key]))preferences[key]=clamp(patch[key],0,1);soundOn=preferences.soundOn;ensureAudio();audio?.resume?.();applyMix();try{localStorage.setItem('timbertrail-audio',JSON.stringify(preferences));}catch{}return {...preferences};}
-const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nextFire:0,nextWater:0};
+const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nextFire:0,nextFireCrackle:0,nextWater:0};
   function ensureAudio() {
     if ((!soundOn && !preferences.musicOn) || audio) return;
     try {
@@ -22,6 +22,10 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
       const seconds = 3, buffer = audio.createBuffer(1, audio.sampleRate * seconds, audio.sampleRate), data = buffer.getChannelData(0);
       let brown = 0;
       for (let i = 0; i < data.length; i++) { brown = brown * .985 + (Math.random() * 2 - 1) * .035; data[i] = brown * 1.9; }
+      // A separate, broadband friction source gives dry fibres and wood detail.
+      // The slow brown-noise ambience buffer is intentionally left unchanged.
+      const foleyBuffer=audio.createBuffer(1,audio.sampleRate*2,audio.sampleRate),foley=foleyBuffer.getChannelData(0);let soft=0;
+      for(let i=0;i<foley.length;i++){const white=Math.random()*2-1;soft=soft*.8+white*.2;foley[i]=soft*.65+white*.2;}
 
       const wind = audio.createBufferSource(), windFilter = audio.createBiquadFilter(), windGain = audio.createGain();
       wind.buffer = buffer; wind.loop = true; windFilter.type = 'bandpass'; windFilter.frequency.value = 520; windFilter.Q.value = .42; windGain.gain.value = 0;
@@ -33,7 +37,7 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
 
       const windLfo = audio.createOscillator(), windDepth = audio.createGain();
       windLfo.frequency.value = .075; windDepth.gain.value = 0; windLfo.connect(windDepth).connect(windGain.gain); windLfo.start();
-      audioBus = { master, ambience, music, sfx, compressor, buffer, windGain, rainGain };
+      audioBus = { master, ambience, music, sfx, compressor, buffer, foleyBuffer, windGain, rainGain };
       applyMix();audioClock.nextMusic = audio.currentTime + .15;
       audioClock.nextBird = game.playSeconds + 3;
     } catch { soundOn = false; audio = null; audioBus = null; }
@@ -46,13 +50,28 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     node.connect(destination); return destination;
   }
 
-  function noiseBurst(duration = .1, volume = .03, lowpass = 2200, highpass = 80, when = null, pan = 0) {
+  function noiseBurst(duration = .1, volume = .03, lowpass = 2200, highpass = 80, when = null, pan = 0, texture = false, attack = .018) {
     if (!soundOn || !audioBus) return;
     const start = when ?? audio.currentTime, source = audio.createBufferSource(), hp = audio.createBiquadFilter(), lp = audio.createBiquadFilter(), gain = audio.createGain();
-    source.buffer = audioBus.buffer; hp.type = 'highpass'; hp.frequency.value = highpass; lp.type = 'lowpass'; lp.frequency.value = lowpass;
-    gain.gain.setValueAtTime(.0001, start); gain.gain.exponentialRampToValueAtTime(Math.max(.0002, volume), start + Math.min(.018, duration * .2)); gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+    source.buffer = texture?audioBus.foleyBuffer:audioBus.buffer; hp.type = 'highpass'; hp.frequency.value = highpass; lp.type = 'lowpass'; lp.frequency.value = lowpass;
+    gain.gain.setValueAtTime(.0001, start); gain.gain.exponentialRampToValueAtTime(Math.max(.0002, volume), start + Math.min(attack, duration * .35)); gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
     source.connect(hp).connect(lp).connect(gain); connectWithPan(gain, audioBus.sfx, pan);
-    const offset = Math.random() * Math.max(.01, audioBus.buffer.duration - duration - .02); source.start(start, offset); source.stop(start + duration + .03);
+    const offset = Math.random() * Math.max(.01, source.buffer.duration - duration - .02); source.start(start, offset); source.stop(start + duration + .03);
+  }
+
+  function materialFoley(kind,v,now,pan){
+    // Contact, friction, then settling into the pack. No oscillators or pitch sweeps.
+    // [offset, duration, gain, lowpass, highpass]; irregular timing avoids a UI cadence.
+    const patterns={
+      gatherWood:[[0,.09,.07,1100,110],[.045,.22,.027,2300,390],[.19,.055,.045,1500,180]],
+      gatherStone:[[0,.045,.07,2700,620],[.042,.075,.046,1700,260],[.105,.14,.025,850,100]],
+      gatherGrass:[[0,.25,.042,5100,1050],[.08,.16,.031,3300,660],[.23,.13,.018,2600,460]],
+      gatherFruit:[[0,.18,.03,3900,850],[.105,.06,.031,1450,180],[.18,.15,.018,2100,380]],
+      gatherMushroom:[[0,.16,.038,1500,150],[.08,.065,.032,2500,520],[.19,.19,.018,2300,350]],
+      skin:[[0,.27,.03,2100,480],[.13,.21,.034,3100,650],[.33,.24,.021,1200,120]],
+      pickup:[[0,.18,.029,2400,300],[.12,.13,.024,1200,130]]
+    };
+    for(const [offset,length,gain,lp,hp]of patterns[kind]||patterns.pickup){const variation=.9+Math.random()*.2;noiseBurst(length*variation,gain*v*(.86+Math.random()*.2),lp*variation,hp,now+offset*(.92+Math.random()*.16),pan,true);}
   }
 
   function synthTone(frequency, endFrequency, duration = .1, volume = .025, type = 'sine', when = null, pan = 0, destination = null) {
@@ -94,14 +113,20 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     else if (name === 'pageFlip') { noiseBurst(.18, .033 * v, 4700, 650, now, pan); noiseBurst(.09, .018 * v, 3200, 950, now + .1, pan); }
     else if (name === 'uiTick') synthTone(390, 430, .035, .008 * v, 'sine', now, pan);
     else if (name === 'deny') synthTone(118, 92, .13, .022 * v, 'triangle', now, pan);
+    else if(name==='drink'){noiseBurst(.22,.019*v,1350,140,now,pan);noiseBurst(.17,.012*v,900,190,now+.25,pan);synthTone(360,200,.1,.007*v,'sine',now+.12,pan);}
+    else if(name==='pour'){noiseBurst(.65,.025*v,2300,360,now,pan);for(let i=0;i<5;i++)synthTone(310+i*53,210+i*47,.07,.007*v,'sine',now+i*.1,pan);}
+    else if(['door','shutter','chestOpen'].includes(name)){noiseBurst(.34,.014*v,650,85,now,pan);synthTone(name==='door'?145:210,90,.28,.009*v,'triangle',now,pan);noiseBurst(.06,.027*v,820,75,now+.31,pan);}
+    else if(['cloth','storage'].includes(name)){noiseBurst(.28,.019*v,1650,270,now,pan);if(name==='storage')noiseBurst(.06,.016*v,750,120,now+.2,pan);}
+    else if(name==='floorStep'){noiseBurst(.08,.014*v,410,45,now,pan);synthTone(98,68,.07,.008*v,'triangle',now,pan);}
     else if (name === 'step') { noiseBurst(.09, .026 * v, 760, 45, now, pan); synthTone(82, 55, .07, .014 * v, 'sine', now, pan); }
     else if (name === 'wood') { noiseBurst(.13, .035 * v, 1180, 120, now, pan); synthTone(126, 74, .11, .021 * v, 'triangle', now, pan); }
     else if (name === 'stone') { synthTone(690, 570, .12, .022 * v, 'sine', now, pan); synthTone(1030, 790, .08, .013 * v, 'sine', now + .025, pan); }
     else if (name === 'rustle') { noiseBurst(.22, .021 * v, 3100, 520, now, pan); noiseBurst(.15, .014 * v, 2100, 350, now + .11, pan); }
-    else if (name === 'pickup') { synthTone(330, 455, .1, .014 * v, 'triangle', now, pan); noiseBurst(.08, .01 * v, 1900, 250, now, pan); }
+    else if (['pickup','gatherWood','gatherStone','gatherGrass','gatherFruit','gatherMushroom','skin'].includes(name))materialFoley(name,v,now,pan);
     else if (name === 'axe') { noiseBurst(.12, .06 * v, 1350, 75, now, pan); synthTone(104, 57, .16, .04 * v, 'triangle', now + .01, pan); noiseBurst(.18, .026 * v, 670, 50, now + .07, pan); }
     else if (name === 'water') { noiseBurst(.72, .026 * v, 2600, 480, now, pan); synthTone(410, 260, .38, .009 * v, 'sine', now + .05, pan); }
-    else if (name === 'fire') { for (let i = 0; i < 4; i++) noiseBurst(.035 + i * .012, (.014 + i * .002) * v, 3300, 600, now + i * .045, pan); }
+    else if(name==='fireBed'){noiseBurst(1.65,.026*v,1150,95,now,pan,false,.38);noiseBurst(1.12,.006*v,2200,480,now+.3,pan,true,.24);}
+    else if(name==='fire'||name==='fireCrackle'){const q=Math.random();noiseBurst(.018+q*.018,.032*v,2300+q*1100,520,now,pan,true);noiseBurst(.12+q*.12,.014*v,1250,160,now+.012,pan,true);if(q>.76)noiseBurst(.025,.017*v,2600,630,now+.13+q*.06,pan,true);}
     else if (name === 'eat') { noiseBurst(.11, .028 * v, 1500, 180, now, pan); noiseBurst(.1, .023 * v, 1250, 150, now + .14, pan); }
     else if (name === 'equip') { noiseBurst(.18, .022 * v, 1300, 140, now, pan); synthTone(245, 285, .08, .012 * v, 'triangle', now + .08, pan); }
     else if (name === 'craft') { playSfx('wood', .7 * v, pan); playSfx('stone', .55 * v, pan); synthTone(294, 440, .28, .018 * v, 'triangle', now + .18, pan); }
@@ -128,11 +153,11 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     if(!game.running){audioBus.rainGain.gain.setTargetAtTime(0,audio.currentTime,.5);audioBus.windGain.gain.setTargetAtTime(0,audio.currentTime,.5);audioBus.music.gain.setTargetAtTime(0,audio.currentTime,.7);return;}
     const now = audio.currentTime;
     if (audioClock.nextMusic < now - .2) audioClock.nextMusic = now + .08;
-    const rain=game.weather==='rain'?(game.rainIntensity??.3):0;
-    audioBus.rainGain.gain.setTargetAtTime(rain>.8?.06:rain>.45?.023:rain>0?.008:0,now,3);
+    const inside=!!game.cabinHome?.inside;const rain=game.weather==='rain'?(game.rainIntensity??.3):0;
+    audioBus.rainGain.gain.setTargetAtTime((rain>.8?.06:rain>.45?.023:rain>0?.008:0)*(inside?.18:1),now,3);
     // Short leaf-rustling gusts, with long genuinely quiet gaps.
     const windPhase=game.playSeconds%73,gust=windPhase<11?Math.sin(windPhase/11*Math.PI)**2:0;
-    audioBus.windGain.gain.setTargetAtTime(gust*(rain>.8?.035:.017),now,1.2);
+    audioBus.windGain.gain.setTargetAtTime(gust*(rain>.8?.035:.017)*(inside?.12:1),now,1.2);
     const playingMusic=preferences.musicOn&&musicWindow(game.playSeconds)&&rain<.45;
     audioBus.music.gain.setTargetAtTime(playingMusic?preferences.musicVolume*.48:0,now,1.8);
     if(!playingMusic)audioClock.nextMusic=now+.15;
@@ -144,29 +169,30 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
       audioClock.nextMusic+=5.1;
     }
 
-    if (daylight() > .42 && game.weather !== 'rain' && game.playSeconds >= audioClock.nextBird) {
+    if (!inside && daylight() > .42 && game.weather !== 'rain' && game.playSeconds >= audioClock.nextBird) {
       playBird(); audioClock.nextBird = game.playSeconds + 3.8 + seeded(game.playSeconds + 77) * 6.8;
-    } else if (daylight() < .24 && game.weather !== 'rain' && game.playSeconds >= audioClock.nextBird) {
+    } else if (!inside && daylight() < .24 && game.weather !== 'rain' && game.playSeconds >= audioClock.nextBird) {
       const pan = seeded(game.playSeconds + 91) * 1.4 - .7;
       for (let i = 0; i < 3; i++) synthTone(2350 + i * 170, 2210 + i * 150, .035, .0028, 'sine', now + i * .11, pan, audioBus.ambience);
       audioClock.nextBird = game.playSeconds + 2.8 + seeded(game.playSeconds + 33) * 4.5;
     }
     if (game.player.moving && !overlay && game.playSeconds >= audioClock.nextStep) {
       const crouching = game.player.crouching, running = game.player.running;
-      playSfx('step', crouching ? .32 : running ? 1.12 : .76, game.player.facing * .05);
+      playSfx(inside?'floorStep':game.player.wading?'water':'step',game.player.wading?.25:crouching?.32:running?1.12:.76,game.player.facing*.05);
       audioClock.nextStep = game.playSeconds + (crouching ? .62 : running ? .29 : .46);
     }
-    const nearFire = game.structures.find(s => (s.type === 'fire' || s.type === 'oldfire') && s.lit && distance(s.x, game.player.x) < 115);
-    if (nearFire && game.playSeconds >= audioClock.nextFire) {
-      playSfx('fire', clamp(1 - distance(nearFire.x, game.player.x) / 150, .22, .72), clamp((nearFire.x - game.player.x) / 110, -.7, .7));
-      audioClock.nextFire = game.playSeconds + .32 + seeded(game.playSeconds) * .48;
-    }
-    const nearWater = waterSpots.find(w => distance(w.x, game.player.x) < 150);
+    const nearFire=inside?(game.cabinHome.fire.lit&&game.cabinHome.fire.fuel>0?{x:game.player.x}:null):game.structures.filter(s=>(s.type==='fire'||s.type==='oldfire')&&s.lit&&s.fuel>0&&distance(s.x,game.player.x)<150).sort((a,b)=>distance(a.x,game.player.x)-distance(b.x,game.player.x))[0];
+    if(nearFire){
+      const volume=inside?.65:Math.pow(clamp(1-distance(nearFire.x,game.player.x)/150),1.4)*.8,pan=inside?clamp((468-(game.cabinHome.x||480))/320,-.6,.6):clamp((nearFire.x-game.player.x)/150,-.7,.7);
+      if(game.playSeconds>=audioClock.nextFire){playSfx('fireBed',volume,pan);audioClock.nextFire=game.playSeconds+1.05+seeded(game.playSeconds)*.2;}
+      if(game.playSeconds>=audioClock.nextFireCrackle){playSfx('fireCrackle',volume*(.6+seeded(game.playSeconds+9)*.4),pan);audioClock.nextFireCrackle=game.playSeconds+2.1+seeded(game.playSeconds+71)*4.2;}
+    }else{audioClock.nextFire=game.playSeconds;audioClock.nextFireCrackle=game.playSeconds+.6;}
+    const nearWater = !inside&&waterSpots.find(w => distance(w.x, game.player.x) < 150);
     if (nearWater && game.playSeconds >= audioClock.nextWater) {
       noiseBurst(.7, .009 * clamp(1 - distance(nearWater.x, game.player.x) / 180, .2, 1), 2100, 300, now, clamp((nearWater.x - game.player.x) / 130, -.75, .75));
       audioClock.nextWater = game.playSeconds + 1.1 + seeded(game.playSeconds + 12) * .9;
     }
-    const nearAnimal = animals.find(a => a.alive && a.type !== 'bear' && distance(a.x, game.player.x) < 175 && Math.abs(a.vx) > 18);
+    const nearAnimal = !inside&&animals.find(a => a.alive && a.type !== 'bear' && distance(a.x, game.player.x) < 175 && Math.abs(a.vx) > 18);
     if (nearAnimal && game.playSeconds >= audioClock.nextAnimal) {
       const pan = clamp((nearAnimal.x - game.player.x) / 160, -.8, .8);
       playSfx('rustle', nearAnimal.type === 'deer' ? .42 : .25, pan);
