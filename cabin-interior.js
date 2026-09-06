@@ -13,6 +13,7 @@ const fixtures=[
  {id:'bed',name:'Sleep until morning',x:886,box:[813,260,144,99]},
  {id:'chest',name:'Storage chest',x:877,box:[817,363,130,78]},
  {id:'coffee',name:'Drink from the mug',x:719,box:[704,349,29,29]},
+ {id:'letter',name:'Read the letter',x:759,box:[740,365,40,22]},
  {id:'jug',name:'Refill the mug',x:798,box:[784,378,30,49]},
  {id:'window',name:'Open / close the curtains',x:740,box:[688,143,89,98]},
  {id:'lantern',name:'Light / put out the lantern',x:625,box:[612,92,27,55]},
@@ -28,6 +29,7 @@ function fade(e,dt){const tr=e.transition;tr.time+=Math.min(dt,.05);if(tr.time>=
 function hit(p,e){if(e)p=toRoom(e,p);return fixtures.find(o=>p.x>=o.box[0]&&p.x<=o.box[0]+o.box[2]&&p.y>=o.box[1]&&p.y<=o.box[1]+o.box[3]);}
 function interact(e,id){const h=home(e),o=fixtures.find(v=>v.id===id);if(!h.inside||!o||e.transition||!visible(e,id))return false;e.roomTarget=null;e.state.player.moving=false;
  if(id==='door')return begin(e,false);
+ if(id==='letter'){if(!e.cabinReady())return false;e.sound('pageTurn',.35);e.emit('panel',{panel:'home-letter'});return true;}
  if(['hearth','kitchen','bed','chest'].includes(id)){e.sound(id==='chest'?'chestOpen':id==='bed'?'cloth':'wood',.35);e.emit('panel',{panel:'home-'+id});return true;}
  if(id==='window'){h.shutters=!h.shutters;e.sound('cloth',.35);}
  if(id==='lantern'){h.lantern=!h.lantern;e.sound('fire',.25);}
@@ -62,6 +64,7 @@ function action(e,id){const h=home(e),s=e.state;if(!h.inside||e.transition)retur
  else if(['rawFish','rawMeat'].includes(id)){if(!h.fire.lit||!h.fire.fuel||s.inventory[id]<1)return false;s.inventory[id]--;s.inventory[id==='rawFish'?'cookedFish':'cookedMeat']++;e.finishTask('meal');}
  else return false;e.sound('fire',.45);e.emit('change');e.emit('save');return true;}
 function panel(e,type,art,name){const h=home(e),s=e.state,T=x=>root.L?.text(x)||x;
+ if(type==='home-letter')return `<article class="cabin-letter-text" tabindex="0" aria-label="A letter to the traveller"><h3>Hello, traveller!</h3><p>If you find this letter, it means I have passed on. This cabin once belonged to a fair (if not very reliable) man named Sieni-Atte. The story goes that he moved here to escape his mad wife. I came across the cabin by chance and have spent my old age keeping it in good repair and enjoying nature. But all beautiful things fade away in time...</p><p>PS. The story also goes that Atte's former wife still roams this area to this day. Could she be the swamp monster people in the village have been whispering about...</p><p>PSS. A zander weighing over 10 kg was caught in this pond a long time ago. I never managed to catch one myself, but perhaps you will!</p></article>`;
  if(type==='home-bed')return `<div class="home-panel"><p>${T('Sleep until morning')}</p><p>${T('Rest restores energy and health. Food, water and firewood are still used overnight.')}</p><button class="primary" data-home-action="sleep">${T('Sleep until morning')}</button></div>`;
  if(type==='home-chest'){const column=(title,dir,source)=>`<section><h3>${T(title)}</h3><div class="storage-list">${Object.keys(root.PE.items).filter(id=>source(id)>0).map(id=>`<div class="storage-row">${art(id)}<span>${name(id)}<small> × ${source(id)}</small></span><button data-storage="${dir}" data-item="${id}">${dir==='store'?'→':'←'} 1</button><button data-storage="${dir}" data-item="${id}" data-all="true" ${root.PE.toolDurability[id]?'disabled':''}>${T('All')}</button></div>`).join('')||`<p>${T('Empty')}</p>`}</div></section>`;return `<div class="home-panel"><p>${T('Storage chest')} · ${Object.keys(root.PE.items).reduce((n,id)=>n+count(h,id),0)} / 200</p><div class="storage-columns">${column('Backpack','store',id=>s.inventory[id])}${column('Storage chest','take',id=>count(h,id))}</div><p>${T('Tool condition is preserved. Withdraw matching tools one at a time.')}</p></div>`;}
  const cooking=type==='home-kitchen';

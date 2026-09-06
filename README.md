@@ -1,5 +1,9 @@
 # Timbertrail
 
+## Test release 0.8.4 — a letter at home
+
+After restoring the Sienilampi cabin, look right inside: a loose letter lies beside the mug on the coffee table. Click to read the previous resident's story in English or Finnish on the supplied paper, with bundled Kalam handwriting. Escape or × puts it down; it stays available to reread. Reading pauses the game and does not change inventory or saves. Existing restored cabins receive it too.
+
 ## Test release 0.8.3 — startup, terrain and quiet footsteps
 
 The first world frame waits for all required images. Landscape caches also invalidate when a late ground material or panorama arrives, fixing the floating Aarni cabin caused by network load order. Production scripts/styles and the audio registry now share a release cache key.

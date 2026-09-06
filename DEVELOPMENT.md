@@ -1,5 +1,9 @@
 # Timbertrail — working direction
 
+## Cabin letter (0.8.4)
+
+`letter` is a room-space fixture beside the mug, gated on cabin restoration and visible indoor interaction. It opens `home-letter` through the existing paused modal lifecycle, including Escape, focus return and keyboard scrolling. No read/collected flag is saved: the letter remains available. The supplied page is used unchanged for both the table prop and CSS sheet; Kalam Regular and its OFL license ship locally. Full-paragraph bilingual entries preserve the user's Finnish narrative and updated PSS wording. Lore does not change fishing size limits. See `assets/CABIN-LETTER.md`.
+
 ## Release reliability and quiet footsteps (0.8.3)
 
 `game.js` must not draw until all mandatory image, equipment and book loads finish. `PEWorldArt.prepare` additionally tracks panorama identities and ground-material identity, rebuilding affected caches when asynchronous dependencies change. Title rendering once cached terrain before the material arrived over HTTP, leaving Aarni's setback cabin unsupported until a region reload. Test slow and warm loads, not just preloaded native images.

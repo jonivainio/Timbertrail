@@ -83,6 +83,7 @@
     endFishingPointer(true);PEFishing.release(engine,true);
     if(engine.transition)return;
     if(!engine.state.running&&!['confirm','settings'].includes(kind))return;
+    if(kind==='home-letter'&&(!engine.state.cabinHome?.inside||!engine.cabinReady()||!PECabin.visible(engine,'letter')))return;
     if(panel===kind&&!modalClosing){if(journalPanels.has(kind))return;closePanel();return;}
     if(panel&&journalPanels.has(panel)&&journalPanels.has(kind)&&!modalClosing){panel=kind;renderPanel();PEAudio.play('pageFlip',.6);return;}
     if(kind==='dialogue'){dialogueStage=engine.state.traders.aarni.introDone?'smalltalk':'welcome';visits++;}
@@ -96,6 +97,7 @@
     if(!panel)return;const s=engine.state,oldScroll=content.scrollTop,oldFocus=document.activeElement?.dataset?.select||null;
     const headings={'home-chest':['Storage chest','SIENILAMPI'],'home-hearth':['Fireplace','SIENILAMPI'],'home-kitchen':['Kitchen','SIENILAMPI'],'home-bed':['Sleep until morning','SIENILAMPI'],inventory:['Reppu','KAIKKI TARPEELLINEN MUKANA'],craft:['Käsityöt','OMIN KÄSIN · LUONNON ANTIMISTA'],map:['Korpilaakson kartta','YHDEN POLUN ALKU'],journal:['Kenttämuistiinpanot','PIENIÄ HETKIÄ METSÄSTÄ'],help:['Retkeilijän opas','KULJE OMAAN TAHTIISI'],pause:['Päävalikko','RETKESI ON TURVASSA'],trade:['Aarnin leirillä','VANHAN METSÄNKÄVIJÄN TARINOITA'],fire:['Nuotion äärellä','LÄMPÖÄ JA LÄMMIN ATERIA'],confirm:['Uusi retki?','NYKYINEN RETKI ON TALLENNETTU']};
     headings['fish-catch']=['Your catch','SIENILAMPI'];
+    headings['home-letter']=['A letter to the traveller','SIENILAMPI'];
     headings.dismantle=['Dismantle structure?','RECOVER MATERIALS'];headings.dialogue=['Aarni','A WARM HEARTH · A FAMILIAR FACE'];headings.settings=['Settings','MAKE YOURSELF AT HOME'];headings.trade=['Aarni’s table','A FAIR EXCHANGE'];headings.map=['The northern trails','A MAP OF THINGS TO COME'];
     modal.dataset.panel=panel;
     $('modal-title').textContent=headings[panel][0];$('modal-kicker').textContent=headings[panel][1];
@@ -278,6 +280,7 @@
   saved=readSave();renderer.scenery=[null,null,null];let loaded=0,loadFailed=false,equipmentReady=false,bookReady=false;
   const assets=[...['menu_banner','pick_banner1','pick_banner2','pick_banner3'].map(id=>[id,id]),['west','forest-west'],['ravine','forest-ravine'],['upland','forest-upland'],['sprites','traveller-and-kajo'],['wildlife','woodland-wildlife'],['props','timber-props'],['poses','timber-poses'],['chopTree','chop-standing'],['chopLog','chop-ground'],['treeVariants','forest-trees']];
   assets.push(['runPoses','traveller-run'],['fishingPoses','fishing-poses-v2'],['pikeImage','icon-pike'],['zanderImage','icon-zander']);
+  assets.push(['letterImage','cabin-letter']);
   assets.push(['yardProps','cabin-yard-props-final'],['kajoCabin','kajo-cabin-poses'],['cabinInterior','sienilampi-interior'],['groundMaterial','forest-floor-material'],['riverImage','aarni-river'],['pondImage','hiljalampi'],['cabinAtlas','hiljalampi-cabin'],['pierImage','sienilampi-pier'],['springImage','cabin-spring-v2'],['petImage','traveller-pet'],['seatedImage','traveller-seated']);renderer.regionImages={};
   function finishLoading(){if(ready||loadFailed||loaded!==assets.length||!equipmentReady||!bookReady)return;ready=true;$('start-button').disabled=false;refreshTitle();PEAudio.title?.(engine.state);}
   for(const [key,path]of assets){const img=new Image();img.onload=()=>{const i=['west','ravine','upland'].indexOf(key);if(i>=0){renderer.scenery[i]=img;if(i===0)renderer.forest=img;}else{renderer[key]=img;if(key==='riverImage')renderer.regionImages.river=img;if(key==='pondImage')renderer.regionImages.pond=img;}loaded++;if(key==='wildlife')paintWildlife(content);finishLoading();};img.onerror=()=>{loadFailed=true;$('load-note').textContent='Metsäkuvaa ei voitu ladata. Tarkista, että assets-kansio on index.html-tiedoston vieressä.';$('start-button').textContent='Lataus epäonnistui';L.apply($('title-card'));};img.src='assets/'+path+'.png';}

@@ -39,6 +39,8 @@ function draw(r,e){const c=r.c,s=e.state,h=root.PECabin.home(e),t=s.playSeconds;
  const daylight=Math.max(0,Math.sin((s.dayTime-.22)*Math.PI*2));
  if(h.shutters&&daylight<.5){c.fillStyle=`rgba(18,34,48,${(.5-daylight)*1.55})`;c.fillRect(692,144,80,99);}
  curtains(c,h.shutters,t);
+ // A loose page rests on the coffee table; its hit box uses the same room space.
+ if(e.cabinReady()&&r.letterImage){c.save();c.transform(1,.04,.42,.48,744,367);c.shadowColor='#160e09aa';c.shadowBlur=2;c.shadowOffsetY=2;c.drawImage(r.letterImage,0,0,27,32);c.shadowColor='transparent';c.strokeStyle='#755432';c.lineWidth=.6;for(let i=0;i<6;i++){c.beginPath();c.moveTo(5,8+i*2.7);c.lineTo(i===5?15:22,8+i*2.7);c.stroke();}c.restore();}
  c.fillStyle=`rgba(13,19,28,${.06+(1-daylight)*.27})`;c.fillRect(0,0,960,540);
  if(h.lantern){c.save();c.globalCompositeOperation='screen';glow(c,625,130,175,'#edb65c29');c.restore();c.fillStyle='#ffe3a3';c.fillRect(623,121,4,8);}
  if(h.fire.lit&&h.fire.fuel>0){c.save();c.globalCompositeOperation='screen';glow(c,466,330,265,`rgba(245,135,54,${.14+Math.sin(t*5)*.008+Math.sin(t*3.17)*.006})`);c.restore();c.save();c.beginPath();c.rect(430,279,79,70);c.clip();root.PEFire?.draw(c,468,345,69,61,t,917,Math.min(1,Math.max(.25,h.fire.fuel/30)),r.makeCanvas);c.restore();}

@@ -6,6 +6,9 @@ if(base!==root){const html=fs.readFileSync(path.join(base,'index.html'),'utf8'),
 const assets=['forest-west','forest-ravine','forest-upland','traveller-and-kajo','timber-poses','timber-props','timber-interior','timber-logo','woodland-wildlife','forest-trees','chop-standing','chop-ground','book-icon','book-open',...Array.from({length:4},(_,i)=>'book-opening-'+(i+1)),...['knife','flintaxe','axe','puukko','rod'].map(x=>'tool-'+x)];
 assets.push('cabin-yard-props-final','kajo-cabin-poses','sienilampi-interior','icon-canteen','menu_banner','pick_banner1','pick_banner2','pick_banner3');
 assets.push('trail-map','menu-landscape','forest-floor-material');
+assets.push('cabin-letter');
+assert.ok(fs.readFileSync(path.join(base,'assets/fonts/Kalam-Regular.ttf')).length>10000,'bundled letter handwriting font');
+assert.ok(fs.readFileSync(path.join(base,'assets/fonts/Kalam-OFL.txt'),'utf8').includes('SIL OPEN FONT LICENSE'),'redistribution license accompanies the font');
 assets.push(...['rawFish','cookedFish','pike','zander','perch'].map(id=>'icon-'+id));
 assets.push('fishing-poses-v2');
 assets.push('aarni-river','hiljalampi','hiljalampi-cabin','sienilampi-pier','cabin-spring-v2','timber-wordmark','traveller-pet','traveller-seated');

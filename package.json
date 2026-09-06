@@ -1,6 +1,6 @@
 {
   "name": "timbertrail",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "private": true,
   "description": "A quiet pixel-art wilderness survival prototype",
   "engines": {

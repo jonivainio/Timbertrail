@@ -2,6 +2,10 @@
 (function(root){
   'use strict';
   const pairs=[
+    ['Lue kirje','Read the letter'],['Kirje kulkijalle','A letter to the traveller'],['Hei kulkija!','Hello, traveller!'],
+    ['Jos löydät tämän kirjeen, se tarkoittaa että aika on jättänyt minut. Tämä mökki kuului aikoinaan reilulle (joskaan ei kovin luotettavalle) miehelle nimeltään Sieni-Atte. Tarina kertoo, että hän muutti karkuun hullua vaimoaan. Löysin mökin sattumalta ja olen viettänyt vanhuusvuoteni pitäen mökkiä kunnossa luonnosta nauttien. Mutta kaikki kaunis katoaa joskus...',"If you find this letter, it means I have passed on. This cabin once belonged to a fair (if not very reliable) man named Sieni-Atte. The story goes that he moved here to escape his mad wife. I came across the cabin by chance and have spent my old age keeping it in good repair and enjoying nature. But all beautiful things fade away in time..."],
+    ['PS. tarina myös kertoo, että Atten entinen vaimo liikkuu tänä päivänäkin alueella. Onkohan tämä se suohirviö, mistä kylillä on liikkunut huhuja...',"PS. The story also goes that Atte's former wife still roams this area to this day. Could she be the swamp monster people in the village have been whispering about..."],
+    ['PSS. lammesta on joskus aikoja sitten saatu yli 10kg kuha. Itse en koskaan tätä onnistunut nappaamaan, mutta ehkä sinä onnistut!',"PSS. A zander weighing over 10 kg was caught in this pond a long time ago. I never managed to catch one myself, but perhaps you will!"],
     ['Peli pysähtyi odottamattoman virheen vuoksi. Retkeäsi ei ole nollattu.','The game paused after an unexpected error. Your journey has not been reset.'],
     ['Yritä uudelleen','Try again'],
     ['Katsele ympärillesi · Klikkaa käyttääksesi','Look around · Click to use'],
