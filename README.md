@@ -1,6 +1,10 @@
 # Timbertrail
 
-## Test release 0.7.1
+## Test release 0.7.2
+
+User-supplied raw/cooked fillet illustrations now replace the old fish icons in backpack, storage, cooking and quick food slots. Pike, zander and perch illustrations are registered separately for species displays; this art update does not add perch spawning or change inventory/save IDs. Source notes: `assets/FISH-ICONS.md`. Spinning-fishing v1 is still in development and is not part of this art-only release.
+
+## Cabin polish (0.7.1)
 
 Cabin polish: separate fireplace and kitchen menus, quiet short fire crackles without the whooshing noise bed, drag/drop chest storage with half/exact stack transfers, linen curtains, and original decorative yard props. Sleeping restores one third of maximum health, capped at 100. Existing saves are retained.
 
