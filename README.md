@@ -46,4 +46,4 @@ For desktop work, attach this actual repository directory as the local project's
 
 ## Art and scope
 
-Original generated art and user-supplied props; no Wild n Chill assets are included. Prompt/source notes live in assets/*.md. Lighting is stylized 2D, not ray tracing. Full wilderness chapters, cabin restoration and a Steam build are future work.
+Original generated art and user-supplied props. Prompt/source notes live in assets/*.md. Lighting is stylized 2D, not ray tracing. Full wilderness chapters, cabin restoration and a Steam build are future work.
