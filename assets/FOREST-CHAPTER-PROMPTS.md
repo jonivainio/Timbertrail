@@ -1,0 +1,20 @@
+# Forest chapter — original background artwork
+
+Built-in imagegen generation, 2026-09-05. The old forest-panorama.png was used only as a style reference. Three new, distinct PNGs preserved unchanged in assets. Runtime Canvas composition forms a finite background covering the whole 6,400-unit route, with no repeat or mirroring. Terrain and complete midground/foreground props are separate draw layers; there is no horizontal cut/fade across tree trunks.
+
+## forest-west.png
+
+Use case: stylized-concept. Asset type: unique extra-wide 3:1 side-scrolling Finnish forest background, chapter 1 of a continuous long woodland. Reference image role: STYLE ONLY; do not copy its composition. Create an original premium detailed pixel-art panorama. Old spruce forest opens into a fern-rich sunlit birch hollow at the right. Ancient grey pine trunks, intact full tree forms, cool blue depth, warm scattered light on velvety moss, lichen-covered boulders, gnarled roots and naturally irregular undergrowth. Ground is around lower fifth; no prominent foreground walking path, no black bottom band, no close framing trees covering edges. This is a distant/middle-distance background; foreground and walking terrain are separate in game. Both extreme edges are quiet diffuse blue-green woodland depth with no dominant tree on the very edge, to join to another woodland scene. Sophisticated organic fine pixel clusters, not smooth digital painting, not geometric polygons. No humans, animals, cabins, interface, words or logos. Full wide landscape, naturalistic and calm.
+
+## forest-ravine.png
+
+Use case: stylized-concept. Asset type: unique extra-wide 3:1 side-scrolling Finnish forest background, chapter 2 of a continuous long woodland. Reference image role STYLE ONLY. Original premium detailed pixel-art panorama showing a sheltered rocky ravine amid northern mixed birch and spruce woods; a distant narrow stream snakes between ancient granite cliffs, a beautiful twisted windfallen tree lies behind the clearing, soft luminous mist between trunks, high moss-covered slabs, elegant sunbeams. Large varied complete tree forms, thick delicate foliage, lichen, brown pine needles, rich cool blue-green depth contrasting muted honey moss. Ground around lower fifth. No prominent foreground walking path, no black bottom band, no close framing trees on the edges. Both extreme edges quiet diffuse blue-green woodland depth to join adjacent forest scenery. Fine naturalistic pixel clusters, atmospheric gorgeous pixel art, no polygons, no smooth plastic look. No people, animals, cabins, interface, text or logos.
+
+## forest-upland.png
+
+Use case: stylized-concept. Asset type: unique extra-wide 3:1 side-scrolling Finnish forest background, final chapter 3 of a continuous long woodland. Reference image role STYLE ONLY. Original premium fine pixel-art panorama: rising upland pine forest with old knotted trunks, heath and bilberry shrubs, sun-dappled glacier boulders, a distant opening revealing a blue-grey rocky fell beyond the treetops toward the right. Evocative golden scattered forest sunlight, cool luminous mist, gentle depth and entirely different composition from the reference. Intact organic trees, roots and moss, rich high detail, restrained greens, warm earth, quiet old growth forest. Ground around lower fifth. No prominent foreground walking path, no dark bottom band, no close framing trees over the edges; extreme edges diffuse blue-green woodland depth to join adjacent scenes. Realistically textured hand-crafted pixel clusters, not smooth painting, not vector. No people, wildlife, buildings, UI, text or logos.
+
+## Quality and integration
+
+Original raster dimensions: 2172 × 724 each. Image sources retained in the project. Background joins are blended only left-to-right in the distant painted scenery; foreground prop fading uses whole-object opacity near the traveller. New code-native equipment icons/rig and leather-book UI do not require generated raster edits. Game world/contact-sheet previews are actual Canvas renders, not browser screenshots.
+

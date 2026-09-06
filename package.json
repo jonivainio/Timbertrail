@@ -1,0 +1,12 @@
+{
+  "name": "timbertrail",
+  "version": "0.6.0",
+  "private": true,
+  "description": "A quiet pixel-art wilderness survival prototype",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node tests/engine.cjs && node tests/ui.cjs && node scripts/check-assets.cjs",
+    "build": "node scripts/build.cjs",
+    "check:secrets": "node scripts/check-secrets.cjs"
+  }
+}
