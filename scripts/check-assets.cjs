@@ -13,3 +13,5 @@ for(const name of assets){const b=fs.readFileSync(path.join(base,'assets',name+'
 console.log(`PASS ${assets.length} required images, script syntax, relative asset references${base===root?'':' in production build'}`);
 
 console.log('PASS '+require('./sounds.cjs').readLibrary(base).length+' registered audio files and provenance');
+
+assert.ok(fs.statSync(path.join(base,'assets/title-music.mp3')).size>1000,'title music included');

@@ -6,8 +6,9 @@ const preferences={soundOn:true,musicOn:true,soundVolume:.7,musicVolume:.4};
 try{const saved=JSON.parse(localStorage.getItem('timbertrail-audio')||'{}');for(const key of ['soundOn','musicOn'])if(typeof saved[key]==='boolean')preferences[key]=saved[key];for(const key of ['soundVolume','musicVolume'])if(Number.isFinite(saved[key]))preferences[key]=clamp(saved[key],0,1);}catch{}
 soundOn=preferences.soundOn;
 const musicWindow=seconds=>{const phase=((seconds-18)%240+240)%240;return seconds>=18&&phase<42;};
+function updateTitle(retry=false){if(audioBus)root.PETitleMusic?.set(audio,audioBus.master,!game.running,preferences.musicOn?preferences.musicVolume:0,retry);}
 function applyMix(){if(!audioBus)return;if(!soundOn)root.PEAudioSamples?.stopLoops?.(audio);const t=audio.currentTime;audioBus.ambience.gain.setTargetAtTime(soundOn?preferences.soundVolume*.7:0,t,.12);audioBus.sfx.gain.setTargetAtTime(soundOn?preferences.soundVolume*.78:0,t,.12);audioBus.music.gain.setTargetAtTime(preferences.musicOn?preferences.musicVolume*.48:0,t,.5);}
-function configure(patch){for(const key of ['soundOn','musicOn'])if(typeof patch[key]==='boolean')preferences[key]=patch[key];for(const key of ['soundVolume','musicVolume'])if(Number.isFinite(patch[key]))preferences[key]=clamp(patch[key],0,1);soundOn=preferences.soundOn;ensureAudio();audio?.resume?.();applyMix();try{localStorage.setItem('timbertrail-audio',JSON.stringify(preferences));}catch{}return {...preferences};}
+function configure(patch){for(const key of ['soundOn','musicOn'])if(typeof patch[key]==='boolean')preferences[key]=patch[key];for(const key of ['soundVolume','musicVolume'])if(Number.isFinite(patch[key]))preferences[key]=clamp(patch[key],0,1);soundOn=preferences.soundOn;ensureAudio();audio?.resume?.();applyMix();updateTitle(true);try{localStorage.setItem('timbertrail-audio',JSON.stringify(preferences));}catch{}return {...preferences};}
 const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nextFireCrackle:0,nextWater:0};
   function ensureAudio() {
     if ((!soundOn && !preferences.musicOn) || audio) return;
@@ -159,6 +160,7 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
   }
 
   function updateAudio() {
+    updateTitle();
     if (!audioBus || audio.state === 'suspended') return;
     if(!game.running){root.PEAudioSamples?.stopLoops?.(audio);audioBus.rainGain.gain.setTargetAtTime(0,audio.currentTime,.5);audioBus.windGain.gain.setTargetAtTime(0,audio.currentTime,.5);audioBus.music.gain.setTargetAtTime(0,audio.currentTime,.7);return;}
     const now = audio.currentTime;
@@ -181,10 +183,13 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
       audioClock.nextMusic+=5.1;
     }
 
+    const nearWater = !inside&&waterSpots.find(w => distance(w.x, game.player.x) < 150);
+    const streamLevel=soundOn&&!overlay&&nearWater?.12*clamp(1-distance(nearWater.x,game.player.x)/180,.2,1):0;
+    const sampleStream=root.PEAudioSamples?.setLoop?.('stream',audio,audioBus.ambience,streamLevel,nearWater?clamp((nearWater.x-game.player.x)/130,-.75,.75):0);
     if(overlay)return;
 
     if (!inside && daylight() > .42 && game.weather !== 'rain' && game.playSeconds >= audioClock.nextBird) {
-      playBird(); audioClock.nextBird = game.playSeconds + 3.8 + seeded(game.playSeconds + 77) * 6.8;
+      playBird(); audioClock.nextBird = game.playSeconds + 9 + seeded(game.playSeconds + 77) * 9;
     } else if (!inside && daylight() < .24 && game.weather !== 'rain' && game.playSeconds >= audioClock.nextBird) {
       const pan = seeded(game.playSeconds + 91) * 1.4 - .7;
       for (let i = 0; i < 3; i++) synthTone(2350 + i * 170, 2210 + i * 150, .035, .0028, 'sine', now + i * .11, pan, audioBus.ambience);
@@ -201,9 +206,8 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
 
       if(game.playSeconds>=audioClock.nextFireCrackle){playSfx('fireCrackle',volume*(.6+seeded(game.playSeconds+9)*.4),pan);audioClock.nextFireCrackle=game.playSeconds+2.1+seeded(game.playSeconds+71)*4.2;}
     }else{audioClock.nextFireCrackle=game.playSeconds+.6;}
-    const nearWater = !inside&&waterSpots.find(w => distance(w.x, game.player.x) < 150);
-    if (nearWater && game.playSeconds >= audioClock.nextWater) {
-      if(!soundOn||!root.PEAudioSamples?.play('stream',audio,audioBus.ambience,.12*clamp(1-distance(nearWater.x,game.player.x)/180,.2,1),clamp((nearWater.x-game.player.x)/130,-.75,.75)))noiseBurst(.7, .009 * clamp(1 - distance(nearWater.x, game.player.x) / 180, .2, 1), 2100, 300, now, clamp((nearWater.x - game.player.x) / 130, -.75, .75));
+    if (!sampleStream && soundOn && nearWater && game.playSeconds >= audioClock.nextWater) {
+      noiseBurst(.7, .009 * clamp(1 - distance(nearWater.x, game.player.x) / 180, .2, 1), 2100, 300, now, clamp((nearWater.x - game.player.x) / 130, -.75, .75));
       audioClock.nextWater = game.playSeconds + 1.1 + seeded(game.playSeconds + 12) * .9;
     }
     const nearAnimal = !inside&&animals.find(a => a.alive && a.type !== 'bear' && distance(a.x, game.player.x) < 175 && Math.abs(a.vx) > 18);
@@ -219,7 +223,8 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
 root.PEAudio={
   play:playSfx,
   settings:()=>({...preferences}),configure,musicWindow,
-  start(state){game=state;ensureAudio();audio?.resume?.();},
+  start(state){game=state;ensureAudio();audio?.resume?.();updateTitle(true);},
+  title(state){game=state;ensureAudio();audio?.resume?.();updateTitle(true);},
   toggle(){configure({soundOn:!soundOn});return soundOn;},
   pause(paused){if(paused&&audio)root.PEAudioSamples?.stopLoops?.(audio);if(audioBus)audioBus.master.gain.setTargetAtTime(paused?.0001:.62,audio.currentTime,.15);if(!paused&&audio)audioClock.nextMusic=audio.currentTime+.1;},
   update(state,engine,paused){game=state;keys=engine.keys;animals=state.animals;waterSpots=engine.water;overlay=paused;updateAudio();

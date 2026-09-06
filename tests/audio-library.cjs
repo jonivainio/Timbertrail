@@ -9,7 +9,11 @@ for(const e of entries){
   assert.ok(format&&pcm,e.event+' PCM chunks');assert.equal(format.readUInt16LE(0),1,'uncompressed PCM');assert.equal(format.readUInt16LE(2),1,'mono');assert.equal(format.readUInt16LE(14),16,'16-bit');
   const rate=format.readUInt32LE(4),duration=pcm.length/2/rate;assert.ok(e.offset+e.duration<=duration+.0001,e.event+' playback range');
   let peak=0,sum=0;for(let i=0;i<pcm.length;i+=2){const v=pcm.readInt16LE(i)/32768;peak=Math.max(peak,Math.abs(v));sum+=v*v;}
-  assert.ok(peak<=.66,e.event+' bounded peaks');assert.ok(Math.sqrt(sum/(pcm.length/2))>.0005,e.event+' audible data');
+  assert.ok(peak<=.421,e.event+' bounded peaks');assert.ok(Math.sqrt(sum/(pcm.length/2))>.0005,e.event+' audible data');
+  for(const r of e.regions||[{offset:e.offset,duration:e.duration}]){
+    assert.ok(r.offset+r.duration<=duration+.0001,e.event+' variant range');
+    if(!e.loop){assert.equal(pcm.readInt16LE(Math.round(r.offset*rate)*2),0,e.event+' zero attack');assert.equal(pcm.readInt16LE((Math.round((r.offset+r.duration)*rate)-1)*2),0,e.event+' zero release');}
+  }
   if(e.loop)assert.ok(Math.abs(pcm.readInt16LE(0)-pcm.readInt16LE(pcm.length-2))/32768<.08,e.event+' continuous loop seam');
 }
 console.log('PASS '+entries.length+' real sample ranges, PCM payloads, non-silence, headroom and loop seams; listening remains a playtest.');

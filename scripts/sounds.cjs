@@ -11,7 +11,9 @@ function validate(entry){
   if(entry.reviewed!==true)throw Error('Check the source/license and technical audio validity, then set reviewed: true');
   if(entry.listeningReviewed!==undefined&&typeof entry.listeningReviewed!=='boolean')throw Error('Invalid listening review status');
   if(entry.loop!==undefined&&typeof entry.loop!=='boolean')throw Error('Invalid loop flag');
-  if(entry.loop&&!['reelWind','reelDrag','wind','rain'].includes(entry.event))throw Error('Only continuous reel/weather events may loop');
+  if(entry.loop&&!['reelWind','reelDrag','wind','rain','stream'].includes(entry.event))throw Error('Only continuous reel/weather/stream events may loop');
+  for(const k of ['attack','release','loopAttack','loopRelease'])if(entry[k]!==undefined&&(!Number.isFinite(entry[k])||entry[k]<0||entry[k]>3))throw Error('Invalid envelope');
+  if(entry.regions!==undefined&&(!Array.isArray(entry.regions)||!entry.regions.length||entry.regions.length>8||entry.regions.some(r=>!Number.isFinite(r.offset)||r.offset<0||!Number.isFinite(r.duration)||r.duration<.02||r.duration>10)))throw Error('Invalid variants');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(entry.downloadedOn)||!Number.isFinite(Date.parse(entry.downloadedOn)))throw Error('Missing download date YYYY-MM-DD');
   for(const [k,min,max]of [['offset',0,600],['duration',.02,10],['gain',.001,1]])if(!Number.isFinite(entry[k])||entry[k]<min||entry[k]>max)throw Error('Invalid '+k);
   if(!entry.loop&&(entry.event==='reelDrag'&&entry.duration>.12||entry.event==='reelWind'&&entry.duration>.26))throw Error('One-shot reel clips must fit the existing cadence: drag <= 0.12 s, wind <= 0.26 s');
@@ -38,7 +40,7 @@ function importSound(recipePath,base=root){
   if(stat.size>20*1024*1024)throw Error('Audio exceeds 20 MB; trim it first');
   const data=fs.readFileSync(source),ext=audioType(data),sha256=crypto.createHash('sha256').update(data).digest('hex');
   const entries=readLibrary(base),file=recipe.event+'-'+sha256+ext;
-  const entry={};for(const k of ['event','title','creator','source','downloadedOn','reviewed','listeningReviewed','loop','notes','offset','duration','gain'])if(recipe[k]!==undefined)entry[k]=recipe[k];
+  const entry={};for(const k of ['event','title','creator','source','downloadedOn','reviewed','listeningReviewed','loop','attack','release','loopAttack','loopRelease','regions','notes','offset','duration','gain'])if(recipe[k]!==undefined)entry[k]=recipe[k];
   Object.assign(entry,{file,sha256,license:'Pixabay Content License',licenseUrl:'https://pixabay.com/service/terms/'});
   const dir=path.join(base,'assets/audio'),target=path.join(dir,file);
   if(!fs.existsSync(target))fs.copyFileSync(source,target,fs.constants.COPYFILE_EXCL);

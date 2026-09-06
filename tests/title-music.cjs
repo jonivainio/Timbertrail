@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+let plays=0,pauses=0,media,stopTimer=null,level=0,created=0;
+const ctx={Audio:class{constructor(url){assert.equal(url,'assets/title-music.mp3');media=this;this.currentTime=5;this.duration=180;}play(){plays++;return Promise.resolve();}pause(){pauses++;}},setTimeout(fn){stopTimer=fn;return 1;},clearTimeout(){stopTimer=null;}};
+vm.createContext(ctx);vm.runInContext(fs.readFileSync('title-music.js','utf8'),ctx);
+const audio={currentTime:1,createGain(){return {gain:{setTargetAtTime(v){level=v;}},connect(){}};},createMediaElementSource(){created++;return {connect(g){return g;}};}};
+const set=(active,v,retry=false)=>ctx.PETitleMusic.set(audio,{},active,v,retry);
+set(false,.4);assert.equal(created,0,'no music load during play');
+set(true,.4);assert.equal(plays,1);assert.equal(media.loop,true);assert.ok(level>0);
+set(true,.4);assert.equal(plays,1,'frames do not restart playback');
+set(true,0);assert.equal(level,0);assert.ok(stopTimer,'mute fades before pausing');stopTimer();assert.equal(pauses,1);
+set(true,.4,true);assert.equal(plays,2);assert.equal(created,1,'reuse the media source');
+set(false,.4);assert.equal(level,0);set(true,.4,true);assert.equal(stopTimer,null,'return cancels pending stop');
+media.currentTime=179.5;set(true,.4);assert.ok(level<.04,'soft track end');
+set(false,.4);stopTimer();assert.equal(pauses,2,'game entry pauses title music after release');
+console.log('PASS title music transitions, mute/volume, autoplay retry, loop edges and source reuse.');

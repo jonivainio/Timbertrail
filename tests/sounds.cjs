@@ -13,7 +13,7 @@ async function main(){
   assert.throws(()=>validate({...recipe,duration:.27}));assert.throws(()=>audioType(Buffer.from('<html>not audio</html>')));
   fs.appendFileSync(path.join(dir,'assets/audio',imported.file),'changed');assert.throws(()=>readLibrary(dir),/integrity/);
   const sources=[],gains=[],requests=[];
-  const parameter=()=>({setValueAtTime(){},exponentialRampToValueAtTime(){},setTargetAtTime(v){this.target=v;},cancelScheduledValues(){}});
+  const parameter=()=>({setValueAtTime(){},exponentialRampToValueAtTime(){},linearRampToValueAtTime(){},setTargetAtTime(v){this.target=v;},cancelScheduledValues(){}});
   const node=()=>({gain:parameter(),pan:{},connect(n){return n;},disconnect(){},start(...args){this.started=args;},stop(...args){this.stopped=args;}});
   const context={currentTime:2,createBufferSource(){const n=node();sources.push(n);return n;},createGain(){const n=node();gains.push(n);return n;},createStereoPanner:node,async decodeAudioData(){return {duration:1};}};
   const ctx={fetch:async url=>{requests.push(url);return {ok:true,json:async()=>[imported],arrayBuffer:async()=>wav.buffer};}};vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'../audio-samples.js'),'utf8'),ctx);
@@ -23,12 +23,16 @@ async function main(){
   assert.equal(samples.play('reelWind',context,node(),.5,-.2),true);assert.deepEqual(sources[0].started,[2,0,.04]);sources[0].onended();
   assert.equal(samples.play('unknown',context,node(),1,0),false);
   assert.equal(samples.setLoop('reelWind',context,node(),1),false,'one-shots are not silently looped');
-  const loopContext={fetch:async url=>({ok:true,json:async()=>[{...imported,loop:true}],arrayBuffer:async()=>wav.buffer})};vm.createContext(loopContext);vm.runInContext(fs.readFileSync(path.join(__dirname,'../audio-samples.js'),'utf8'),loopContext);
-  await loopContext.PEAudioSamples.load(context);const beforeLoop=sources.length;
+  const loopContext={fetch:async url=>({ok:true,json:async()=>[{...imported,loop:true,loopRelease:1.2}, {...imported,event:'step',attack:.03,release:.08,regions:[{offset:.1,duration:.2},{offset:.4,duration:.25}]}],arrayBuffer:async()=>wav.buffer})};vm.createContext(loopContext);vm.runInContext(fs.readFileSync(path.join(__dirname,'../audio-samples.js'),'utf8'),loopContext);
+  await loopContext.PEAudioSamples.load(context);
+  loopContext.PEAudioSamples.play('step',context,node(),1,0);assert.deepEqual(sources.at(-1).started,[2,.1,.2]);
+  loopContext.PEAudioSamples.play('step',context,node(),1,0);assert.deepEqual(sources.at(-1).started,[2,.4,.25]);
+  loopContext.PEAudioSamples.play('step',context,node(),1,0);assert.deepEqual(sources.at(-1).started,[2,.1,.2]);
+  const beforeLoop=sources.length;
   assert.equal(loopContext.PEAudioSamples.setLoop('reelWind',context,node(),.5,-.2),true);
   for(let i=0;i<30;i++)loopContext.PEAudioSamples.setLoop('reelWind',context,node(),.8,.2);
   assert.equal(sources.length,beforeLoop+1,'repeated updates reuse a single looping source');assert.equal(sources.at(-1).loop,true);
-  assert.equal(sources.at(-1).loopEnd,.04);loopContext.PEAudioSamples.setLoop('reelWind',context,node(),0);assert.ok(sources.at(-1).stopped,'release fades and stops the source');
+  assert.equal(sources.at(-1).loopEnd,.04);loopContext.PEAudioSamples.setLoop('reelWind',context,node(),0);assert.deepEqual(sources.at(-1).stopped,[3.2],'ambient release lasts the configured 1.2 seconds');
   loopContext.PEAudioSamples.setLoop('reelWind',context,node(),1);loopContext.PEAudioSamples.stopLoops(context);assert.equal(loopContext.PEAudioSamples.status().loops.length,0,'pause/mute can stop every loop');
   const fail={fetch:async()=>{throw Error('offline');}};vm.createContext(fail);vm.runInContext(fs.readFileSync(path.join(__dirname,'../audio-samples.js'),'utf8'),fail);await fail.PEAudioSamples.load(context);assert.equal(fail.PEAudioSamples.play('reelWind',context,node(),1,0),false);
   // Integration: sample dispatch must stay behind the game's sound switch.

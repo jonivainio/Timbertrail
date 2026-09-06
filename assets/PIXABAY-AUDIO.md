@@ -40,8 +40,14 @@ Tallenna MP3/WAV/OGG ja paikallinen `work/audio/recipe.json`. Esimerkki on täyt
 }
 ```
 
-`file` on suhteessa reseptiin. `offset` ja `duration` ovat sekunteja. `loop: true` on tuettu vain tapahtumille `reelWind`, `reelDrag`, `wind` ja `rain`. Muut ovat kertanäytteitä. Ilman loop-asetusta kelan näyte saa kestää enintään 0,26 s ja jarrun 0,12 s. Valmistele loopin sauma ennen tuontia. Käytä lyhyitä puhtaita toimintotehosteita.
+`file` on suhteessa reseptiin. `offset` ja `duration` ovat sekunteja. `loop: true` on tuettu vain tapahtumille `reelWind`, `reelDrag`, `wind`, `rain` ja `stream`. Muut ovat kertanäytteitä. Ilman loop-asetusta kelan näyte saa kestää enintään 0,26 s ja jarrun 0,12 s. Valmistele loopin sauma ennen tuontia. Käytä lyhyitä puhtaita toimintotehosteita.
 
 Tarkistettu resepti tuodaan komennolla `npm run sounds -- import work/audio/recipe.json`. Komento kopioi tiedoston sisältötiivisteellä nimettynä ja vaihtaa tapahtuman rekisterimerkinnän; vanhaa tiedostoa ei poisteta. `npm run sounds -- check` tarkistaa rekisterin ja tiedostojen eheyden. Työkalu ei kuuntele tai tarkista oikeuksia automaattisesti.
 
 Testaa HTTP-palvelimella tai Pagesissa; `file://` voi estää näytteiden lataamisen. Epäonnistunut tai kesken oleva lataus käyttää synteettistä varatehostetta eikä soita vanhaa tapahtumaa jälkikäteen. Aja projektin testit, salaisuustarkistus, build ja tuotantoasset-tarkistus ennen julkaisua. Tarkista pelissä kuunnellen erityisesti loopit, askeleet, toistuvat keräilyäänet, etäisyydet ja äänenvoimakkuus.
+
+## Uudelleensovitus
+
+53 tapahtuman tarkat leikkaukset ja käsittelyarvot ovat `assets/audio-processing.json`-tiedostossa. `python scripts/refine-audio.py --sources work/audio` tarvitsee NumPyn ja alkuperäisistä 24 kHz mono float -muotoon puretut `<Pixabay-ID>.npy`-tiedostot. MP3:n voi purkaa esimerkiksi FFmpegillä 24 kHz mono f32le -muotoon ja tallentaa NumPyllä; lataukset pysyvät paikallisina.
+
+Käsittely vaimentaa tasaista kohinaa pehmeällä spektrimaskilla, rajaa turhia taajuuksia ja tasaa aktiivisten jaksojen voimakkuutta. Äänikohtaiset häivytykset korvaavat aiemmat muutaman millisekunnin reunat. `regions` sisältää erikseen häivytetyt askel- ja rätinämuunnelmat; `attack`/`release` sekä `loopAttack`/`loopRelease` ohjaavat ajonaikaista toistoa. Puro soi jatkuvana ristihäivytettynä jaksona. Alkuperäiset tiedostot ja aiemmat versiot säilytetään. Kuunteluarvio on edelleen merkitty tekemättömäksi.

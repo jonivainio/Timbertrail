@@ -2,7 +2,7 @@
 // out of the public site. Existing local source and diagnostic files stay in place.
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),dest=path.join(root,'dist');
-const files=['index.html','style.css','parchment.css','storage.css','fishing.css','i18n.js','regions.js','cabin-interior.js','fishing.js','engine.js','item-icons.js','equipment.js','terrain-surface.js','world-art.js','region-art.js','fire-effects.js','cabin-art.js','fishing-art.js','render.js','audio-samples.js','audio.js','panels.js','storage-ui.js','game.js'];
+const files=['index.html','style.css','parchment.css','storage.css','fishing.css','i18n.js','regions.js','cabin-interior.js','fishing.js','engine.js','item-icons.js','equipment.js','terrain-surface.js','world-art.js','region-art.js','fire-effects.js','cabin-art.js','fishing-art.js','render.js','audio-samples.js','title-music.js','audio.js','panels.js','storage-ui.js','game.js'];
 fs.mkdirSync(path.join(dest,'assets'),{recursive:true});
 for(const file of files)fs.copyFileSync(path.join(root,file),path.join(dest,file));
 const images=fs.readdirSync(path.join(root,'assets')).filter(f=>f.endsWith('.png'));
@@ -16,3 +16,5 @@ const allowed=new Set(['library.json',...audioEntries.map(e=>e.file)]);
 for(const name of fs.readdirSync(path.join(dest,'assets/audio')))if(!allowed.has(name)&&/^[a-zA-Z]+-[a-f0-9]{64}\.(mp3|wav|ogg)$/.test(name))fs.unlinkSync(path.join(dest,'assets/audio',name));
 for(const name of allowed)fs.copyFileSync(path.join(root,'assets/audio',name),path.join(dest,'assets/audio',name));
 console.log(audioEntries.length+' registered audio clips included.');
+
+fs.copyFileSync(path.join(root,'assets/title-music.mp3'),path.join(dest,'assets/title-music.mp3'));

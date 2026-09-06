@@ -2,7 +2,7 @@
 
 ## Pixabay sound update
 
-53 sound events now use 27 locally hosted Pixabay recordings: fishing, footsteps, gathering/tools, cabin interactions, Journal/UI, Kajo, and birds/water/wind/rain. Reel and brake loops follow the existing fishing load model and stop on release/cancel/pause/mute. Clips are trimmed, peak/RMS bounded and softly faded; the full bank is about 2.3 MB. Music and night insect synthesis remain unchanged. All files decoded successfully in an actual browser; perceived quality and balance still need a listening playtest. Sources, edits and explicit listening-review status are in `assets/audio/library.json`; see `assets/PIXABAY-AUDIO.md`.
+53 sound events now use 27 locally hosted Pixabay recordings: fishing, footsteps, gathering/tools, cabin interactions, Journal/UI, Kajo, and birds/water/wind/rain. Reel and brake loops follow the existing fishing load model and stop on release/cancel/pause/mute. Clips now use source-specific spectral noise attenuation, softer frequency balance, longer raised-cosine fades, active-window leveling and varied footsteps/crackles. Stream ambience is continuous with an overlapped seam; the full bank is about 3.0 MB. Music and night insect synthesis remain unchanged. All files decoded successfully in an actual browser; perceived quality and balance still need a listening playtest. Sources, edits and explicit listening-review status are in `assets/audio/library.json`; see `assets/PIXABAY-AUDIO.md`.
 
 ## Test release 0.8.2 — smoother fish movement
 
@@ -53,7 +53,7 @@ Start with berries, no tools. Craft a flint knife, cord and flint axe. Trade hid
 
 ## Development and checks
 
-Pixabay sound workflow: [Finnish instructions, search candidates and import steps](assets/PIXABAY-AUDIO.md). Run `npm run sounds -- search` for action-specific searches. Reviewed local clips can replace procedural effects through `assets/audio/library.json`; the library now contains 53 prepared events from 27 Pixabay recordings (about 2.3 MB). Pixabay's documented public API does not include sounds. Sample loading requires HTTP/Pages; blocked or missing samples retain procedural audio.
+Pixabay sound workflow: [Finnish instructions, search candidates and import steps](assets/PIXABAY-AUDIO.md). Run `npm run sounds -- search` for action-specific searches. Reviewed local clips can replace procedural effects through `assets/audio/library.json`; the library now contains 53 prepared events from 27 Pixabay recordings (about 3.0 MB). Pixabay's documented public API does not include sounds. Sample loading requires HTTP/Pages; blocked or missing samples retain procedural audio.
 
 Node.js 22 or later; no npm install required.
 
@@ -149,3 +149,5 @@ At zero health the traveller collapses; Kajo brings them to the nearest lean-to 
 ## Repository workflow
 
 This repository is the local Timbertrail game project's working folder. The earlier pine-and-ember folder remains untouched; do not edit both copies. New topical tasks should read AGENTS.md, README.md and DEVELOPMENT.md and work on this repository. Finish one shared-folder code change before starting another, or use separate Git worktrees and integrate deliberately. The user has requested ongoing GitHub updates: verify completed changes, check the remote, then commit and push main without force. There is no background synchronization service.
+
+Title music: the user-supplied “RPG - The Enchanted Forest of Min” plays on the title screen, follows music preferences and fades out on game entry. Browsers may require a first click/key before playback. See `assets/TITLE-MUSIC.md`.
