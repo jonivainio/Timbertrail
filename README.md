@@ -29,7 +29,20 @@ Browser localStorage, key `timbertrail-save-v3`; legacy saves are migrated witho
 
 ## GitHub Pages
 
-The workflow tests and builds on main, then deploys the static output. Repository Settings → Pages → Source must be **GitHub Actions**. Expected project URL: https://jonivainio.github.io/Timbertrail/ . Relative asset paths support this subdirectory. Publishing is only complete once the deployment succeeds.
+The workflow tests and builds on main, then deploys the static output. GitHub Pages is configured with **GitHub Actions** as its source. Public test URL: https://jonivainio.github.io/Timbertrail/ . Relative asset paths support this subdirectory. Each update is live only once its deployment succeeds.
+
+## Woodland polish — September 2026
+
+- Journal opens with Tab from gameplay (Tab navigates controls inside it); vertical tabs and independent page scrolling. One knife, axe and food slot with typed drag/drop.
+- User-supplied map and main-menu illustration. Forest and neighboring Riverbank have pastel-red markers. Riverbank is a preview of the next chapter, not a second playable map; three further biomes are grey.
+- Lean-to requires 8 large sticks, 4 branches, 6 fibre and 2 cord, plus a usable axe.
+- Bark-covered logs and irregularly scattered billets; positions, rotation and visual variants survive saving.
+- Independent sound/music switches and volume sliders, saved locally. Music plays for roughly 42 seconds per four-minute cycle, leaving long natural ambience intervals. Quiet birds in sunny woodland, occasional wind and three rain levels. Rain occurs on roughly 13% of generated days; sleeping also advances weather.
+- Swaying canopy light with sprite-alpha occlusion, terrain-following pools/contact shadows and occasional local morning mist around hollows and streams. These are 2D effects, not physical 3D lighting.
+
+## Continue work in ChatGPT / Codex
+
+For desktop work, attach this actual repository directory as the local project's primary folder. For cloud coding, connect the GitHub repository to a Codex cloud environment. A regular ChatGPT Project organizes conversations and sources but does not itself synchronize this local folder or push commits. Review and commit/push completed changes (or merge a reviewed cloud PR) to main; Pages updates automatically after successful tests. Durable instructions are in AGENTS.md. Official guidance: https://learn.chatgpt.com/docs/projects and https://learn.chatgpt.com/docs/cloud .
 
 ## Art and scope
 

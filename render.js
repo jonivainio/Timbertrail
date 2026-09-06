@@ -8,6 +8,19 @@
   function oval(c,x,y,rx,ry,col){c.fillStyle=col;c.beginPath();c.ellipse(Math.round(x),Math.round(y),rx,ry,0,0,Math.PI*2);c.fill();}
   function shadow(c,x,y,w=18){oval(c,x,y+1,w,3,'#10170d88');}
   function flecks(c,x,y,w,h,colors,count,seed=1){for(let i=0;i<count;i++){const a=random(seed+i*2),b=random(seed+17+i*3);rect(c,x+a*w,y+b*h,1+Math.floor(random(i+seed+12)*2),1,colors[i%colors.length]);}}
+  function woodDrop(c,d,y){
+    const seed=d.variant??d.x,log=d.type==='log',length=log?42+random(seed)*9:25+random(seed)*12,radius=log?6:3,slope=Math.atan2(ground(d.x+15)-ground(d.x-15),30);
+    shadow(c,d.x,y,length*.57);c.save();c.translate(Math.round(d.x),Math.round(y-radius+1));c.rotate(slope+(d.angle||0));
+    const left=-length*.5,right=length*.5;
+    poly(c,[[left,-radius+1],[right-2,-radius],[right+2,-radius*.2],[right,radius],[left+1,radius-1]],log?'#493c30':'#8f734d');
+    // Bark stays on the curved exterior; only the split face is pale wood.
+    for(let row=-radius+1;row<radius;row+=2){line(c,[[left+1,row],[right-1,row+(random(seed+row)-.5)*2]],['#6e5840','#382f27','#806448','#524132'][(row+radius)%4],1);}
+    if(!log){poly(c,[[left,-radius+1],[right,-radius],[right-2,0],[left+3,1]],'#bc9b65');line(c,[[left+4,-1],[right-4,-2]],'#e0bc82',1);line(c,[[left+6,1],[right-6,0]],'#8d693d',1);}
+    for(let i=0;i<(log?48:15);i++){const x=left+2+random(seed+i)*Math.max(1,length-5),yy=-radius+random(seed+i+31)*radius*2;rect(c,x,yy,1+random(i+17)*4,1,['#a48a6070','#282b23','#6f5840','#746341'][i%4]);}
+    if(log){for(let i=0;i<4;i++){const x=left+5+i*length/5;line(c,[[x,-radius+1],[x+3,-1],[x+1,3]],'#292b24',1);}line(c,[[left+4,-radius],[left+11,-radius-1],[left+20,-radius]],'#82915a',2);rect(c,left+8,-radius-2,5,1,'#a0a376');}
+    oval(c,right,0,log?4:2.5,radius,'#d0ad77');oval(c,right,0,log?2.7:1.2,radius*.65,'#947249');oval(c,right,0,log?1.8:.7,radius*.42,'#c0a071');line(c,[[right,0],[right+1,radius-1]],'#614c34',1);
+    if(random(seed+51)>.4){line(c,[[left+9,-2],[left+7,-radius-4]],'#554432',log?3:2);rect(c,left+6,-radius-5,2,1,'#b39562');}c.restore();
+  }
   function icon(c,type,x=0,y=0,size=48){c.save();c.translate(Math.round(x),Math.round(y));c.scale(size/48,size/48);
     if(root.PEEquipment&&root.PEEquipment.isTool(type)){root.PEEquipment.drawIcon(c,type);c.restore();return;}
     const branch=(a,b,d)=>line(c,[[a,b],[d,38]],'#35271e',5);
@@ -142,9 +155,6 @@
       c.fillStyle='#273c36';c.fillRect(0,0,W,H);
       this.landscape(cam);
       const daylight=.12+.88*Math.max(0,Math.sin((s.dayTime-.22)*Math.PI*2)),dawn=Math.exp(-Math.pow((s.dayTime-.29)/.085,2)),dusk=Math.exp(-Math.pow((s.dayTime-.73)/.09,2)),warm=Math.max(dawn,dusk);
-      // Animated light and drifting atmosphere are rendered in world space.
-      c.save();c.globalCompositeOperation='screen';for(let i=0;i<4;i++){const x=((i*413-cam*.32)%(W+430)+W+430)%(W+430)-210;const g=c.createLinearGradient(x,45,x+165,390);g.addColorStop(0,'#dfdbae00');g.addColorStop(.2,'#dddca5'+Math.round(daylight*13).toString(16).padStart(2,'0'));g.addColorStop(1,'#c4d3b300');poly(c,[[x,0],[x+36,0],[x+225,415],[x+110,415]],g);}
-      for(let i=0;i<4;i++){const x=(i*317+t*2-cam*.2)%(W+500)-170,y=275+i*22;const g=c.createRadialGradient(x,y,2,x,y,160);g.addColorStop(0,'#9ab4b108');g.addColorStop(1,'#aac7c000');c.fillStyle=g;c.fillRect(x-160,y-60,320,120);}c.restore();
       c.save();c.translate(-Math.round(cam),0);
       if(root.PEWorldArt)root.PEWorldArt.drawMid(this,engine);
       for(const water of engine.water)if(Math.abs(water.x-cam-W*.5)<W*.65){
@@ -161,7 +171,11 @@
       }
       for(const n of engine.nodes){if(n.x<cam-105||n.x>cam+W+105||s.picked[n.id]>s.playSeconds)continue;const y=ground(n.x);if(n.type==='tree'&&this.props)this.harvestTree(n.x);else{c.save();if(['stone','wood'].includes(n.type)){c.translate(n.x,y+1);c.rotate(Math.atan2(ground(n.x+14)-ground(n.x-14),28));c.translate(-n.x,-y);}worldNode(c,n,y,t);c.restore();}}
       for(const f of s.falling||[]){const u=clamp(f.time/1.8,0,1);this.harvestTree(f.x,f.direction*u*u*Math.PI/2);}
-      for(const d of s.drops||[]){const y=ground(d.x);if(d.type==='log'){line(c,[[d.x-19,y-5],[d.x+20,y-5]],'#493b26',12);line(c,[[d.x-18,y-8],[d.x+19,y-8]],'#99804d',3);oval(c,d.x+20,y-5,5,6,'#c4a16b');oval(c,d.x+20,y-5,2,3,'#80633b');}else if(d.type==='carcass'){if(this.wildlife){c.save();c.translate(d.x,y);c.rotate(.18);c.scale(1,.45);c.translate(-d.x,-y);this.animalSprite({type:d.species,x:d.x,facing:1,stride:0,vx:0});c.restore();}}else if(d.type==='firewood')icon(c,'firewood',d.x-12,y-16,23);else worldNode(c,d,y,t);}
+      for(const d of [...(s.drops||[])].sort((a,b)=>(a.depth||0)-(b.depth||0))){if(d.x<cam-70||d.x>cam+W+70)continue;const y=ground(d.x)+(d.depth||0);
+        if(['log','firewood'].includes(d.type))woodDrop(c,d,y);
+        else if(d.type==='carcass'){if(this.wildlife){c.save();c.translate(d.x,y);c.rotate(.18);c.scale(1,.45);c.translate(-d.x,-y);this.animalSprite({type:d.species,x:d.x,facing:1,stride:0,vx:0});c.restore();}}
+        else{c.save();c.translate(d.x,y);c.rotate(d.angle||0);c.translate(-d.x,-y);worldNode(c,d,y,t);c.restore();}
+      }
       for(const obj of s.structures)if(obj.x>cam-100&&obj.x<cam+W+100){if(obj.type==='shelter'&&this.props)this.prop('shelter',obj.x,ground(obj.x)+3,100);else structure(c,obj,t);}
       if(engine.npc.x>cam-180&&engine.npc.x<cam+W+180)this.prop('cabin',engine.npc.x-6,ground(engine.npc.x)+8,196);
       for(const a of s.animals)if(a.alive&&a.x>cam-70&&a.x<cam+W+70){if(this.wildlife)this.animalSprite(a);else animal(c,a,t);}
@@ -184,11 +198,10 @@
       if(engine.fishing){const f=engine.fishing,p=s.player,tip=root.PEEquipment?root.PEEquipment.fishingLineOrigin(engine):{x:p.x+22,y:ground(p.x)-39},y=ground(f.x);line(c,[[tip.x,tip.y],[f.x,y-10]],'#c9c4a788',1);rect(c,f.x,y-8+Math.sin(t*5)*(f.stage==='bite'?4:1),3,5,'#cf9255');}
       if(this.hover){const o=this.hover,y=ground(o.x),w=o.type==='tree'?24:o.type==='animal'?24:17;line(c,[[o.x-w,y-5],[o.x-w,y+3],[o.x-w+7,y+3]],'#e5d6a2',1);line(c,[[o.x+w-7,y+3],[o.x+w,y+3],[o.x+w,y-5]],'#e5d6a2',1);}
       c.restore();
-      // Contact bounce and directional pools of light travel gently over the path.
-      c.save();c.globalCompositeOperation='screen';for(let i=0;i<6;i++){const x=((i*283-cam*.91+t*1.8)%(W+350)+W+350)%(W+350)-140,y=ground(x+cam)-8;c.save();c.translate(x,y);c.scale(1,.22);const g=c.createRadialGradient(0,0,2,0,0,85);g.addColorStop(0,`rgba(225,${Math.round(205-warm*45)},125,${daylight*(.11+warm*.07)})`);g.addColorStop(1,'#ceb96c00');c.fillStyle=g;c.fillRect(-85,-85,170,170);c.restore();}c.restore();
+      if(root.PEWorldArt?.drawLight)root.PEWorldArt.drawLight(this,engine);
       if(root.PEWorldArt)root.PEWorldArt.drawForeground(this,engine);
       c.fillStyle=`rgba(7,17,35,${(1-daylight)*.76+(s.weather==='rain'?.07:0)})`;c.fillRect(0,0,W,H);if(warm>.02){c.globalCompositeOperation='soft-light';c.fillStyle=`rgba(223,129,64,${warm*.46})`;c.fillRect(0,0,W,H);c.globalCompositeOperation='source-over';}
-      if(s.weather==='rain'){c.globalAlpha=.3;for(let i=0;i<100;i++){const x=(random(i)*W+t*43)%W,y=(random(i+66)*H+t*280)%H;line(c,[[x,y],[x-3,y+10]],'#a0b3b0',1);}c.globalAlpha=1;}
+      if(s.weather==='rain'){c.globalAlpha=.3;for(let i=0;i<25+(s.rainIntensity??.3)*90;i++){const x=(random(i)*W+t*43)%W,y=(random(i+66)*H+t*280)%H;line(c,[[x,y],[x-3,y+10]],'#a0b3b0',1);}c.globalAlpha=1;}
       for(let i=0;i<38;i++){const x=(random(i+55)*W+t*(2+random(i)*3)-cam*.18+W*10)%W,y=70+random(i+17)*365+Math.sin(t*.3+i)*12;rect(c,x,y,1,1,daylight>.5?'#d0d8aa55':'#bbd99488');}
       const vignette=c.createRadialGradient(W*.52,H*.48,H*.25,W*.5,H*.5,W*.66);vignette.addColorStop(0,'#08171000');vignette.addColorStop(1,'#020b0780');c.fillStyle=vignette;c.fillRect(0,0,W,H);
       for(const e of engine.effects){c.globalAlpha=clamp(e.life,0,1);c.font='12px Georgia';c.textAlign='center';const label=root.L?root.L.text(e.text):e.text;c.fillStyle='#0e211b';c.fillText(label,e.x-cam+1,e.y+1);c.fillStyle='#eee0b2';c.fillText(label,e.x-cam,e.y);c.globalAlpha=1;}

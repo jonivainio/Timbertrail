@@ -99,3 +99,14 @@ for(let i=0;i<36;i++)timing.update(.05);
 assert.deepEqual(axeTimes,[.45,1.35],'axe audio lands on the two rendered impact frames before completion');
 
 console.log('Tool progression verified.');
+
+const shelter=recipes.find(r=>r.id==='shelter');
+assert.equal(shelter.need.firewood,8);
+const camp=new Engine();camp.start();Object.assign(camp.state.inventory,{axe:1,wood:50,fiber:50,cord:10});camp.state.toolDurability.axe=75;
+assert.equal(camp.requirements(shelter),false,'branches cannot replace stout shelter poles');camp.state.inventory.firewood=8;assert.equal(camp.craft('shelter'),true);assert.equal(camp.state.inventory.firewood,0);
+const scatter=new Engine();scatter.start();for(let i=0;i<3;i++)scatter.scatterDrop('firewood',700,i,49);
+assert.equal(new Set(scatter.state.drops.map(d=>d.angle)).size,3);assert.equal(new Set(scatter.state.drops.map(d=>d.depth)).size,3);
+const positions=scatter.state.drops.map(({x,angle,depth,variant})=>({x,angle,depth,variant}));const reload=new Engine();reload.load(JSON.parse(scatter.save()));assert.deepEqual(reload.state.drops.map(({x,angle,depth,variant})=>({x,angle,depth,variant})),positions);
+let rainy=0;for(let day=2;day<202;day++){const e=new Engine();e.start();e.state.day=day-1;e.state.dayTime=.99999;e.update(.05);if(e.state.weather==='rain')rainy++;}assert.ok(rainy<40&&rainy>5,'rain is uncommon across a representative calendar');
+global.PE=require('../engine.js');const world=require('../world-art.js');assert.equal(world.lightProfile({day:1,dayTime:.95,weather:'clear'}).strength,0);assert.ok(world.lightProfile({day:1,dayTime:.45,weather:'clear'}).strength>world.lightProfile({day:1,dayTime:.45,weather:'rain'}).strength*5);
+console.log('PASS shelter poles, varied persistent wood scattering, uncommon rain and sun/rain light response.');

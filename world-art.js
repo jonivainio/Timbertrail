@@ -68,6 +68,38 @@
       c.restore();
     }
   }
-  root.PEWorldArt={drawLandscape,drawMid,drawForeground,contact,BACKGROUND_WIDTH:BW};
+  function lightProfile(s){
+    const sun=Math.max(0,Math.sin((s.dayTime-.22)*Math.PI*2)),warm=Math.max(Math.exp(-Math.pow((s.dayTime-.29)/.085,2)),Math.exp(-Math.pow((s.dayTime-.73)/.09,2)));
+    return {strength:sun*(s.weather==='rain'?.12:1),warm,slope:.48-(s.dayTime-.25)*1.15,mist:s.weather!=='rain'&&random(s.day+83)>.48?Math.exp(-Math.pow((s.dayTime-.29)/.065,2)):0};
+  }
+  function drawLight(renderer,engine){
+    const c=renderer.c,s=engine.state,cam=s.camera,t=s.playSeconds,profile=lightProfile(s),{strength,warm,slope,mist}=profile;
+    if(strength>.01){
+      const surface=renderer._lightSurface||(renderer._lightSurface=renderer.makeCanvas(W,H)),l=surface.getContext('2d');l.setTransform(1,0,0,1,0,0);l.clearRect(0,0,W,H);l.save();l.translate(-cam,0);
+      // World-fixed canopy openings: beams sway rather than sliding with the camera.
+      for(let i=0;i<24;i++){const source=70+i*279+random(i+61)*130,sway=Math.sin(t*.16+i*1.7)*9+Math.sin(t*.063+i)*4,x=source+sway,y=ground(x+180),foot=x+slope*y,width=20+random(i+11)*25;if(foot<cam-190||foot>cam+W+190)continue;
+        const pulse=.78+Math.sin(t*.23+i)*.12,g=l.createLinearGradient(x,0,foot,y);g.addColorStop(0,'#fff0c000');g.addColorStop(.25,`rgba(245,225,171,${strength*.065*pulse})`);g.addColorStop(.8,`rgba(242,223,164,${strength*.095*pulse})`);g.addColorStop(1,`rgba(255,219,139,${strength*.045})`);
+        l.fillStyle=g;l.beginPath();l.moveTo(x-width*.25,0);l.lineTo(x+width*.25,0);l.lineTo(foot+width,ground(foot+width));for(let dx=width;dx>=-width;dx-=4)l.lineTo(foot+dx,ground(foot+dx));l.closePath();l.fill();
+        // Thin, gently wandering cores avoid a flat hard-edged stripe.
+        l.globalAlpha=.35;for(let j=0;j<3;j++){const dx=Math.sin(t*.12+i+j)*7+j*7;l.beginPath();l.moveTo(x+dx,45);l.lineTo(x+dx+2,45);l.lineTo(foot+dx+5,ground(foot+dx));l.lineTo(foot+dx,ground(foot+dx));l.fill();}l.globalAlpha=1;
+        l.save();l.beginPath();l.moveTo(foot-width*2,H);for(let dx=-width*2;dx<=width*2;dx+=3)l.lineTo(foot+dx,ground(foot+dx));l.lineTo(foot+width*2,H);l.closePath();l.clip();
+        l.translate(foot,ground(foot)+4);l.scale(1,.26);const pool=l.createRadialGradient(0,0,1,0,0,width*2);pool.addColorStop(0,`rgba(243,${Math.round(226-warm*23)},153,${strength*.22*pulse})`);pool.addColorStop(1,'#dfcb9400');l.fillStyle=pool;l.fillRect(-width*2,-width*2,width*4,width*4);l.restore();
+      }
+      // Actual sprite alpha occludes light. No ray shines through a trunk or rock.
+      l.globalCompositeOperation='destination-out';const previous=renderer.c;renderer.c=l;
+      try{for(const [x,h]of [[275,310],[1790,300],[2460,340],[3820,280],[4650,335],[5650,310],[6230,320]])if(x>cam-160&&x<cam+W+160)renderer.prop('tree',x,ground(x)+5,h);
+        for(const [x,h]of [[805,43],[2030,49],[2750,46],[3590,37],[4530,52],[5850,50]])if(x>cam-100&&x<cam+W+100)renderer.prop('mound',x,ground(x)+6,h);
+        for(const n of engine.nodes)if(n.type==='tree'&&n.x>cam-100&&n.x<cam+W+100&&!(s.picked[n.id]>t))renderer.harvestTree(n.x);
+        if(engine.npc.x>cam-170&&engine.npc.x<cam+W+170)renderer.prop('cabin',engine.npc.x-6,ground(engine.npc.x)+8,196);
+        for(const a of [s.player,s.dog]){l.fillStyle='#000';l.fillRect(a.x-10,ground(a.x)-(a===s.player?56:24),20,a===s.player?58:26);}
+      }finally{renderer.c=previous;}l.restore();l.globalCompositeOperation='source-over';
+      c.save();c.globalCompositeOperation='screen';c.drawImage(surface,0,0);c.restore();
+      // Low, directional contact shadows follow the slope of the trail.
+      c.save();c.translate(-cam,0);c.globalAlpha=strength*.2;for(const n of engine.nodes){if(n.type!=='tree'||n.x<cam-100||n.x>cam+W+100||s.picked[n.id]>t)continue;const end=n.x+slope*110;c.fillStyle='#11291e';c.beginPath();c.moveTo(n.x-5,ground(n.x));c.lineTo(n.x+5,ground(n.x));c.lineTo(end+10,ground(end)+13);c.lineTo(end-12,ground(end)+14);c.closePath();c.fill();}c.restore();
+    }
+    // Mist belongs to hollows and stream banks, and only to some mornings.
+    if(mist>.015){c.save();for(const [anchor,width]of [[1295,210],[2945,265],[4150,165]]){const x=anchor-cam+Math.sin(t*.055+anchor)*20;if(x<-width||x>W+width)continue;for(let i=0;i<3;i++){const xx=x+Math.sin(t*.09+i)*25,yy=ground(anchor)-14-i*12;c.save();c.translate(xx,yy);c.scale(1,.2);const g=c.createRadialGradient(0,0,2,0,0,width);g.addColorStop(0,`rgba(178,198,191,${mist*(.045+i*.01)})`);g.addColorStop(1,'#b5c9bf00');c.fillStyle=g;c.fillRect(-width,-width,width*2,width*2);c.restore();}}c.restore();}
+  }
+  root.PEWorldArt={drawLandscape,drawMid,drawForeground,drawLight,lightProfile,contact,BACKGROUND_WIDTH:BW};
   if(typeof module!=='undefined')module.exports=root.PEWorldArt;
 })(typeof window!=='undefined'?window:globalThis);

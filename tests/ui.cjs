@@ -28,7 +28,7 @@ const context={document:doc,Image:TestImage,console,performance,setTimeout:(fn,d
 
 vm.createContext(context);for(const file of ['i18n.js','engine.js','render.js','panels.js'])vm.runInContext(fs.readFileSync(path.join(dir,file),'utf8'),context,{filename:file});
 let engine;const Base=context.PE.Engine;context.PE.Engine=class extends Base{constructor(...a){super(...a);if(!engine)engine=this;}};
-const sounds=[];context.PEAudio={play(n){sounds.push(n);},start(){},toggle(){return false;},pause(){},update(){},settings:()=>({soundOn:true,musicOn:true,soundVolume:.7,musicVolume:.4})};
+const sounds=[],mix={soundOn:true,musicOn:true,soundVolume:.7,musicVolume:.4};context.PEAudio={play(n){sounds.push(n);},start(){},toggle(){return false;},pause(){},update(){},settings:()=>({...mix}),configure:p=>Object.assign(mix,p)};
 vm.runInContext(fs.readFileSync(path.join(dir,'game.js'),'utf8'),context,{filename:'game.js'});
 const $=id=>doc.getElementById(id),click=sel=>{const b=doc.querySelector(sel);assert.ok(b,'Element exists: '+sel);assert.equal(b.disabled,false);b.dispatch('click');};
 (async()=>{await Promise.all(imageLoads);await Promise.resolve();await Promise.resolve();
@@ -40,4 +40,9 @@ assert.equal(engine.assignQuickSlot('knife','wood'),false);assert.equal(engine.a
 click('[data-panel="craft"]');assert.ok(sounds.includes('pageFlip'));click('[data-panel="map"]');assert.ok(doc.querySelector('.regional-map'));click('[data-panel="journal"]');
 click('#close-modal');assert.equal($('book-animation').src,'assets/book-open.png');advance();assert.equal($('modal-backdrop').hidden,true);assert.ok(!$('game-shell').classList.contains('journal-open'));assert.ok(sounds.filter(x=>x==='pageTurn').length>=2);
 console.log('PASS Journal frame order, tabs/audio events, one typed tool slot, save migration and boot. DOM harness only; not browser layout QA.');
+doc.dispatch('keydown',{code:'Tab'});advance();assert.equal($('modal').dataset.panel,'inventory');
+const item=doc.querySelector('[data-item-drag="knife"]'),target=doc.querySelector('[data-slot="knife"]');let transfer='';const dataTransfer={setData:(_,v)=>transfer=v,getData:()=>transfer};item.dispatch('dragstart',{dataTransfer});assert.ok(target.classList.contains('drop-ready'));target.dispatch('drop',{dataTransfer});assert.equal(engine.state.quickTools.knife,'knife');
+click('[data-panel="map"]');assert.equal(doc.querySelectorAll('.region-pin').length,5);assert.equal(doc.querySelectorAll('.region-pin.available').length,2);const beforeX=engine.state.player.x;click('[data-region="river"]');assert.equal(engine.state.player.x,beforeX);assert.ok($('region-description').textContent.includes('not playable yet'));click('#close-modal');advance();
+click('[data-panel="settings"]');assert.equal(doc.querySelectorAll('input[data-audio-volume]').length,2);click('[data-audio-channel="musicOn"]');assert.equal(mix.musicOn,false);assert.equal(mix.soundOn,true);const slider=$('volume-music');slider.value='27';slider.dispatch('input');assert.equal(mix.musicVolume,.27);click('[data-language="fi"]');assert.ok($('modal-content').textContent.includes('Musiikki'));click('[data-language="en"]');
+console.log('PASS Tab shortcut, actual drag/drop events, map region availability and independent audio controls.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -33,7 +33,7 @@
     {id:'wood',name:'Kindling',need:{firewood:1},tool:'knife',toolAny:['knife','puukko'],amount:3,desc:'Shave one split billet into three small branches for crafting or lighting a fire.'},
     {id:'flintaxe',need:{stone:2,wood:3,cord:1},tool:'knife',toolAny:['knife','puukko'],desc:'Valmista ensin piikiviveitsi ja naru. Hidas kivikirves kaataa puun ja pilkkoo rankapuut.'},
     {id:'campfire',name:'Nuotiokehä',need:{stone:4,wood:4},tool:'flintaxe',toolAny:['flintaxe','axe'],structure:'fire',desc:'Rakenna jalkojesi viereen. Lämmittää ja kypsentää ruokaa.'},
-    {id:'shelter',name:'Laavusuoja',need:{wood:12,fiber:6,cord:2},tool:'flintaxe',toolAny:['flintaxe','axe'],structure:'shelter',desc:'Oma lepopaikka. Nuku aamuun ja palauta voimasi.'},
+    {id:'shelter',name:'Laavusuoja',need:{firewood:8,wood:4,fiber:6,cord:2},tool:'flintaxe',toolAny:['flintaxe','axe'],structure:'shelter',desc:'Oma lepopaikka. Nuku aamuun ja palauta voimasi.'},
     {id:'bow',need:{wood:4,cord:2},tool:'knife',toolAny:['knife','puukko'],desc:'Lähesty riistaa kyykyssä. Muista valmistaa myös nuolia.'},
     {id:'arrows',name:'Neljä nuolta',need:{wood:1,stone:1},tool:'knife',toolAny:['knife','puukko'],amount:4,desc:'Neljä nuolta saarijouseen.'},
     {id:'rod',need:{wood:3,cord:2},tool:'knife',toolAny:['knife','puukko'],desc:'Vapa veden äärelle. Nosta kala, kun koho nykäisee.'},
@@ -52,7 +52,7 @@
     dog:{x:506,facing:1,mode:'sit',delay:.8,idle:0,nextDecision:7,lastMoving:false,stride:0},
     inventory:Object.fromEntries(Object.keys(items).map(k=>[k,k==='berries'?3:0])),toolDurability:{},quickFood:'berries',quickTools:{knife:'knife',axe:'flintaxe'},equipped:null,
     structures:[{id:'oldfire',type:'oldfire',x:710,lit:false,fuel:0}],picked:{},completed:{},drops:[],falling:[],traders:{aarni:{introDone:false}},
-    journal:{seen:{},hunted:{},caught:{}},day:1,dayTime:.38,weather:'clear',currentMap:'forest',camera:181,playSeconds:0,rowanMet:false,traded:false,
+    journal:{seen:{},hunted:{},caught:{}},day:1,dayTime:.38,weather:'clear',rainIntensity:0,currentMap:'forest',camera:181,playSeconds:0,rowanMet:false,traded:false,
     animals:[['rabbit',1510],['grouse',5480],['deer',2810],['bear',4660]].map(([type,x],i)=>({id:'a'+i,type,x,home:x,vx:0,facing:i%2?1:-1,hp:type==='bear'?5:type==='deer'?2:1,alive:true,mode:x>WORLD?'away':'graze',returnAt:150+i*25,timer:8+i,flight:0,stride:0}))
   };}
   class Engine {
@@ -96,10 +96,11 @@
     emit(type,data={}){if(type==='change'||type==='save')this.rememberItems();this.onEvent({type,...data});}
     notify(text){this.emit('notice',{text});}
     sound(name,intensity=1){this.emit('sound',{name,intensity});}
-    start(saved=null){if(saved)this.load(saved);this.state.running=true;this.state.player.moving=false;this.keys={};this.action=null;this.fishing=null;this.walkTarget=null;this.attack=null;this.projectiles=[];this.emit('change');}
+    start(saved=null){if(saved)this.load(saved);this.state.running=true;this.state.player.moving=false;this.endOfTrailShown=false;this.sinceSave=0;this.effects=[];this.keys={};this.action=null;this.fishing=null;this.walkTarget=null;this.attack=null;this.projectiles=[];this.emit('change');}
     load(saved){
       const defaults=fresh(),safeNumber=(v,d,min,max)=>Number.isFinite(v)?clamp(v,min,max):d;
       this.state={...defaults,day:safeNumber(saved.day,1,1,9999),dayTime:safeNumber(saved.dayTime,.38,0,1),playSeconds:safeNumber(saved.playSeconds,0,0,1e9),weather:['clear','rain','mist'].includes(saved.weather)?saved.weather:'clear',rowanMet:!!saved.rowanMet,traded:!!saved.traded};
+      this.state.rainIntensity=this.state.weather==='rain'?safeNumber(saved.rainIntensity,.3,.15,1):0;
       for(const k of Object.keys(defaults.inventory))this.state.inventory[k]=Math.floor(safeNumber(saved.inventory?.[k],defaults.inventory[k],0,99999));
       this.restoreToolDurability(saved.toolDurability);
       for(const id of Object.keys(items))if(saved.discovered?.[id]===true)this.state.discovered[id]=true;
@@ -123,9 +124,11 @@
       // Preserve v2 animal state; a v1 save keeps its inventory, progress and camp.
       if(saved.version>=3&&Array.isArray(saved.animals))for(const a of this.state.animals){const old=saved.animals.find(v=>v.id===a.id);if(old){a.x=safeNumber(old.x,a.x,-1800,WORLD+1800);a.alive=old.alive!==false;a.hp=safeNumber(old.hp,a.hp,0,5);a.respawnAt=safeNumber(old.respawnAt,0,0,1e9);a.returnAt=safeNumber(old.returnAt,0,0,1e9);a.mode=['away','flee','graze','walk'].includes(old.mode)?old.mode:'graze';a.departing=!!old.departing;a.facing=old.facing===-1?-1:1;}}
       this.state.traders.aarni.introDone=!!saved.traders?.aarni?.introDone;
-      if(Array.isArray(saved.drops))this.state.drops=saved.drops.filter(d=>['log','wood','firewood','carcass'].includes(d.type)&&Number.isFinite(d.x)).slice(0,300).map((d,i)=>({id:'drop'+i,type:d.type,x:clamp(d.x,10,WORLD-10),species:animalNames[d.species]?d.species:'rabbit',amount:safeNumber(d.amount,1,1,10)}));
+      if(Array.isArray(saved.drops))this.state.drops=saved.drops.filter(d=>['log','wood','firewood','carcass'].includes(d.type)&&Number.isFinite(d.x)).slice(0,300).map((d,i)=>({id:'drop'+i,type:d.type,x:clamp(d.x,10,WORLD-10),species:animalNames[d.species]?d.species:'rabbit',amount:safeNumber(d.amount,1,1,10),angle:safeNumber(d.angle,(random(i+47)-.5)*.8,-1.2,1.2),depth:safeNumber(d.depth,random(i+13)*7-2,-4,9),variant:safeNumber(d.variant,i,0,1e8)}));
       if(Array.isArray(saved.falling))this.state.falling=saved.falling.filter(f=>Number.isFinite(f.x)).slice(0,30).map((f,i)=>({id:'fall'+i,x:f.x,time:safeNumber(f.time,0,0,1.8),direction:f.direction===-1?-1:1}));
     }
+    dailyWeather(){const s=this.state;s.weather=random(s.day+381)>.87?'rain':'clear';s.rainIntensity=s.weather==='rain'?(random(s.day+912)>.9?.95:random(s.day+18)>.6?.55:.25):0;}
+    scatterDrop(type,x,index,spread){const s=this.state,seed=x*1.73+s.playSeconds*3.1+index*29.47,offset=(random(seed)-.5)*spread*2;const drop={id:type+'-'+s.playSeconds+'-'+s.drops.length+'-'+index,type,x:clamp(x+offset,25,WORLD-25),angle:(random(seed+17)-.5)*(type==='log'?.26:.7),depth:random(seed+29)*10-3,variant:Math.floor(random(seed+43)*10000),amount:1};s.drops.push(drop);return drop;}
     save(){this.rememberItems();return JSON.stringify(this.state);}
     finishTask(id){if(!this.state.completed[id]){this.state.completed[id]=true;this.sound('task',.6);this.emit('change');}}
     setCrouch(value){if(this.state.player.crouching!==value){this.state.player.crouching=value;this.sound('rustle',.22);this.emit('change');}}
@@ -185,7 +188,7 @@
         this.activeFire=fire.id;
         this.emit('panel',{panel:'fire'});return;
       }
-      if(target.type==='shelter'){s.day++;s.dayTime=.28;for(const f of s.structures){f.fuel=0;f.lit=false;}p.energy=100;p.warmth=95;p.health=clamp(p.health+30,0,100);p.hunger=clamp(p.hunger-12,1,100);p.thirst=clamp(p.thirst-15,1,100);this.sound('sleep');this.notify('Heräät uuteen aamuun. Kajo venyttelee vieressä.');this.emit('change');return;}
+      if(target.type==='shelter'){s.day++;this.dailyWeather();s.dayTime=.28;for(const f of s.structures){f.fuel=0;f.lit=false;}p.energy=100;p.warmth=95;p.health=clamp(p.health+30,0,100);p.hunger=clamp(p.hunger-12,1,100);p.thirst=clamp(p.thirst-15,1,100);this.sound('sleep');this.notify('Heräät uuteen aamuun. Kajo venyttelee vieressä.');this.emit('change');return;}
       if(target.type==='trap'){const trap=s.structures.find(v=>v.id===target.id);if(trap.readyAt>s.playSeconds)return this.notify('Ansa on viritetty. Tarkista vähän myöhemmin.');s.drops.push({id:'trapped-'+s.playSeconds,type:'carcass',species:'rabbit',x:target.x+24});s.journal.hunted.rabbit=true;trap.readyAt=s.playSeconds+90;this.notify('Game down. Approach with a flint knife or puukko to recover meat and hide.');this.sound('pickup');this.emit('change');return;}
       if(target.type==='water'){
         if(s.equipped==='rod'){if(!this.fishing){this.fishing={time:0,biteAt:2.5+random(s.playSeconds)*3,stage:'wait',x:target.x};this.sound('cast');this.emit('change');}return;}
@@ -213,7 +216,7 @@
     }
     update(dt){
       const s=this.state;if(!s.running)return;dt=Math.min(dt,.05);s.playSeconds+=dt;this.shotCooldown=Math.max(0,this.shotCooldown-dt);
-      s.dayTime+=dt/900;if(s.dayTime>=1){s.dayTime-=1;s.day++;s.weather=random(s.day)>.7?'rain':'clear';}
+      s.dayTime+=dt/900;if(s.dayTime>=1){s.dayTime-=1;s.day++;this.dailyWeather();}
       const p=s.player,manual=(this.keys.KeyD||this.keys.ArrowRight?1:0)-(this.keys.KeyA||this.keys.ArrowLeft?1:0),sprint=!p.crouching&&(this.keys.ShiftLeft||this.keys.ShiftRight)&&p.energy>2;
       if(manual){this.walkTarget=null;this.action=null;}
       let dir=manual;
@@ -234,7 +237,7 @@
         // each .9s swing. Sound only at that contact, never at action start.
         if(['tree','log'].includes(a.target.type)){const first=Math.floor((previous-.45+1e-7)/.9),last=Math.floor((a.time-.45+1e-7)/.9);for(let swing=first+1;swing<=last;swing++)this.sound('axe',.65);}
         if(a.time>=a.duration){this.completeAction(a.target);this.action=null;this.emit('change');}}
-      for(const fall of s.falling){fall.time+=dt;if(fall.time>=1.8&&!fall.done){fall.done=true;for(let i=0;i<3;i++)s.drops.push({id:'log-'+s.playSeconds+'-'+i,type:'log',x:clamp(fall.x+fall.direction*(35+i*34),15,WORLD-15)});for(let i=0;i<4;i++)s.drops.push({id:'branch-'+s.playSeconds+'-'+i,type:'wood',x:clamp(fall.x-28+i*21,15,WORLD-15),amount:1});this.sound('impact',.6);this.emit('change');}}s.falling=s.falling.filter(f=>!f.done);
+      for(const fall of s.falling){fall.time+=dt;if(fall.time>=1.8&&!fall.done){fall.done=true;for(let i=0;i<3;i++)this.scatterDrop('log',fall.x+fall.direction*(35+i*34),i,10);for(let i=0;i<4;i++)this.scatterDrop('wood',fall.x+fall.direction*48,i,70);this.sound('impact',.6);this.emit('change');}}s.falling=s.falling.filter(f=>!f.done);
       for(const fire of s.structures)if(fire.lit){fire.fuel=Math.max(0,(fire.fuel||0)-dt);if(fire.fuel===0){fire.lit=false;this.emit('change');if(Math.abs(fire.x-p.x)<250)this.notify('The campfire has gone out. Add dry wood to relight it.');}}
       if(this.attack){const a=this.attack;a.time+=dt;if(a.time>=.32&&!a.released){a.released=true;const origin=root.PEEquipment?root.PEEquipment.projectileOrigin(this):{x:p.x+p.facing*13,y:ground(p.x)-(p.crouching?24:40)},dx=a.wx-origin.x,dy=a.wy-origin.y,len=Math.hypot(dx,dy)||1;s.inventory.arrows--;this.projectiles.push({x:origin.x,y:origin.y,vx:dx/len*390,vy:dy/len*390,life:2.5});this.sound('bow',.7);this.emit('change');}if(a.time>=a.duration)this.attack=null;}
       if(this.fishing){const f=this.fishing;f.time+=dt;if(f.stage==='wait'&&f.time>f.biteAt){f.stage='bite';this.sound('water',.5);this.emit('change');}if(f.time>f.biteAt+1.8){this.fishing=null;this.notify('Kala nykäisi ja katosi. Kokeile uudestaan.');this.emit('change');}}
@@ -248,7 +251,7 @@
     }
     completeAction(target){const s=this.state,type=target.type;
       if(type==='tree'){this.consumeTool(s.equipped,s.equipped==='flintaxe'?2:1);s.picked[target.id]=1e12;s.falling.push({id:target.id,x:target.x,time:0,direction:s.player.facing});return;}
-      if(type==='log'){this.consumeTool(s.equipped);s.drops=s.drops.filter(d=>d.id!==target.id);for(let i=0;i<3;i++)s.drops.push({id:'billet-'+s.playSeconds+'-'+i,type:'firewood',x:target.x+(i-1)*17,amount:1});this.sound('wood',.7);return;}
+      if(type==='log'){this.consumeTool(s.equipped);s.drops=s.drops.filter(d=>d.id!==target.id);for(let i=0;i<3;i++)this.scatterDrop('firewood',target.x,i,49);this.sound('wood',.7);return;}
       if(type==='carcass'){this.consumeTool(s.equipped);s.drops=s.drops.filter(d=>d.id!==target.id);s.inventory.rawMeat+=target.species==='deer'?3:target.species==='bear'?4:1;if(['deer','bear'].includes(target.species))s.inventory.hide++;this.notify('Skinned and packed. Cook the meat at a campfire.');this.sound('rustle',.6);return;}
       const amount=target.amount||(type==='fiber'?2:1);s.inventory[type]+=amount;
       if(s.drops.some(d=>d.id===target.id))s.drops=s.drops.filter(d=>d.id!==target.id);else s.picked[target.id]=s.playSeconds+360;
