@@ -38,6 +38,7 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
       const windLfo = audio.createOscillator(), windDepth = audio.createGain();
       windLfo.frequency.value = .075; windDepth.gain.value = 0; windLfo.connect(windDepth).connect(windGain.gain); windLfo.start();
       audioBus = { master, ambience, music, sfx, compressor, buffer, foleyBuffer, windGain, rainGain };
+      root.PEAudioSamples?.load(audio);
       applyMix();audioClock.nextMusic = audio.currentTime + .15;
       audioClock.nextBird = game.playSeconds + 3;
     } catch { soundOn = false; audio = null; audioBus = null; }
@@ -107,6 +108,7 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     ensureAudio();
     if (!audioBus) return;
     const now = audio.currentTime, v = intensity;
+    if(root.PEAudioSamples?.play(name,audio,audioBus.sfx,intensity,pan))return;
     if (name === 'uiOpen') { synthTone(218, 292, .11, .018 * v, 'triangle', now, pan); noiseBurst(.055, .009 * v, 1600, 330, now, pan); }
     else if (name === 'uiClose') synthTone(270, 190, .09, .014 * v, 'triangle', now, pan);
     else if (name === 'pageTurn') { noiseBurst(.32, .035 * v, 4800, 600, now, pan); noiseBurst(.18, .025 * v, 3500, 700, now + .12, pan); noiseBurst(.10, .017 * v, 5300, 850, now + .25, pan); }

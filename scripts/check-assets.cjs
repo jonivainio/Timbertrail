@@ -11,3 +11,5 @@ assets.push('aarni-river','hiljalampi','hiljalampi-cabin','sienilampi-pier','cab
 assets.push('traveller-run',...['arrows','berries','bow','campfire','cookedMeat','cord','fiber','firewood','hide','kindling','mushroom','rawMeat','shelter','stone','trap','wood'].map(id=>'icon-'+id));
 for(const name of assets){const b=fs.readFileSync(path.join(base,'assets',name+'.png'));assert.equal(b.toString('hex',0,8),'89504e470d0a1a0a',name+' PNG');assert.ok(b.readUInt32BE(16)>0&&b.readUInt32BE(20)>0);}
 console.log(`PASS ${assets.length} required images, script syntax, relative asset references${base===root?'':' in production build'}`);
+
+console.log('PASS '+require('./sounds.cjs').readLibrary(base).length+' registered audio files and provenance');

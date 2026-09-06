@@ -1,5 +1,9 @@
 # Timbertrail — working direction
 
+## Pixabay sound acquisition
+
+See `assets/PIXABAY-AUDIO.md` for source research, Finnish user steps and the reusable assistant workflow. `scripts/sounds.cjs` offers search URLs, reviewed local import and integrity/provenance checks. `assets/audio/library.json` is the authority; `audio-samples.js` preloads registered clips when Web Audio starts, with immediate procedural fallback while pending or on failure. Samples use the existing SFX bus, master pause, mute and volume. Short reel samples fit the existing 0.14/0.28-second scheduling cadence; no persistent loops or saved-state changes. Build copies registered audio only. The initial registry contains no downloaded or listening-approved Pixabay clips. Automated checks do not verify actual decoding or perceived sound quality.
+
 ## Spinning fishing v1 (0.8.0)
 
 `fishing.js` owns the dependency-free simulation. `PEFishing.ready/canCast` gates the Sienilampi chair, sitting state and equipped/owned rod. `press/release/cancel` own an explicit charge → flight → wet → fight → catch/cancel chain. Fixed 1/120-second substeps make lure and tension results independent of normal frame rates. The browser caps elapsed frame time; hidden tabs and open menus pause simulation instead of accumulating a catch-up burst. Casts/total catches/personal best weights are persistent in sanitized `state.fishery`; the shoal, line, lure, input, active fight and catch overlay are transient. Reload/travel never resumes a held button or active hook. Old inventory/tool IDs and saves are unchanged.

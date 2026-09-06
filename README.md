@@ -45,6 +45,8 @@ Start with berries, no tools. Craft a flint knife, cord and flint axe. Trade hid
 
 ## Development and checks
 
+Pixabay sound workflow: [Finnish instructions, search candidates and import steps](assets/PIXABAY-AUDIO.md). Run `npm run sounds -- search` for action-specific searches. Reviewed local clips can replace procedural effects through `assets/audio/library.json`; the initial library is empty. Pixabay's documented public API does not include sounds. Sample loading requires HTTP/Pages; blocked or missing samples retain procedural audio.
+
 Node.js 22 or later; no npm install required.
 
 ```sh
