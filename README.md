@@ -33,7 +33,7 @@ The workflow tests and builds on main, then deploys the static output. GitHub Pa
 
 ## Woodland polish — September 2026
 
-- Journal opens with Tab from gameplay (Tab navigates controls inside it); vertical tabs and independent page scrolling. One knife, axe and food slot with typed drag/drop.
+- Tab opens and closes Journal; vertical tabs and independent page scrolling. One knife, axe and food slot with typed drag/drop. Shift+Tab navigates controls backwards; the panels remain fully mouse-operated.
 - User-supplied map and main-menu illustration. Forest and neighboring Riverbank have pastel-red markers. Riverbank is a preview of the next chapter, not a second playable map; three further biomes are grey.
 - Lean-to requires 8 large sticks, 4 branches, 6 fibre and 2 cord, plus a usable axe.
 - Bark-covered logs and irregularly scattered billets; positions, rotation and visual variants survive saving.
@@ -46,4 +46,18 @@ For desktop work, attach this actual repository directory as the local project's
 
 ## Art and scope
 
-Original generated art and user-supplied props; no Wild n Chill assets are included. Prompt/source notes live in assets/*.md. Lighting is stylized 2D, not ray tracing. Full wilderness chapters, cabin restoration and a Steam build are future work.
+Original generated art and user-supplied props. Prompt/source notes live in assets/*.md. Lighting is stylized 2D, not ray tracing. Full wilderness chapters, cabin restoration and a Steam build are future work.
+
+## Companion and campfire update
+
+- S/down toggles crouching; W/up stands. Shift runs with six dedicated illustrated poses, separate from walking.
+- Hover Kajo and scroll to choose petting, stick throwing, or retrieval when a downed grouse is nearby. Click to approach/confirm. Retrieved birds stay on the ground and still require a knife for skinning. No live animals are retrieved.
+- Journal's loose map occupies nearly the full spread. Region descriptions appear at their markers; only Forest is playable.
+- Sixteen supplied item images replace placeholders. Kindling is the shaving recipe's icon; its output remains dry branches, preserving existing saves and recipes.
+- Layered campfire tongues, drifting sparks, embers, light on nearby textures and a terrain-following warm pool. This is artistic 2D compositing, not physically simulated illumination.
+- Slightly more audible daytime birds and occasional wind. Menu rays, dust and localized mist animate subtly; reduced-motion preferences are respected.
+- Forest nights approach a warmth floor of 8 (5 in rain), without cold damage from night cooling alone. Fires and shelter remain useful. Hunger/thirst are separate risks.
+
+## Working copy and future updates
+
+This repository is now the local Timbertrail game project's working folder. The earlier pine-and-ember folder remains untouched; do not edit both copies. New topical tasks should read AGENTS.md, README.md and DEVELOPMENT.md, check Git status/origin, and work on this repository. Finish one shared-folder code change before starting another, or use separate Git worktrees and integrate the branches deliberately. Completed verified changes are committed/pushed to main, never force-pushed; GitHub Actions then deploys Pages. There is no continuous file mirroring or background synchronization service.

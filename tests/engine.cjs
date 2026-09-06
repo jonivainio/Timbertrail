@@ -110,3 +110,26 @@ const positions=scatter.state.drops.map(({x,angle,depth,variant})=>({x,angle,dep
 let rainy=0;for(let day=2;day<202;day++){const e=new Engine();e.start();e.state.day=day-1;e.state.dayTime=.99999;e.update(.05);if(e.state.weather==='rain')rainy++;}assert.ok(rainy<40&&rainy>5,'rain is uncommon across a representative calendar');
 global.PE=require('../engine.js');const world=require('../world-art.js');assert.equal(world.lightProfile({day:1,dayTime:.95,weather:'clear'}).strength,0);assert.ok(world.lightProfile({day:1,dayTime:.45,weather:'clear'}).strength>world.lightProfile({day:1,dayTime:.45,weather:'rain'}).strength*5);
 console.log('PASS shelter poles, varied persistent wood scattering, uncommon rain and sun/rain light response.');
+
+const companion=new Engine();companion.start();companion.state.dog.x=companion.state.player.x+120;
+companion.interact({id:'dog',type:'dog',x:companion.state.dog.x,command:'pet'});
+assert.equal(companion.walkTarget.command,'pet');
+for(let i=0;i<120&&!companion.action;i++)companion.update(.05);
+assert.equal(companion.action?.target.type,'pet','approach retains the chosen dog command');
+assert.ok(Math.abs(companion.state.player.x-companion.state.dog.x)<=27);
+for(let i=0;i<45;i++)companion.update(.05);
+assert.equal(companion.action,null);assert.equal(companion.state.dog.mode,'sit');
+assert.deepEqual(companion.dogActions(),['pet','stick']);
+companion.state.drops.push({id:'test-bird',type:'carcass',species:'grouse',x:companion.state.player.x+250});
+assert.ok(companion.dogActions().includes('retrieve'));assert.equal(companion.commandDog('retrieve'),true);
+let carried=false;for(let i=0;i<180;i++){companion.update(.05);carried||=!!companion.state.drops[0]?.carriedBy;}
+assert.equal(carried,true);assert.equal(companion.state.drops.length,1);assert.ok(!companion.state.drops[0].carriedBy);
+assert.ok(Math.abs(companion.state.drops[0].x-companion.state.player.x)<45);assert.equal(companion.state.inventory.rawMeat,0,'fetch does not bypass skinning');
+companion.state.drops[0].carriedBy='dog';companion.state.dog.mode='retrieve';companion.travel();assert.ok(!companion.state.drops[0].carriedBy,'map travel releases a carried carcass');
+const savedCompanion=new Engine();savedCompanion.load(JSON.parse(companion.save()));assert.equal(savedCompanion.state.drops.length,1);
+const jog=new Engine();jog.start();jog.keys={KeyD:true,ShiftLeft:true};jog.update(.05);assert.equal(jog.state.player.running,true);jog.setCrouch(true);jog.update(.05);assert.equal(jog.state.player.running,false);jog.keys={};jog.setCrouch(false);jog.update(.05);assert.equal(jog.state.player.running,false);
+const cold=new Engine();cold.start();cold.state.dayTime=.81;cold.state.weather='clear';cold.state.structures=[];cold.state.player.warmth=80;
+for(let i=0;i<7200;i++){cold.state.player.hunger=100;cold.state.player.thirst=100;cold.update(.05);}
+assert.ok(cold.state.player.warmth>7&&cold.state.player.warmth<17,'forest nights approach, but do not reach, freezing');
+const beforeWarmth=cold.state.player.warmth;cold.state.structures.push({type:'fire',x:cold.state.player.x,lit:true,fuel:100});cold.update(.05);assert.ok(cold.state.player.warmth>beforeWarmth);
+console.log('PASS dog approach/petting/retrieval, recoverable carcass, real running state and cold forest nights.');

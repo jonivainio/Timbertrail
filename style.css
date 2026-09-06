@@ -124,4 +124,26 @@ html[lang=en] .quick-group:before{content:"TOOLS"}html[lang=en] #quick-food:befo
 .map-sheet .cabin-pin{font-size:20px;color:#706c5f;opacity:.8;pointer-events:auto}
 .illustrated-map .map-info{height:10%;margin:0;padding:1px 10px;background:#e1c993e8;border:1px solid #876d4433;border-radius:3px;align-self:stretch;text-align:center;justify-content:center}
 .illustrated-map .map-info p{font:clamp(8px,.83cqw,11px)/1.35 Georgia,serif;color:#493927;margin:0}
+/* The loose map covers the fold, while its marker coordinates remain image-relative. */
+.journal-shell[data-panel=map] #modal-content{inset:7% 6% 5% 12%}
+.journal-shell[data-panel=map] .modal-header{top:5%;right:3%;pointer-events:none}
+.journal-shell[data-panel=map] .modal-header>div{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden}
+.journal-shell[data-panel=map] .close{pointer-events:auto;margin-left:auto;background:#e4d0a8;box-shadow:0 2px 7px #21160a66}
+.journal-shell[data-panel=map] .modal-footer{display:none}
+.journal-shell .illustrated-map{border:0;justify-content:center}
+.illustrated-map .map-sheet{height:100%;width:auto;max-width:100%;flex:none}
+.map-sheet .region-pin:focus .region-name{display:block}
+.map-sheet .region-pin:focus{z-index:5}
+.map-sheet .region-description{display:block;white-space:normal;width:clamp(100px,16cqw,185px);font:clamp(8px,.86cqw,11px)/1.4 Georgia,serif;margin-top:6px;color:#d7c8a7}
+.world-tip{white-space:pre-line;line-height:1.5}
+/* Quiet motion in the supplied title illustration, always behind controls. */
+.menu-atmosphere{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;mix-blend-mode:screen}
+.playing .menu-atmosphere{display:none}
+.menu-rays{position:absolute;left:24%;top:-20%;width:47%;height:125%;transform-origin:65% 0;background:conic-gradient(from 167deg at 65% 0,transparent 0deg,#f7e5aa16 2deg,transparent 7deg,#ede6b61a 10deg,transparent 14deg,#e6d8a010 21deg,transparent 27deg);filter:blur(3px);animation:menu-light 17s ease-in-out infinite alternate}
+.menu-mist{position:absolute;left:-12%;top:55%;width:90%;height:30%;background:radial-gradient(ellipse at 32% 60%,#b9c9b915,transparent 55%),radial-gradient(ellipse at 70% 30%,#c0d5c018,transparent 45%);filter:blur(12px);animation:menu-fog 29s ease-in-out infinite alternate}
+.menu-atmosphere>span{position:absolute;left:var(--x);top:var(--y);width:2px;height:2px;background:#ecdeb6;box-shadow:0 0 5px #f5df9f80;opacity:0;animation:menu-mote 22s linear infinite;animation-delay:var(--delay)}
+@keyframes menu-light{from{transform:rotate(-4deg);opacity:.55}to{transform:rotate(3deg);opacity:1}}
+@keyframes menu-fog{from{transform:translate(-3%,3%);opacity:.45}to{transform:translate(10%,-8%);opacity:.9}}
+@keyframes menu-mote{0%,100%{opacity:0;transform:translate(0,12px)}20%,70%{opacity:.45}90%{opacity:0;transform:translate(33px,-65px)}}
+@media(prefers-reduced-motion:reduce){.menu-atmosphere *{animation:none!important}.menu-rays{opacity:.5}.menu-mist{opacity:.35}}
 @media(max-width:760px){.journal-shell .inventory-grid{gap:6px;grid-auto-rows:clamp(38px,6cqw,65px)}#game-shell:not(.playing) .title-card{right:5%;top:8%;width:37%}.map-sheet .region-dot{width:10px;height:10px}.map-sheet .region-pin{width:26px;height:26px}.map-sheet .region-name{font-size:10px}}

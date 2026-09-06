@@ -79,7 +79,7 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     const start = when ?? audio.currentTime, base = 1750 + seeded(game.playSeconds) * 760, pan = seeded(game.playSeconds + 44) * 1.5 - .75;
     const phrases=[[[1,1.22,.12],[1.25,1.08,.15],[1.1,1.28,.09]],[[1.05,.91,.19],[.94,1.16,.11],[1.18,.96,.16],[1.08,1.3,.08]],[[1,1.06,.07],[1.17,1.08,.08],[1.23,.99,.17]]];
     const phrase=phrases[Math.floor(seeded(game.playSeconds+19)*phrases.length)];let at=start;
-    for(const [from,to,length]of phrase){synthTone(base*from,base*to,length,.0065,'sine',at,pan,audioBus.ambience);at+=length+.055;}
+    for(const [from,to,length]of phrase){synthTone(base*from,base*to,length,.0082,'sine',at,pan,audioBus.ambience);at+=length+.055;}
     if(seeded(game.playSeconds+2)>.6){synthTone(base*.84,base*.98,.15,.003,'sine',start+1.2,-pan*.7,audioBus.ambience);synthTone(base*.95,base*.82,.2,.0028,'sine',start+1.43,-pan*.7,audioBus.ambience);}
   }
 
@@ -132,7 +132,7 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     audioBus.rainGain.gain.setTargetAtTime(rain>.8?.06:rain>.45?.023:rain>0?.008:0,now,3);
     // Short leaf-rustling gusts, with long genuinely quiet gaps.
     const windPhase=game.playSeconds%73,gust=windPhase<11?Math.sin(windPhase/11*Math.PI)**2:0;
-    audioBus.windGain.gain.setTargetAtTime(gust*(rain>.8?.035:.014),now,1.2);
+    audioBus.windGain.gain.setTargetAtTime(gust*(rain>.8?.035:.017),now,1.2);
     const playingMusic=preferences.musicOn&&musicWindow(game.playSeconds)&&rain<.45;
     audioBus.music.gain.setTargetAtTime(playingMusic?preferences.musicVolume*.48:0,now,1.8);
     if(!playingMusic)audioClock.nextMusic=now+.15;
@@ -145,14 +145,14 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     }
 
     if (daylight() > .42 && game.weather !== 'rain' && game.playSeconds >= audioClock.nextBird) {
-      playBird(); audioClock.nextBird = game.playSeconds + 4.5 + seeded(game.playSeconds + 77) * 8;
+      playBird(); audioClock.nextBird = game.playSeconds + 3.8 + seeded(game.playSeconds + 77) * 6.8;
     } else if (daylight() < .24 && game.weather !== 'rain' && game.playSeconds >= audioClock.nextBird) {
       const pan = seeded(game.playSeconds + 91) * 1.4 - .7;
       for (let i = 0; i < 3; i++) synthTone(2350 + i * 170, 2210 + i * 150, .035, .0028, 'sine', now + i * .11, pan, audioBus.ambience);
       audioClock.nextBird = game.playSeconds + 2.8 + seeded(game.playSeconds + 33) * 4.5;
     }
     if (game.player.moving && !overlay && game.playSeconds >= audioClock.nextStep) {
-      const crouching = game.player.crouching, running = !crouching && (keys.ShiftLeft || keys.ShiftRight);
+      const crouching = game.player.crouching, running = game.player.running;
       playSfx('step', crouching ? .32 : running ? 1.12 : .76, game.player.facing * .05);
       audioClock.nextStep = game.playSeconds + (crouching ? .62 : running ? .29 : .46);
     }

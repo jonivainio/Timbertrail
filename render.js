@@ -21,7 +21,7 @@
     oval(c,right,0,log?4:2.5,radius,'#d0ad77');oval(c,right,0,log?2.7:1.2,radius*.65,'#947249');oval(c,right,0,log?1.8:.7,radius*.42,'#c0a071');line(c,[[right,0],[right+1,radius-1]],'#614c34',1);
     if(random(seed+51)>.4){line(c,[[left+9,-2],[left+7,-radius-4]],'#554432',log?3:2);rect(c,left+6,-radius-5,2,1,'#b39562');}c.restore();
   }
-  function icon(c,type,x=0,y=0,size=48){c.save();c.translate(Math.round(x),Math.round(y));c.scale(size/48,size/48);
+  function icon(c,type,x=0,y=0,size=48){if(root.PEIcons?.draw(c,type,x,y,size))return;c.save();c.translate(Math.round(x),Math.round(y));c.scale(size/48,size/48);
     if(root.PEEquipment&&root.PEEquipment.isTool(type)){root.PEEquipment.drawIcon(c,type);c.restore();return;}
     const branch=(a,b,d)=>line(c,[[a,b],[d,38]],'#35271e',5);
     if(type==='puukko'){
@@ -123,7 +123,22 @@
     if(s.type==='fire'||s.type==='oldfire'){
       for(let i=0;i<9;i++){const a=i/9*Math.PI*2;oval(c,x+Math.cos(a)*19,y-3+Math.sin(a)*5,5,3,i%2?'#7e8270':'#515e54');rect(c,x+Math.cos(a)*19-1,y-5+Math.sin(a)*5,3,1,'#b5b197');}
       line(c,[[x-11,y-7],[x+11,y-2]],'#786045',4);line(c,[[x-10,y-2],[x+9,y-9]],'#9c7b4e',4);
-      if(s.lit){c.globalCompositeOperation='screen';const g=c.createRadialGradient(x,y-10,1,x,y-10,78);g.addColorStop(0,'#df903755');g.addColorStop(1,'#df903700');c.fillStyle=g;c.fillRect(x-78,y-88,156,156);c.globalCompositeOperation='source-over';for(let i=0;i<5;i++){const h=10+random(Math.floor(t*9)+i)*15;poly(c,[[x-11+i*4,y-6],[x-8+i*4,y-h],[x-3+i*4,y-6]],i%2?'#e7a150':'#b96032');}poly(c,[[x-5,y-5],[x-1,y-17],[x+5,y-6]],'#f1d48a');for(let i=0;i<7;i++){const u=(t*.22+i/7)%1;rect(c,x+Math.sin(i+t)*u*12,y-15-u*44,1,1,'#d8b678'+Math.floor((1-u)*190).toString(16).padStart(2,'0'));}}
+      if(s.lit&&s.fuel>0){
+        const strength=clamp(s.fuel/30,.25,1),sway=Math.sin(t*2.2+s.x)*2;
+        // Continuous tapered tongues: hot pale bases, orange edges and drifting tips.
+        for(let i=0;i<5;i++){
+          const xx=x+(i-2)*4,h=(17+Math.sin(t*5.1+i*2)*4+Math.sin(t*3.3+i)*3)*strength,w=3.5+i%2,lean=sway+Math.sin(t*4+i)*3;
+          for(let layer=0;layer<3;layer++){
+            const height=h*(1-layer*.23),width=w*(1-layer*.27),base=y-5;
+            c.fillStyle=['#b94a22','#ec922d','#ffe0a0'][layer];c.beginPath();c.moveTo(xx-width,base);
+            c.bezierCurveTo(xx-width*1.3,base-height*.4,xx+lean-3,base-height*.65,xx+lean,base-height);
+            c.bezierCurveTo(xx+lean+1,base-height*.53,xx+width*1.4,base-height*.35,xx+width,base);c.closePath();c.fill();
+          }
+        }
+        for(let i=0;i<12;i++)rect(c,x-12+random(i+8)*24,y-6+random(i+50)*5,2,1,i%3?'#d47733':'#ffe0a0');
+        for(let i=0;i<8;i++){const u=(t*(.17+random(i)*.09)+i/8)%1;c.globalAlpha=(1-u)*strength*.75;rect(c,x+Math.sin(i+t*.8)*u*16,y-13-u*57,1,1,i%2?'#efba69':'#e38338');}c.globalAlpha=1;
+        for(let i=0;i<3;i++){const u=(t*.12+i/3)%1;oval(c,x+Math.sin(t*.45+i)*u*14,y-22-u*48,3+u*7,4+u*5,`rgba(151,156,135,${Math.sin(u*Math.PI)*.06})`);}
+      }
     }else if(s.type==='shelter'){
       line(c,[[x-45,y],[x-10,y-54],[x+43,y]],'#463d2a',5);poly(c,[[x-11,y-56],[x+40,y-53],[x+67,y-2],[x+17,y-1]],'#566047');poly(c,[[x-11,y-54],[x+17,y-2],[x-43,y-2]],'#24352b');poly(c,[[x-10,y-50],[x+9,y-4],[x-37,y-4]],'#162921');line(c,[[x-11,y-55],[x+40,y-52],[x+66,y-3]],'#9b9d6c',2);for(let i=0;i<9;i++)line(c,[[x-5+i*5,y-47],[x+21+i*5,y-6]],i%2?'#6f7852':'#475b42',1);line(c,[[x+40,y-52],[x+85,y]],'#b0a481',1);rect(c,x-27,y-4,38,3,'#8f8b5a');
     }else{icon(c,'trap',x-18,y-33,36);}
@@ -171,7 +186,7 @@
       }
       for(const n of engine.nodes){if(n.x<cam-105||n.x>cam+W+105||s.picked[n.id]>s.playSeconds)continue;const y=ground(n.x);if(n.type==='tree'&&this.props)this.harvestTree(n.x);else{c.save();if(['stone','wood'].includes(n.type)){c.translate(n.x,y+1);c.rotate(Math.atan2(ground(n.x+14)-ground(n.x-14),28));c.translate(-n.x,-y);}worldNode(c,n,y,t);c.restore();}}
       for(const f of s.falling||[]){const u=clamp(f.time/1.8,0,1);this.harvestTree(f.x,f.direction*u*u*Math.PI/2);}
-      for(const d of [...(s.drops||[])].sort((a,b)=>(a.depth||0)-(b.depth||0))){if(d.x<cam-70||d.x>cam+W+70)continue;const y=ground(d.x)+(d.depth||0);
+      for(const d of [...(s.drops||[])].sort((a,b)=>(a.depth||0)-(b.depth||0))){if(d.carriedBy||d.x<cam-70||d.x>cam+W+70)continue;const y=ground(d.x)+(d.depth||0);
         if(['log','firewood'].includes(d.type))woodDrop(c,d,y);
         else if(d.type==='carcass'){if(this.wildlife){c.save();c.translate(d.x,y);c.rotate(.18);c.scale(1,.45);c.translate(-d.x,-y);this.animalSprite({type:d.species,x:d.x,facing:1,stride:0,vx:0});c.restore();}}
         else{c.save();c.translate(d.x,y);c.rotate(d.angle||0);c.translate(-d.x,-y);worldNode(c,d,y,t);c.restore();}
@@ -189,6 +204,7 @@
           if(s.equipped&&poseFrame!==6&&poseFrame!==7&&poseFrame!==8&&poseFrame!==9&&poseFrame!==10&&poseFrame!==11&&!engine.action){c.save();c.translate(Math.round(p.x+p.facing*(p.crouching?12:5)),Math.round(ground(p.x)-(p.crouching?21:29)));c.scale(p.facing,1);c.rotate(s.equipped==='axe'?.5:s.equipped==='puukko'?-.65:0);icon(c,s.equipped,-5,-4,s.equipped==='bow'?29:20);c.restore();}
         }
       }else{dog(c,s.dog.x,ground(s.dog.x),s.dog,t);person(c,s.player.x,ground(s.player.x),s.player.facing,s.player.moving?s.player.stride:t,s.player.moving,s.player.crouching,s.equipped,!!engine.action);}
+      if(s.dog.mode==='retrieve'&&s.dog.fetchStage==='return'&&this.wildlife){const d=s.dog;c.save();c.translate(d.x+d.facing*18,ground(d.x)-19);c.scale(d.facing,1);c.rotate(.35);c.drawImage(this.wildlife,390,173,286,270,-10,-5,20,17);c.restore();}
       if(s.dog.mode==='fetch'){
         const d=s.dog,u=clamp((t-d.fetchStarted)/.65,0,1),carry=d.fetchStage==='return';
         const x=carry?d.x+d.facing*18:d.fetchFrom+(d.fetchX-d.fetchFrom)*u,y=carry?ground(d.x)-22:ground(x)-3-Math.sin(u*Math.PI)*49;
@@ -201,6 +217,16 @@
       if(root.PEWorldArt?.drawLight)root.PEWorldArt.drawLight(this,engine);
       if(root.PEWorldArt)root.PEWorldArt.drawForeground(this,engine);
       c.fillStyle=`rgba(7,17,35,${(1-daylight)*.76+(s.weather==='rain'?.07:0)})`;c.fillRect(0,0,W,H);if(warm>.02){c.globalCompositeOperation='soft-light';c.fillStyle=`rgba(223,129,64,${warm*.46})`;c.fillRect(0,0,W,H);c.globalCompositeOperation='source-over';}
+      // Relight the already night-tinted scene. Screen blending reveals actual ground
+      // and object texture rather than painting an opaque orange disk over it.
+      c.save();c.globalCompositeOperation='screen';
+      for(const fire of s.structures){if(!fire.lit||fire.fuel<=0||fire.x<cam-180||fire.x>cam+W+180)continue;
+        const x=fire.x-cam,y=ground(fire.x),pulse=.93+Math.sin(t*5.3)*.035+Math.sin(t*8.7+fire.x)*.025,strength=clamp(fire.fuel/30,.25,1)*pulse,radius=145;
+        const g=c.createRadialGradient(x,y-14,2,x,y-14,radius);g.addColorStop(0,`rgba(255,169,72,${strength*.46})`);g.addColorStop(.28,`rgba(239,133,43,${strength*.21})`);g.addColorStop(1,'rgba(224,106,29,0)');c.fillStyle=g;c.fillRect(x-radius,y-radius-14,radius*2,radius*2);
+        // A separate terrain-following pool catches the forest floor and nearby roots.
+        for(let j=-95;j<=95;j+=5){const yy=ground(fire.x+j),a=Math.max(0,1-Math.abs(j)/100)*strength*.11;c.fillStyle=`rgba(247,170,77,${a})`;c.fillRect(x+j,yy-2,5,11);}
+        const core=c.createRadialGradient(x,y-12,1,x,y-12,28);core.addColorStop(0,`rgba(255,208,115,${strength*.45})`);core.addColorStop(1,'rgba(255,170,70,0)');c.fillStyle=core;c.fillRect(x-28,y-40,56,56);
+      }c.restore();
       if(s.weather==='rain'){c.globalAlpha=.3;for(let i=0;i<25+(s.rainIntensity??.3)*90;i++){const x=(random(i)*W+t*43)%W,y=(random(i+66)*H+t*280)%H;line(c,[[x,y],[x-3,y+10]],'#a0b3b0',1);}c.globalAlpha=1;}
       for(let i=0;i<38;i++){const x=(random(i+55)*W+t*(2+random(i)*3)-cam*.18+W*10)%W,y=70+random(i+17)*365+Math.sin(t*.3+i)*12;rect(c,x,y,1,1,daylight>.5?'#d0d8aa55':'#bbd99488');}
       const vignette=c.createRadialGradient(W*.52,H*.48,H*.25,W*.5,H*.5,W*.66);vignette.addColorStop(0,'#08171000');vignette.addColorStop(1,'#020b0780');c.fillStyle=vignette;c.fillRect(0,0,W,H);

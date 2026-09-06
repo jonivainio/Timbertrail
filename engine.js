@@ -48,7 +48,7 @@
     return h[i]+(h[i+1]-h[i])*e;
   }
   function fresh(){return {
-    version:5,running:false,discovered:{berries:true},player:{x:565,facing:1,crouching:false,moving:false,hunger:88,thirst:86,energy:100,warmth:85,health:100,stride:0},
+    version:5,running:false,discovered:{berries:true},player:{x:565,facing:1,crouching:false,moving:false,running:false,hunger:88,thirst:86,energy:100,warmth:85,health:100,stride:0},
     dog:{x:506,facing:1,mode:'sit',delay:.8,idle:0,nextDecision:7,lastMoving:false,stride:0},
     inventory:Object.fromEntries(Object.keys(items).map(k=>[k,k==='berries'?3:0])),toolDurability:{},quickFood:'berries',quickTools:{knife:'knife',axe:'flintaxe'},equipped:null,
     structures:[{id:'oldfire',type:'oldfire',x:710,lit:false,fuel:0}],picked:{},completed:{},drops:[],falling:[],traders:{aarni:{introDone:false}},
@@ -167,7 +167,7 @@
       const task={knife:'makeKnife',flintaxe:'makeAxe',campfire:'makeFire',shelter:'makeShelter'}[id];if(task)this.finishTask(task);
       this.sound('craft',.65);this.notify((r.name||items[id][0])+' valmistui.');this.emit('change');return true;
     }
-    targets(){const s=this.state;return [...this.nodes.filter(n=>!(s.picked[n.id]>s.playSeconds)),...s.drops,...this.water,...s.structures,this.npc,{type:'dog',x:s.dog.x,id:'dog'},...s.animals.filter(a=>a.alive&&a.mode!=='away'&&a.x>0&&a.x<WORLD).map(a=>({...a,type:'animal',species:a.type}))];}
+    targets(){const s=this.state;return [...this.nodes.filter(n=>!(s.picked[n.id]>s.playSeconds)),...s.drops.filter(d=>!d.carriedBy),...this.water,...s.structures,this.npc,{type:'dog',x:s.dog.x,id:'dog'},...s.animals.filter(a=>a.alive&&a.mode!=='away'&&a.x>0&&a.x<WORLD).map(a=>({...a,type:'animal',species:a.type}))];}
     label(target){if(!target)return '';const s=this.state,far=Math.abs(target.x-s.player.x)>95;
       let label=target.type==='animal'?animalNames[target.species]:({tree:'Spruce · fell with an axe',log:'Trunk · split with an axe',carcass:'Game · skin with a knife',cabin:"Aarni’s cabin · knock on the door",water:s.equipped==='rod'?'Heitä siima':'Juo lähteestä',npc:'Aarni · juttele',dog:'Kajo · heitä keppi',fire:'Nuotio · valmista ruokaa',oldfire:'Vanha nuotiokehä',shelter:'Laavu · lepää aamuun',trap:'Tarkista ansa'})[target.type]||('Kerää · '+items[target.type]?.[0]);
       return label+(far?' · click to approach':'');
@@ -177,12 +177,12 @@
       if(target.type==='animal'){if(s.equipped!=='bow')this.notify(animalNames[target.species]+' — lähesty kyykyssä.');return;}
       if(['tree','log'].includes(target.type)&&!this.isAxe(s.equipped))return this.notify('Equip a flint axe or steel axe from the top belt or backpack.');
       if(target.type==='carcass'&&!this.isKnife(s.equipped))return this.notify('Equip a flint knife or puukko to skin this animal.');
-      const reach=['tree','log','carcass','wood','stone','fiber','berries','mushroom','firewood'].includes(target.type)?28:60;
+      const reach=target.type==='dog'&&target.command==='pet'?27:['tree','log','carcass','wood','stone','fiber','berries','mushroom','firewood'].includes(target.type)?28:60;
       if(Math.abs(target.x-p.x)>reach){this.walkTarget={...target,reach};this.fishing=null;return;}
       this.walkTarget=null;
       p.facing=target.x<p.x?-1:1;
       if(target.type==='cabin'){s.rowanMet=true;this.finishTask('meet');this.emit('panel',{panel:'dialogue'});return;}
-      if(target.type==='dog'){Object.assign(s.dog,{mode:'fetch',fetchStage:'out',fetchX:clamp(p.x+p.facing*180,30,WORLD-30),fetchFrom:p.x,fetchStarted:s.playSeconds,delay:0,timer:10});this.sound('dog',.35);this.notify('Kajo lähtee kepin perään.');return;}
+      if(target.type==='dog'){this.commandDog(target.command||'stick');return;}
       if(['fire','oldfire'].includes(target.type)){
         const fire=s.structures.find(v=>v.id===target.id);
         this.activeFire=fire.id;
@@ -220,15 +220,15 @@
       const p=s.player,manual=(this.keys.KeyD||this.keys.ArrowRight?1:0)-(this.keys.KeyA||this.keys.ArrowLeft?1:0),sprint=!p.crouching&&(this.keys.ShiftLeft||this.keys.ShiftRight)&&p.energy>2;
       if(manual){this.walkTarget=null;this.action=null;}
       let dir=manual;
-      if(this.walkTarget&&!manual){const target=this.targets().find(t=>t.id===this.walkTarget.id);if(!target){this.walkTarget=null;}else if(Math.abs(target.x-p.x)<=this.walkTarget.reach-2){this.walkTarget=null;this.interact(target);}else dir=target.x<p.x?-1:1;}
-      p.moving=!!dir&&!this.action&&!this.fishing&&!this.attack;const speed=p.crouching?38:sprint?145:83;
+      if(this.walkTarget&&!manual){const target=this.targets().find(t=>t.id===this.walkTarget.id);if(!target){this.walkTarget=null;}else if(Math.abs(target.x-p.x)<=this.walkTarget.reach-2){const command=this.walkTarget.command;this.walkTarget=null;this.interact({...target,command});}else dir=target.x<p.x?-1:1;}
+      p.moving=!!dir&&!this.action&&!this.fishing&&!this.attack;p.running=!!(p.moving&&sprint);const speed=p.crouching?38:sprint?145:83;
       if(p.moving){p.facing=dir;p.x=clamp(p.x+dir*speed*dt,35,WORLD-35);p.stride+=dt*(p.crouching?5:sprint?13:8);if(sprint)p.energy=clamp(p.energy-dt*5,0,100);}
       if(p.x>=WORLD-38&&!this.endOfTrailShown){this.endOfTrailShown=true;this.walkTarget=null;this.notify('The demo ends here. More trails will open in a future chapter.');}
       if(p.x<WORLD-160)this.endOfTrailShown=false;
       if(!sprint||!p.moving)p.energy=clamp(p.energy+dt*2,0,100);
       p.hunger=clamp(p.hunger-dt*.065,0,100);p.thirst=clamp(p.thirst-dt*.085,0,100);
       const nearFire=s.structures.some(f=>f.lit&&Math.abs(f.x-p.x)<110),night=s.dayTime<.22||s.dayTime>.8;
-      p.warmth=clamp(p.warmth+dt*(nearFire?.9:s.weather==='rain'?-.12:night?-.055:.025),0,100);
+      p.warmth=clamp(p.warmth+dt*(nearFire?.9:night?(Math.min(p.warmth,s.weather==='rain'?5:8)-p.warmth)*.007:s.weather==='rain'?-.12:.025),0,100);
       p.health=clamp(p.health+dt*(p.hunger<1||p.thirst<1?-.3:p.warmth<1?-.16:.02),0,100);
       if(p.health<=0){p.x=565;p.health=65;p.hunger=55;p.thirst=55;p.warmth=60;this.notify('Kajo johdattaa sinut takaisin leiripaikalle. Lepää ja syö.');}
       s.camera+=(clamp(p.x-WIDTH*.4,0,WORLD-WIDTH)-s.camera)*Math.min(1,dt*6);
@@ -250,6 +250,7 @@
       this.sinceSave+=dt;if(this.sinceSave>15){this.sinceSave=0;this.emit('save');}
     }
     completeAction(target){const s=this.state,type=target.type;
+      if(type==='pet'){s.dog.mode='sit';s.dog.nextDecision=s.playSeconds+4;this.notify('Kajo leans into your hand.');this.sound('rustle',.18);return;}
       if(type==='tree'){this.consumeTool(s.equipped,s.equipped==='flintaxe'?2:1);s.picked[target.id]=1e12;s.falling.push({id:target.id,x:target.x,time:0,direction:s.player.facing});return;}
       if(type==='log'){this.consumeTool(s.equipped);s.drops=s.drops.filter(d=>d.id!==target.id);for(let i=0;i<3;i++)this.scatterDrop('firewood',target.x,i,49);this.sound('wood',.7);return;}
       if(type==='carcass'){this.consumeTool(s.equipped);s.drops=s.drops.filter(d=>d.id!==target.id);s.inventory.rawMeat+=target.species==='deer'?3:target.species==='bear'?4:1;if(['deer','bear'].includes(target.species))s.inventory.hide++;this.notify('Skinned and packed. Cook the meat at a campfire.');this.sound('rustle',.6);return;}
@@ -258,7 +259,25 @@
       this.effects.push({x:target.x,y:ground(target.x)-20,text:'+'+amount+' '+items[type][0],life:1.6});this.sound(type==='stone'?'stone':'pickup',.65);
       if(s.inventory.wood&&s.inventory.stone&&s.inventory.fiber)this.finishTask('firstGather');
     }
+    dogActions(){const s=this.state;return ['pet','stick',...(s.drops.some(d=>d.type==='carcass'&&d.species==='grouse'&&!d.carriedBy&&Math.abs(d.x-s.player.x)<900)?['retrieve']:[])];}
+    commandDog(command){const s=this.state,d=s.dog,p=s.player;if(['retrieve','fetch','pet'].includes(d.mode))return this.notify('Kajo is busy. Give him a moment.');
+      if(command==='pet'){if(Math.abs(d.x-p.x)>27)return false;d.mode='pet';d.moving=false;d.facing=p.x<d.x?-1:1;p.facing=-d.facing;this.action={target:{type:'pet',x:d.x},time:0,duration:2.1};this.sound('rustle',.2);return true;}
+      if(command==='retrieve'){const bird=s.drops.filter(v=>v.type==='carcass'&&v.species==='grouse'&&!v.carriedBy&&Math.abs(v.x-p.x)<900).sort((a,b)=>Math.abs(a.x-d.x)-Math.abs(b.x-d.x))[0];if(!bird)return this.notify('There is no downed bird nearby.');Object.assign(d,{mode:'retrieve',retrieveId:bird.id,fetchStage:'out',timer:30,moving:false});this.notify('Kajo goes to retrieve the bird.');return true;}
+      if(command!=='stick')return false;Object.assign(d,{mode:'fetch',fetchStage:'out',fetchX:clamp(p.x+p.facing*180,30,WORLD-30),fetchFrom:p.x,fetchStarted:s.playSeconds,delay:0,timer:10});this.sound('dog',.25);this.notify('Kajo lähtee kepin perään.');return true;
+    }
     updateDog(dt){const s=this.state,d=s.dog,p=s.player;d.idle=p.moving?0:d.idle+dt;
+      if(d.mode==='pet'){d.moving=false;if(this.action?.target.type!=='pet')d.mode='follow';return;}
+      if(d.mode==='retrieve'){
+        d.timer-=dt;const bird=s.drops.find(v=>v.id===d.retrieveId);d.moving=false;
+        if(!bird||d.timer<=0){if(bird){delete bird.carriedBy;bird.x=d.x;}d.mode='follow';d.retrieveId=null;return;}
+        if(d.fetchStage==='sniff'){d.fetchPause-=dt;if(d.fetchPause<=0){bird.carriedBy='dog';d.fetchStage='return';}return;}
+        const destination=d.fetchStage==='return'?p.x-p.facing*26:bird.x,delta=destination-d.x;
+        if(Math.abs(delta)>7){d.facing=delta<0?-1:1;d.x+=d.facing*Math.min(Math.abs(delta),dt*155);d.moving=true;d.stride+=dt*12;}
+        else if(d.fetchStage==='out'){d.fetchStage='sniff';d.fetchPause=.6;}
+        else{bird.x=d.x;delete bird.carriedBy;d.mode='sit';d.retrieveId=null;d.nextDecision=s.playSeconds+3;this.notify('Kajo brings the bird. Skin it with a knife.');this.sound('rustle',.25);this.emit('change');}
+        if(bird.carriedBy)bird.x=d.x;return;
+      }
+      if(this.walkTarget?.type==='dog'){d.moving=false;d.mode='sit';return;}
       if(p.moving&&!d.lastMoving&&d.mode!=='fetch'){d.delay=.35+random(s.playSeconds)*.85;d.mode='wait';}d.lastMoving=p.moving;d.delay=Math.max(0,(d.delay||0)-dt);
       if(d.mode==='fetch'){
         d.timer-=dt;d.moving=false;
@@ -292,7 +311,7 @@
         if(a.vx)a.stride+=dt*(a.mode==='flee'?15:4);
       }
     }
-    travel(){const s=this.state;s.player.x=565;s.camera=181;s.dog.x=506;s.dog.mode='sit';s.dog.delay=.7;this.projectiles=[];this.action=null;this.attack=null;this.walkTarget=null;this.fishing=null;this.keys={};this.sound('travel',.5);this.notify('Metsä · palaat vanhalle nuotiopaikalle.');this.emit('change');}
+    travel(){const s=this.state;for(const drop of s.drops)delete drop.carriedBy;s.player.x=565;s.player.moving=false;s.player.running=false;s.camera=181;s.dog.x=506;s.dog.mode='sit';s.dog.retrieveId=null;s.dog.delay=.7;this.projectiles=[];this.action=null;this.attack=null;this.walkTarget=null;this.fishing=null;this.keys={};this.sound('travel',.5);this.notify('Metsä · palaat vanhalle nuotiopaikalle.');this.emit('change');}
   }
   const api={Engine,items,recipes,tasks,animalNames,toolDurability,foodIds,WIDTH,HEIGHT,WORLD,TILE,ground,random,clamp};root.PE=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

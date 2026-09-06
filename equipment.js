@@ -71,6 +71,11 @@
     const anchors={0:[74,72],1:[78,70],2:[77,70],3:[81,80]},grip=(anchors[index]||anchors[0]).slice();grip[1]+=bob;if(crouch&&p.moving)grip[0]+=Math.sin(p.stride)*2;return{index,bob,grip};
   }
   function drawIdle(renderer,lc,p,type){
+    if(p.running&&renderer.runPoses){
+      const index=Math.floor(p.stride/(Math.PI/3))%6,boxes=[[74,128,354,467],[467,137,276,451],[759,112,277,456],[1080,133,351,464],[1519,158,226,435],[1800,128,294,455]],anchors=[274,619,889,1278,1622,1951],bases=[593,586,590,595,591,605],hands=[[351,300],[695,314],[971,287],[1337,304],[1705,332],[2052,290]],b=boxes[index],k=.134;
+      lc.drawImage(renderer.runPoses,...b,67+(b[0]-anchors[index])*k,101+(b[1]-bases[index])*k,b[2]*k,b[3]*k);
+      if(type){const grip=[67+(hands[index][0]-anchors[index])*k,101+(hands[index][1]-bases[index])*k];drawHeld(lc,type,grip,heldAngle(type)+(['axe','flintaxe'].includes(type)?.3:0),heldScale(type));}return;
+    }
     const {index,bob,grip,pose}=idleGrip(p);
     if(pose&&renderer.poses)basePose(renderer,lc,index);else baseSprite(renderer,lc,index,bob);
     if(!type)return;
@@ -128,18 +133,25 @@
   function gatherAction(renderer,lc,engine){
     const frame=(engine.action.time/engine.action.duration)<.58?4:5;basePose(renderer,lc,frame);
   }
+  function petAction(renderer,lc,engine){
+    baseSprite(renderer,lc,3);eraseArm(lc,true);
+    const p=engine.state.player,d=engine.state.dog,head=[67+(d.x+d.facing*13-p.x)*p.facing,101+root.PE.ground(d.x)-root.PE.ground(p.x)-27];
+    const wrist=[head[0]+Math.sin(engine.action.time*7)*2,head[1]-1];rigArm(lc,[72,68],wrist,true,-1,12);hand(lc,wrist);
+  }
   function drawActor(renderer,engine){
     if(!renderer||!renderer.sprites)return false;
     const c=renderer.c,s=engine.state,p=s.player,y=root.PE?root.PE.ground(p.x):0,type=TOOLS.has(s.equipped)?s.equipped:null;
     shadow(c,p.x,y,16);const [layer,lc]=makeLayer(renderer);
     if(engine.action&&['tree','log'].includes(engine.action.target.type))axeAction(renderer,lc,engine);
     else if(engine.action&&engine.action.target.type==='carcass')carcassAction(renderer,lc,engine);
+    else if(engine.action&&engine.action.target.type==='pet')petAction(renderer,lc,engine);
     else if(engine.action&&renderer.poses)gatherAction(renderer,lc,engine);
     else if(engine.attack&&type==='bow')bowAction(renderer,lc,engine);
     else drawIdle(renderer,lc,p,type);
     c.save();c.translate(Math.round(p.x),Math.round(y));c.scale(p.facing||1,1);c.drawImage(layer,-67,-101);c.restore();return true;
   }
   function drawIcon(c,type,x=0,y=0,size=48){
+    if(root.PEIcons?.draw(c,type,x,y,size))return;
     if(images[type]){const b=imageBounds[type],k=(size-6)/Math.max(b[2],b[3]);c.save();c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.drawImage(images[type],...b,x+(size-b[2]*k)/2,y+(size-b[3]*k)/2,b[2]*k,b[3]*k);c.restore();return;}
     if(type==='flintaxe')type='axe';
     const bounds={puukko:[-11,-7,27,6],knife:[-11,-10,27,6],axe:[-10,-41,17,5],bow:[-3,-22,13,22],rod:[-7,-19,43,9]}[type],angle=type==='bow'?0:type==='axe'?.68:type==='rod'?-.62:-.68;

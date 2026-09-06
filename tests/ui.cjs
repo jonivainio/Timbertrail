@@ -26,7 +26,7 @@ let timerId=0;const timers=new Map();const advance=()=>{for(let pass=0;pass<8;pa
 const context={document:doc,Image:TestImage,console,performance,setTimeout:(fn,delay)=>(timers.set(++timerId,{fn,delay}),timerId),clearTimeout:id=>timers.delete(id),requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},addEventListener(){},};context.window=context;context.globalThis=context;
 
 
-vm.createContext(context);for(const file of ['i18n.js','engine.js','render.js','panels.js'])vm.runInContext(fs.readFileSync(path.join(dir,file),'utf8'),context,{filename:file});
+vm.createContext(context);for(const file of ['i18n.js','engine.js','item-icons.js','equipment.js','render.js','panels.js'])vm.runInContext(fs.readFileSync(path.join(dir,file),'utf8'),context,{filename:file});
 let engine;const Base=context.PE.Engine;context.PE.Engine=class extends Base{constructor(...a){super(...a);if(!engine)engine=this;}};
 const sounds=[],mix={soundOn:true,musicOn:true,soundVolume:.7,musicVolume:.4};context.PEAudio={play(n){sounds.push(n);},start(){},toggle(){return false;},pause(){},update(){},settings:()=>({...mix}),configure:p=>Object.assign(mix,p)};
 vm.runInContext(fs.readFileSync(path.join(dir,'game.js'),'utf8'),context,{filename:'game.js'});
@@ -42,7 +42,25 @@ click('#close-modal');assert.equal($('book-animation').src,'assets/book-open.png
 console.log('PASS Journal frame order, tabs/audio events, one typed tool slot, save migration and boot. DOM harness only; not browser layout QA.');
 doc.dispatch('keydown',{code:'Tab'});advance();assert.equal($('modal').dataset.panel,'inventory');
 const item=doc.querySelector('[data-item-drag="knife"]'),target=doc.querySelector('[data-slot="knife"]');let transfer='';const dataTransfer={setData:(_,v)=>transfer=v,getData:()=>transfer};item.dispatch('dragstart',{dataTransfer});assert.ok(target.classList.contains('drop-ready'));target.dispatch('drop',{dataTransfer});assert.equal(engine.state.quickTools.knife,'knife');
-click('[data-panel="map"]');assert.equal(doc.querySelectorAll('.region-pin').length,5);assert.equal(doc.querySelectorAll('.region-pin.available').length,2);const beforeX=engine.state.player.x;click('[data-region="river"]');assert.equal(engine.state.player.x,beforeX);assert.ok($('region-description').textContent.includes('not playable yet'));click('#close-modal');advance();
+click('[data-panel="map"]');assert.equal(doc.querySelectorAll('.region-pin').length,5);assert.equal(doc.querySelectorAll('.region-pin.available').length,2);const beforeX=engine.state.player.x;click('[data-region="river"]');assert.equal(engine.state.player.x,beforeX);assert.ok($('region-river-description').textContent.includes('not playable yet'));assert.equal(doc.querySelector('.map-info'),null);click('#close-modal');advance();
 click('[data-panel="settings"]');assert.equal(doc.querySelectorAll('input[data-audio-volume]').length,2);click('[data-audio-channel="musicOn"]');assert.equal(mix.musicOn,false);assert.equal(mix.soundOn,true);const slider=$('volume-music');slider.value='27';slider.dispatch('input');assert.equal(mix.musicVolume,.27);click('[data-language="fi"]');assert.ok($('modal-content').textContent.includes('Musiikki'));click('[data-language="en"]');
 console.log('PASS Tab shortcut, actual drag/drop events, map region availability and independent audio controls.');
+click('#close-modal');advance();
+doc.dispatch('keydown',{code:'Tab'});advance();assert.equal($('modal-backdrop').hidden,false);
+doc.dispatch('keydown',{code:'Tab',repeat:true});assert.ok(!$('modal').classList.contains('is-closing'),'held Tab cannot immediately close the book');
+doc.dispatch('keydown',{code:'Tab'});assert.ok($('modal').classList.contains('is-closing'));advance();assert.equal($('modal-backdrop').hidden,true);
+doc.dispatch('keydown',{code:'KeyS'});assert.equal(engine.state.player.crouching,true);
+doc.dispatch('keydown',{code:'KeyS',repeat:true});assert.equal(engine.state.player.crouching,true);
+doc.dispatch('keyup',{code:'KeyS'});doc.dispatch('keydown',{code:'KeyS'});assert.equal(engine.state.player.crouching,false);
+doc.dispatch('keydown',{code:'KeyS'});doc.dispatch('keydown',{code:'KeyW'});assert.equal(engine.state.player.crouching,false);engine.keys={};
+engine.nodes=[];engine.water=[];engine.state.animals=[];engine.state.structures=[];engine.state.drops=[];engine.state.player.x=2000;engine.state.camera=1800;engine.state.dog.x=2025;engine.state.dog.mode='follow';
+const dogEvent={clientX:225,clientY:context.PE.ground(2025)-15};
+$('game-shell').dispatch('pointermove',{...dogEvent,target:$('game')});assert.ok($('world-tip').textContent.includes('Pet Kajo'));
+$('game').dispatch('click',dogEvent);assert.equal(engine.action.target.type,'pet');engine.action=null;engine.state.dog.mode='follow';
+let wheelPrevented=false;$('game').dispatch('wheel',{...dogEvent,deltaY:100,preventDefault(){wheelPrevented=true;}});assert.equal(wheelPrevented,true);assert.ok($('world-tip').textContent.includes('Throw a stick'));
+$('game').dispatch('click',dogEvent);assert.equal(engine.state.dog.mode,'fetch');
+engine.state.dog.mode='follow';engine.state.drops.push({id:'bird-ui',type:'carcass',species:'grouse',x:2200});context.performance={now:()=>performance.now()+200};
+$('game').dispatch('wheel',{...dogEvent,deltaY:100});assert.ok($('world-tip').textContent.includes('Retrieve the bird'));$('game').dispatch('click',dogEvent);assert.equal(engine.state.dog.mode,'retrieve');
+const drawCalls=[];assert.equal(context.PEIcons.draw(new Proxy({drawImage(...a){drawCalls.push(a);}},{get:(o,k)=>o[k]||(()=>{})}),'berries',0,0,96),true);assert.equal(drawCalls.length,1,'supplied icon images have loaded before play');
+console.log('PASS Tab toggle/repeat, S toggle/W stand, dog hover/wheel/click commands and supplied-icon preload.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
