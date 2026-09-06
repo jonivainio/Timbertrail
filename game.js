@@ -26,6 +26,7 @@
   const animalArt=(type,known)=>`<canvas width="96" height="96" data-wildlife="${wildlifeIndex[type]}"${known?'':' data-silhouette="true"'} class="animal-art" aria-hidden="true"></canvas>`;
   const unknownRecipeArt=id=>`<canvas width="96" height="96" data-recipe-silhouette="${recipeIndex[id]}" class="recipe-silhouette" aria-hidden="true"></canvas>`;
   const name=id=>L.text(items[id]?.[0]||recipes.find(r=>r.id===id)?.name||id);
+  const storageUI=PEStorage.create(engine,content,{art,name,active:()=>panel==='home-chest'&&!modalClosing,refresh:renderPanel,notice});
   const category={tool:'TYÖKALU',material:'TARVIKE',food:'EVÄS',raw:'KYPSENNETTÄVÄ'};
   function paintIcon(ctx,type,x,y,size){if(window.PEEquipment?.isTool?.(type))window.PEEquipment.drawIcon(ctx,type,x,y,size);else PEArt.icon(ctx,type,x,y,size);}
   function paintIcons(scope=document){scope.querySelectorAll('canvas[data-art]').forEach(c=>{const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=false;paintIcon(ctx,c.dataset.art,0,0,c.width);});}
@@ -71,15 +72,15 @@
     if(panel===kind&&!modalClosing){if(journalPanels.has(kind))return;closePanel();return;}
     if(panel&&journalPanels.has(panel)&&journalPanels.has(kind)&&!modalClosing){panel=kind;renderPanel();PEAudio.play('pageFlip',.6);return;}
     if(kind==='dialogue'){dialogueStage=engine.state.traders.aarni.introDone?'smalltalk':'welcome';visits++;}
-    clearTimeout(modalCloseTimer);clearTimeout(bookFrameTimer);modalClosing=false;modal.classList.remove('is-closing');$('modal-backdrop').classList.remove('is-closing');returnFocus=document.activeElement;panel=kind;engine.keys={};engine.walkTarget=null;engine.state.player.moving=false;renderer.hover=null;$('world-tip').hidden=true;$('modal-backdrop').hidden=false;
+    clearTimeout(modalCloseTimer);clearTimeout(bookFrameTimer);modalClosing=false;modal.classList.remove('is-closing');$('modal-backdrop').classList.remove('is-closing');returnFocus=document.activeElement;storageUI.reset();panel=kind;engine.keys={};engine.walkTarget=null;engine.state.player.moving=false;renderer.hover=null;$('world-tip').hidden=true;$('modal-backdrop').hidden=false;
     const isJournal=journalPanels.has(kind);shell.classList.toggle('journal-open',isJournal);modal.classList.toggle('journal-shell',isJournal);modal.classList.toggle('is-opening',isJournal);renderPanel();modal.focus();if(kind==='dismantle')content.querySelector('[data-cancel]')?.focus();
     if(isJournal)playBookSequence(true,()=>modal.classList.remove('is-opening'));PEAudio.play(isJournal?'pageTurn':'uiOpen',.5);
   }
-  function closePanel(){if(!panel||modalClosing)return;pendingTravel=null;engine.pendingDismantle=null;const wasJournal=journalPanels.has(panel);panel=null;modalClosing=true;modal.classList.remove('is-opening');modal.classList.add('is-closing');$('modal-backdrop').classList.add('is-closing');if(wasJournal){playBookSequence(false,finishModalClose);PEAudio.play('pageTurn',.5);}else{modalCloseTimer=setTimeout(finishModalClose,reducedMotion()?0:180);PEAudio.play('uiClose',.5);}save();}
+  function closePanel(){if(!panel||modalClosing)return;pendingTravel=null;engine.pendingDismantle=null;storageUI.reset();const wasJournal=journalPanels.has(panel);panel=null;modalClosing=true;modal.classList.remove('is-opening');modal.classList.add('is-closing');$('modal-backdrop').classList.add('is-closing');if(wasJournal){playBookSequence(false,finishModalClose);PEAudio.play('pageTurn',.5);}else{modalCloseTimer=setTimeout(finishModalClose,reducedMotion()?0:180);PEAudio.play('uiClose',.5);}save();}
   function cancelTravel(){const id=pendingTravel;pendingTravel=null;renderPanel();content.querySelector('[data-travel="'+id+'"]')?.focus();PEAudio.play('uiClose',.25);}
   function renderPanel(){
     if(!panel)return;const s=engine.state,oldScroll=content.scrollTop,oldFocus=document.activeElement?.dataset?.select||null;
-    const headings={'home-chest':['Storage chest','SIENILAMPI'],'home-hearth':['Fireplace','SIENILAMPI'],'home-bed':['Sleep until morning','SIENILAMPI'],inventory:['Reppu','KAIKKI TARPEELLINEN MUKANA'],craft:['Käsityöt','OMIN KÄSIN · LUONNON ANTIMISTA'],map:['Korpilaakson kartta','YHDEN POLUN ALKU'],journal:['Kenttämuistiinpanot','PIENIÄ HETKIÄ METSÄSTÄ'],help:['Retkeilijän opas','KULJE OMAAN TAHTIISI'],pause:['Päävalikko','RETKESI ON TURVASSA'],trade:['Aarnin leirillä','VANHAN METSÄNKÄVIJÄN TARINOITA'],fire:['Nuotion äärellä','LÄMPÖÄ JA LÄMMIN ATERIA'],confirm:['Uusi retki?','NYKYINEN RETKI ON TALLENNETTU']};
+    const headings={'home-chest':['Storage chest','SIENILAMPI'],'home-hearth':['Fireplace','SIENILAMPI'],'home-kitchen':['Kitchen','SIENILAMPI'],'home-bed':['Sleep until morning','SIENILAMPI'],inventory:['Reppu','KAIKKI TARPEELLINEN MUKANA'],craft:['Käsityöt','OMIN KÄSIN · LUONNON ANTIMISTA'],map:['Korpilaakson kartta','YHDEN POLUN ALKU'],journal:['Kenttämuistiinpanot','PIENIÄ HETKIÄ METSÄSTÄ'],help:['Retkeilijän opas','KULJE OMAAN TAHTIISI'],pause:['Päävalikko','RETKESI ON TURVASSA'],trade:['Aarnin leirillä','VANHAN METSÄNKÄVIJÄN TARINOITA'],fire:['Nuotion äärellä','LÄMPÖÄ JA LÄMMIN ATERIA'],confirm:['Uusi retki?','NYKYINEN RETKI ON TALLENNETTU']};
     headings.dismantle=['Dismantle structure?','RECOVER MATERIALS'];headings.dialogue=['Aarni','A WARM HEARTH · A FAMILIAR FACE'];headings.settings=['Settings','MAKE YOURSELF AT HOME'];headings.trade=['Aarni’s table','A FAIR EXCHANGE'];headings.map=['The northern trails','A MAP OF THINGS TO COME'];
     modal.dataset.panel=panel;
     $('modal-title').textContent=headings[panel][0];$('modal-kicker').textContent=headings[panel][1];
@@ -116,7 +117,7 @@
     }
     if(panel==='dialogue')content.innerHTML=TimberPanels.dialogue(dialogueStage,visits);
     if(panel==='trade')content.innerHTML=TimberPanels.trade(s,art);
-    if(panel.startsWith('home-'))content.innerHTML=PECabin.panel(engine,panel,art,name);
+    if(panel.startsWith('home-'))content.innerHTML=panel==='home-chest'?storageUI.render():PECabin.panel(engine,panel,art,name);
     if(panel==='fire')content.innerHTML=TimberPanels.fire(s,engine,art,name);
     if(panel==='dismantle'){
       const target=s.structures.find(o=>o.id===engine.pendingDismantle?.id),label=target?name(({fire:'campfire',oldfire:'campfire',shelter:'shelter',trap:'trap'})[target.type]):'';
@@ -128,7 +129,7 @@
   document.addEventListener('click',e=>{
     // A closing cover remains modal even though its panel contents are already released.
     if(modalClosing)return;
-    const b=e.target.closest('button');if(!b)return;
+    const b=e.target.closest('button');if(!b||b.disabled)return;if(storageUI.click(b))return;
     if(b.dataset.homeAction){const ok=PECabin.action(engine,b.dataset.homeAction);if(ok&&b.dataset.homeAction==='sleep')closePanel();else renderPanel();save();return;}
     if(b.dataset.storage){PECabin.transfer(engine,b.dataset.item,b.dataset.storage,b.dataset.all==='true');renderPanel();syncHUD();save();return;}
     if(pendingTravel){if(b.dataset.travelCancel){cancelTravel();return;}if(b.dataset.travelConfirm){const id=pendingTravel;pendingTravel=null;if(panel==='map'&&PERegions.canTravel(engine.state,id)&&engine.requestTravel(id)){closePanel();syncHUD();save();}else renderPanel();return;}return;}
@@ -237,7 +238,7 @@
   saved=readSave();renderer.scenery=[null,null,null];let loaded=0,loadFailed=false,equipmentReady=false,bookReady=false;
   const assets=[...['menu_banner','pick_banner1','pick_banner2','pick_banner3'].map(id=>[id,id]),['west','forest-west'],['ravine','forest-ravine'],['upland','forest-upland'],['sprites','traveller-and-kajo'],['wildlife','woodland-wildlife'],['props','timber-props'],['poses','timber-poses'],['chopTree','chop-standing'],['chopLog','chop-ground'],['treeVariants','forest-trees']];
   assets.push(['runPoses','traveller-run']);
-  assets.push(['kajoCabin','kajo-cabin-poses'],['cabinInterior','sienilampi-interior'],['groundMaterial','forest-floor-material'],['riverImage','aarni-river'],['pondImage','hiljalampi'],['cabinAtlas','hiljalampi-cabin'],['pierImage','sienilampi-pier'],['springImage','cabin-spring-v2'],['petImage','traveller-pet'],['seatedImage','traveller-seated']);renderer.regionImages={};
+  assets.push(['yardProps','cabin-yard-props-final'],['kajoCabin','kajo-cabin-poses'],['cabinInterior','sienilampi-interior'],['groundMaterial','forest-floor-material'],['riverImage','aarni-river'],['pondImage','hiljalampi'],['cabinAtlas','hiljalampi-cabin'],['pierImage','sienilampi-pier'],['springImage','cabin-spring-v2'],['petImage','traveller-pet'],['seatedImage','traveller-seated']);renderer.regionImages={};
   function finishLoading(){if(ready||loadFailed||loaded!==assets.length||!equipmentReady||!bookReady)return;ready=true;$('start-button').disabled=false;refreshTitle();}
   for(const [key,path]of assets){const img=new Image();img.onload=()=>{const i=['west','ravine','upland'].indexOf(key);if(i>=0){renderer.scenery[i]=img;if(i===0)renderer.forest=img;}else{renderer[key]=img;if(key==='riverImage')renderer.regionImages.river=img;if(key==='pondImage')renderer.regionImages.pond=img;}loaded++;if(key==='wildlife')paintWildlife(content);finishLoading();};img.onerror=()=>{loadFailed=true;$('load-note').textContent='Metsäkuvaa ei voitu ladata. Tarkista, että assets-kansio on index.html-tiedoston vieressä.';$('start-button').textContent='Lataus epäonnistui';L.apply($('title-card'));};img.src='assets/'+path+'.png';}
   Promise.all([window.PEEquipment?.loadAssets?.(),window.PEIcons?.load?.()]).then(()=>{equipmentReady=true;paintIcons();finishLoading();}).catch(()=>{loadFailed=true;$('load-note').textContent='Työkalukuvia ei voitu ladata assets-kansiosta.';$('start-button').textContent='Lataus epäonnistui';L.apply($('title-card'));});

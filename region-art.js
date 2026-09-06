@@ -74,14 +74,30 @@ function cabinYard(r,s){
   else moss(c,xx,yy,8+random(i)*12,i+391,6);
  }
 }
+const yardProps=[
+ {id:'shed',box:[832,15,658,458],offset:420,height:105,depth:20},
+ {id:'tractor',box:[68,45,682,419],offset:265,height:55,depth:44},
+ {id:'fishing',box:[86,497,540,480],offset:-115,height:49,wall:true},
+ {id:'tools',box:[816,499,548,485],offset:116,height:43,wall:true}
+];
+function yardPropPosition(prop){const x=root.PERegions.cabin.x+prop.offset,base=prop.wall?ground(root.PERegions.cabin.x)-root.PERegions.cabin.setback+7:(root.PETerrainSurface?.top(currentMap,x)??ground(x)-70)+prop.depth;return {x,base,width:prop.height*prop.box[2]/prop.box[3]};}
+function drawYardProps(r,s,wall){if(!r.yardProps)return;const c=r.c;
+ for(const prop of yardProps.filter(p=>!!p.wall===wall)){const {x,base,width}=yardPropPosition(prop);if(x+width/2<s.camera||x-width/2>s.camera+W)continue;
+  // Support the entire rigid footprint at its authored depth, not the walking line.
+  root.PETerrainSurface?.socket(r,currentMap,x,base,width*.42,false);
+  c.save();c.fillStyle='#15201755';c.beginPath();c.ellipse(x,base,width*.42,2.4,0,0,Math.PI*2);c.fill();c.drawImage(r.yardProps,...prop.box,x-width/2,base-prop.height,width,prop.height);c.restore();
+  root.PETerrainSurface?.socket(r,currentMap,x,base+1,width*.42,true);
+ }
+}
 function drawCabin(r,s){const c=r.c,x=root.PERegions.cabin.x,y=ground(x),yard=root.PERegions.cabin.clearing;if(x+yard.right<s.camera||x-yard.left>s.camera+W)return;
+ drawYardProps(r,s,false);
  const config=root.PERegions.cabin;cabinYard(r,s);root.PETerrainSurface?.socket(r,currentMap,x,y-config.setback+6,config.scale*155,false);
  c.save();c.translate(x,y-config.setback);c.scale(config.scale,config.scale);c.translate(-x,-y);
  c.fillStyle='#121e1655';c.beginPath();c.ellipse(x,y+8,160,4,0,0,Math.PI*2);c.fill();
  for(const part of ['facade','roof'])c.drawImage(cabinLayer(r,part,!!s.cabinRepairs[part]),x-200,y-240);
  // Ground contact is at the shifted foundation, never stretched from the walking line.
  c.fillStyle='#1c281aa0';c.fillRect(x-154,y+5,308,3);for(let i=0;i<90;i++){const xx=x-158+random(i+413)*316;px(c,xx,y+7+random(i)*4,2+random(i+6)*3,1,['#6f7451','#8b8862','#3f502f'][i%3]);}
- c.restore();
+ c.restore();drawYardProps(r,s,true);
 }
 function water(r,s,start,end,pond){
  const c=r.c,cam=s.camera,t=s.playSeconds,left=Math.max(start,cam-10),right=Math.min(end,cam+W+10);if(right<=left)return;
@@ -156,5 +172,5 @@ function draw(r,e){const s=e.state,c=r.c,cam=s.camera;currentMap=s.currentMap;if
  }else{water(r,s,780,3940,true);drawCabin(r,s);root.PECabinArt?.smoke(r,s);jetty(r,s);cabinSpring(r,s);}
 }
 function hover(r,e){const o=r.hover;if(!o?.box||!e.hotspotActive(o))return;const c=r.c,[dx,dy,w,h]=o.type==='exit'?root.PERegions.trailBox(e.state.camera):o.box,x=o.type==='exit'?dx:o.x+dx,y=o.type==='exit'?dy:ground(o.x)+dy;c.save();c.strokeStyle='#eee4c49c';c.fillStyle='#eee4c407';c.lineWidth=1;c.setLineDash([7,4,1,4]);c.lineDashOffset=-e.state.playSeconds*2;c.beginPath();c.roundRect(x,y,w,h,7);c.fill();c.stroke();c.restore();}
-root.PERegionArt={draw,hover,cabinLayer,clearingOpacity,yardPixelAlpha};if(typeof module!=='undefined')module.exports=root.PERegionArt;
+root.PERegionArt={draw,hover,cabinLayer,clearingOpacity,yardPixelAlpha,yardProps,yardPropPosition};if(typeof module!=='undefined')module.exports=root.PERegionArt;
 })(typeof window==='undefined'?globalThis:window);

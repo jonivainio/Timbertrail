@@ -8,7 +8,7 @@ soundOn=preferences.soundOn;
 const musicWindow=seconds=>{const phase=((seconds-18)%240+240)%240;return seconds>=18&&phase<42;};
 function applyMix(){if(!audioBus)return;const t=audio.currentTime;audioBus.ambience.gain.setTargetAtTime(soundOn?preferences.soundVolume*.7:0,t,.12);audioBus.sfx.gain.setTargetAtTime(soundOn?preferences.soundVolume*.78:0,t,.12);audioBus.music.gain.setTargetAtTime(preferences.musicOn?preferences.musicVolume*.48:0,t,.5);}
 function configure(patch){for(const key of ['soundOn','musicOn'])if(typeof patch[key]==='boolean')preferences[key]=patch[key];for(const key of ['soundVolume','musicVolume'])if(Number.isFinite(patch[key]))preferences[key]=clamp(patch[key],0,1);soundOn=preferences.soundOn;ensureAudio();audio?.resume?.();applyMix();try{localStorage.setItem('timbertrail-audio',JSON.stringify(preferences));}catch{}return {...preferences};}
-const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nextFire:0,nextFireCrackle:0,nextWater:0};
+const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nextFireCrackle:0,nextWater:0};
   function ensureAudio() {
     if ((!soundOn && !preferences.musicOn) || audio) return;
     try {
@@ -125,8 +125,8 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     else if (['pickup','gatherWood','gatherStone','gatherGrass','gatherFruit','gatherMushroom','skin'].includes(name))materialFoley(name,v,now,pan);
     else if (name === 'axe') { noiseBurst(.12, .06 * v, 1350, 75, now, pan); synthTone(104, 57, .16, .04 * v, 'triangle', now + .01, pan); noiseBurst(.18, .026 * v, 670, 50, now + .07, pan); }
     else if (name === 'water') { noiseBurst(.72, .026 * v, 2600, 480, now, pan); synthTone(410, 260, .38, .009 * v, 'sine', now + .05, pan); }
-    else if(name==='fireBed'){noiseBurst(1.65,.026*v,1150,95,now,pan,false,.38);noiseBurst(1.12,.006*v,2200,480,now+.3,pan,true,.24);}
-    else if(name==='fire'||name==='fireCrackle'){const q=Math.random();noiseBurst(.018+q*.018,.032*v,2300+q*1100,520,now,pan,true);noiseBurst(.12+q*.12,.014*v,1250,160,now+.012,pan,true);if(q>.76)noiseBurst(.025,.017*v,2600,630,now+.13+q*.06,pan,true);}
+    // No continuous noise bed: only tiny dry wood ticks, with quiet gaps.
+    else if(name==='fire'||name==='fireCrackle'){const q=Math.random();noiseBurst(.012+q*.016,.011*v,1900+q*700,680,now,pan,true);if(q>.58)noiseBurst(.018,.006*v,2200,740,now+.07+q*.08,pan,true);}
     else if (name === 'eat') { noiseBurst(.11, .028 * v, 1500, 180, now, pan); noiseBurst(.1, .023 * v, 1250, 150, now + .14, pan); }
     else if (name === 'equip') { noiseBurst(.18, .022 * v, 1300, 140, now, pan); synthTone(245, 285, .08, .012 * v, 'triangle', now + .08, pan); }
     else if (name === 'craft') { playSfx('wood', .7 * v, pan); playSfx('stone', .55 * v, pan); synthTone(294, 440, .28, .018 * v, 'triangle', now + .18, pan); }
@@ -184,9 +184,9 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     const nearFire=inside?(game.cabinHome.fire.lit&&game.cabinHome.fire.fuel>0?{x:game.player.x}:null):game.structures.filter(s=>(s.type==='fire'||s.type==='oldfire')&&s.lit&&s.fuel>0&&distance(s.x,game.player.x)<150).sort((a,b)=>distance(a.x,game.player.x)-distance(b.x,game.player.x))[0];
     if(nearFire){
       const volume=inside?.65:Math.pow(clamp(1-distance(nearFire.x,game.player.x)/150),1.4)*.8,pan=inside?clamp((468-(game.cabinHome.x||480))/320,-.6,.6):clamp((nearFire.x-game.player.x)/150,-.7,.7);
-      if(game.playSeconds>=audioClock.nextFire){playSfx('fireBed',volume,pan);audioClock.nextFire=game.playSeconds+1.05+seeded(game.playSeconds)*.2;}
+
       if(game.playSeconds>=audioClock.nextFireCrackle){playSfx('fireCrackle',volume*(.6+seeded(game.playSeconds+9)*.4),pan);audioClock.nextFireCrackle=game.playSeconds+2.1+seeded(game.playSeconds+71)*4.2;}
-    }else{audioClock.nextFire=game.playSeconds;audioClock.nextFireCrackle=game.playSeconds+.6;}
+    }else{audioClock.nextFireCrackle=game.playSeconds+.6;}
     const nearWater = !inside&&waterSpots.find(w => distance(w.x, game.player.x) < 150);
     if (nearWater && game.playSeconds >= audioClock.nextWater) {
       noiseBurst(.7, .009 * clamp(1 - distance(nearWater.x, game.player.x) / 180, .2, 1), 2100, 300, now, clamp((nearWater.x - game.player.x) / 130, -.75, .75));

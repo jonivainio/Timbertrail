@@ -276,7 +276,7 @@
         this.activeFire=fire.id;
         this.emit('panel',{panel:'fire'});return;
       }
-      if(target.type==='shelter'){const home=cabin.home(this);home.fire.fuel=0;home.fire.lit=false;s.day++;this.dailyWeather();s.dayTime=.28;for(const f of s.structures){f.fuel=0;f.lit=false;}p.energy=100;p.warmth=95;p.health=clamp(p.health+30,0,100);p.hunger=clamp(p.hunger-12,1,100);p.thirst=clamp(p.thirst-15,1,100);this.sound('sleep');this.notify('Heräät uuteen aamuun. Kajo venyttelee vieressä.');this.emit('change');return;}
+      if(target.type==='shelter'){const home=cabin.home(this);home.fire.fuel=0;home.fire.lit=false;s.day++;this.dailyWeather();s.dayTime=.28;for(const f of s.structures){f.fuel=0;f.lit=false;}p.energy=100;p.warmth=95;p.health=clamp(p.health+100/3,0,100);p.hunger=clamp(p.hunger-12,1,100);p.thirst=clamp(p.thirst-15,1,100);this.sound('sleep');this.notify('Heräät uuteen aamuun. Kajo venyttelee vieressä.');this.emit('change');return;}
       if(target.type==='trap'){const trap=s.structures.find(v=>v.id===target.id);if(trap.readyAt>s.playSeconds)return this.notify('Ansa on viritetty. Tarkista vähän myöhemmin.');s.drops.push({id:'trapped-'+s.playSeconds,type:'carcass',species:'rabbit',x:target.x+24});s.journal.hunted.rabbit=true;trap.readyAt=s.playSeconds+90;this.notify('Game down. Approach with a flint knife or puukko to recover meat and hide.');this.sound('pickup');this.emit('change');return;}
       if(target.type==='water'){
         if(s.inventory.canteen&&!s.canteenFull){s.canteenFull=true;p.thirst=100;this.finishTask('drink');this.sound('pour',.6);this.notify('Canteen refilled.');this.emit('change');this.emit('save');return;}

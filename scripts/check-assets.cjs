@@ -3,7 +3,7 @@ const root=path.resolve(__dirname,'..'),base=process.argv.includes('--production
 const names=fs.readdirSync(base),sources=names.filter(n=>/\.(js|html|css)$/.test(n));
 for(const name of sources){const text=fs.readFileSync(path.join(base,name),'utf8');if(name.endsWith('.js'))new vm.Script(text,{filename:name});assert.ok(!/(?:src|href)=["'](?:file:|[A-Za-z]:\\|\/assets\/)/.test(text),name+' uses portable paths');for(const match of text.matchAll(/(?:src|href)=["']([^"']+\.(?:js|css|png))["']/g)){assert.ok(fs.existsSync(path.join(base,match[1])),name+' missing '+match[1]);}}
 const assets=['forest-west','forest-ravine','forest-upland','traveller-and-kajo','timber-poses','timber-props','timber-interior','timber-logo','woodland-wildlife','forest-trees','chop-standing','chop-ground','book-icon','book-open',...Array.from({length:4},(_,i)=>'book-opening-'+(i+1)),...['knife','flintaxe','axe','puukko','rod'].map(x=>'tool-'+x)];
-assets.push('kajo-cabin-poses','sienilampi-interior','icon-canteen','menu_banner','pick_banner1','pick_banner2','pick_banner3');
+assets.push('cabin-yard-props-final','kajo-cabin-poses','sienilampi-interior','icon-canteen','menu_banner','pick_banner1','pick_banner2','pick_banner3');
 assets.push('trail-map','menu-landscape','forest-floor-material');
 assets.push('aarni-river','hiljalampi','hiljalampi-cabin','sienilampi-pier','cabin-spring-v2','timber-wordmark','traveller-pet','traveller-seated');
 assets.push('traveller-run',...['arrows','berries','bow','campfire','cookedMeat','cord','fiber','firewood','hide','kindling','mushroom','rawMeat','shelter','stone','trap','wood'].map(id=>'icon-'+id));

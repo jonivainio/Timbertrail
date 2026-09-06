@@ -4,7 +4,7 @@
 
 `fire-effects.js` is loaded before both cabin-art and render. `PEFire.draw` owns a 72×88 thermal raster sampled at 24 Hz, driven by simulation time, independent seeds and fuel strength. Its per-context cache is bounded to 12 fires. The native canvas factory is injected; no render path mutates simulation state. Hearth clipping prevents stray flames/sparks escaping the firebox. Existing world light pools/chimney smoke remain independent.
 
-Audio uses overlapping, softly attacked filtered noise for the fire bed and a separate irregular 2.1–6.3 s crackle clock. No oscillators/tones are used for combustion. Distance, fuel, sound preferences and indoor state gate scheduling; already playing tails last under two seconds.
+Audio now has no fire noise bed. Only one or two quiet 12–28 ms non-tonal crackles play at irregular 2.1–6.3 s intervals. Distance, fuel, sound preferences and indoor state gate scheduling.
 
 `cabin-art.js` crops the original eight-pose `kajo-cabin-poses.png` atlas, uses a long 58-second rest cycle and anchors all poses to the same basket baseline. Small breathing transforms keep contact with the basket; panting/head turns and lying transitions use actual poses, not an avatar rig. Rendering is clock-based and does not add saved animation state. Generation prompt/provenance: `assets/KAJO-CABIN-ART.md`.
 
@@ -12,13 +12,19 @@ Verified with engine/DOM/audio scheduling tests and native Canvas scene snapshot
 
 ## Cabin room model
 
+`storage-ui.js` owns only transient chest selection/drag state. `PECabin.transfer` is authoritative: explicit positive integer amounts transfer atomically or fail, legacy boolean 1/All calls still work, and tool durability is preserved. Reject stale source counts, foreign drops, same-side drops and closed-panel transfers. `storage.css` supplies the two-column grid and amount controls; split means moving part of a counted stack, not adding persistent slot layout. Capacity is 200 total items.
+
+`home-hearth` contains fuel controls only; `home-kitchen` contains cooking controls only. Both the UI and `PECabin.action` require a lit, fueled hearth to cook. Sleep at the bed or lean-to heals `100/3` points, capped at 100.
+
+Yard decorations are authored in `PERegionArt.yardProps`, with tight atlas crops, ground depth and contact radius. The shed and tractor render behind the cabin, while leaning equipment renders in front of the walls. They do not change saves or interaction targets. See `assets/CABIN-YARD-ART.md` for original-art provenance/prompts.
+
 `cabin-interior.js` owns persistent `state.cabinHome`, outside regional snapshots. Indoor `cabinHome.x` is the camera focus (clamped to 320–640 in room coordinates); do not overwrite outdoor `player.x` or include home in `regionKeys`. Entry/exit/sleep use a one-second black fade. Fixtures use normalized 960x540 hit boxes; changing art requires reviewing all boxes. Three exterior repairs gate entry. Interior fixture flags start true for testing. `PECabin.view/toRoom/toScreen` define one 1.5× camera projection (640×360 visible room units, top=84) for painting, hit tests and tooltip anchors. A/D pans at 110 room units/s; camera movement never sets player.moving or produces footsteps. Visible fixtures activate immediately; no invisible click-to-walk. Cold/fade/HUD overlays stay screen-space. Legacy focus positions clamp safely on load.
 
 Home storage uses material counts plus per-tool durability arrays, 200 total units. Inventory represents one worn tool plus pristine spares. Transfers preserve this convention, disallowing withdrawal of another matching tool over an existing one. Canteen is a unique reusable item; global `canteenFull` is preserved in chest storage. Legacy compasses migrate to one empty canteen. Unknown trade IDs are rejected.
 
 Home fire advances each simulation tick in any region; menus pause time. Sleep advances fuel by the skipped night. The unlit room tends toward sheltered warmth; a lit fire actively warms it. `PE.healthDrain`/`PE.needDamage` are shared indoors/outdoors. `PEArt.drawCold` caches a sparse 24px edge effect driven by warmth; it never blocks input or covers the centre.
 
-`cabin-art.js` composes original room art and Kajo (10.5% larger), with no standing or seated player sprite, shutters, lantern, hearth effects and chimney smoke. The canister is painted into the room, not a mismatched vector prop. Audio attenuates rain/wind, suppresses outdoor fauna and uses wooden floor steps, door/shutter/chest, cloth, drink and pour events. Live listening/layout verification remains a separate playtest.
+`cabin-art.js` composes original room art and Kajo (10.5% larger), with no standing or seated player sprite, canvas-drawn woven curtains, lantern, hearth effects and chimney smoke. The existing `shutters` save flag now means curtains open; old closed-window saves stay closed. The canister is painted into the room, not a mismatched vector prop. Audio attenuates rain/wind, suppresses outdoor fauna and uses wooden floor steps, door/shutter/chest, cloth, drink and pour events. Live listening/layout verification remains a separate playtest.
 
 The user leads product decisions. The assistant acts as project lead: turn each request into bounded implementation stages, choose tools/agents/models and reasoning effort proportionately, use creativity where it improves the requested game, and review integration and visual quality before handing back.
 
@@ -43,7 +49,7 @@ Reasoning/model names record this execution choice, not an API pricing estimate 
 
 ## Regional expansion — local work
 
-Do not push or publish unless explicitly requested. The current change is local only.
+The user’s current standing instruction authorizes publication of completed, verified changes. Check origin/main before committing/pushing; never force-push or include diagnostics.
 
 `regions.js` owns the region graph, entrance positions and component costs. `engine.js` saves per-area mutable state through an explicit field allowlist (`regionKeys`), preventing nested region snapshots. Old version-5 saves migrate to version 6. Fade transitions cancel transient actions, switch scenes at black, then restore input. Time pauses through the fade.
 

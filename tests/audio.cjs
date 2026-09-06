@@ -22,11 +22,12 @@ audio.configure({soundOn:true});for(const name of ['drink','pour','door','shutte
 s.running=true;s.weather='rain';s.rainIntensity=.95;s.cabinHome={inside:false,fire:{lit:false}};audio.update(s,engine,false);const outdoorRain=gains[5].gain.value;s.cabinHome.inside=true;audio.update(s,engine,false);assert.ok(gains[5].gain.value<outdoorRain*.25);audio.configure({soundOn:false});const silent=gains.length;audio.play('pour');audio.play('drink');assert.equal(gains.length,silent);
 console.log('PASS indoor rain attenuation, room interaction foley and mute.');
 audio.configure({soundOn:true,musicOn:false});s.weather='rain';s.playSeconds=100;s.cabinHome={inside:true,x:480,fire:{lit:true,fuel:80}};
-const fireStart=sources.length,fireTones=oscillators.length;audio.update(s,engine,false);assert.ok(sources.length>=fireStart+4);const oneFrame=sources.length;
+const fireStart=sources.length,fireTones=oscillators.length;audio.update(s,engine,false);assert.ok(sources.length>=fireStart+1&&sources.length<=fireStart+2);const oneFrame=sources.length;
 for(let i=0;i<30;i++)audio.update(s,engine,false);assert.equal(sources.length,oneFrame,'paused/repeated clock never stacks fire sounds');assert.equal(oscillators.length,fireTones,'wood fire is entirely non-tonal');
 s.playSeconds+=.5;audio.update(s,engine,false);assert.equal(sources.length,oneFrame,'no mechanical sub-second crackle loop');
 s.cabinHome.fire.fuel=0;s.playSeconds+=10;audio.update(s,engine,false);assert.equal(sources.length,oneFrame,'empty hearth stops scheduling fire');
 s.cabinHome.inside=false;s.structures=[{type:'fire',lit:true,fuel:50,x:400}];s.playSeconds+=10;audio.update(s,engine,false);assert.equal(sources.length,oneFrame,'distant campfire is silent');
 s.structures[0].x=20;s.playSeconds+=1;audio.update(s,engine,false);assert.ok(sources.length>oneFrame,'nearby outdoor fire uses the same ambience');
 audio.configure({soundOn:false});const mutedFire=sources.length;s.playSeconds+=10;audio.update(s,engine,false);audio.play('fire');assert.equal(sources.length,mutedFire,'all fire layers respect mute');
-console.log('PASS mellow non-tonal fire layers, sparse crackle scheduling, fuel/distance gating and mute.');
+const noBed=sources.length;audio.configure({soundOn:true});audio.play('fireBed');assert.equal(sources.length,noBed,'removed fire bed cannot emit a whoosh');
+console.log('PASS quiet short crackles only, no fire bed, sparse scheduling, fuel/distance gating and mute.');

@@ -1,21 +1,21 @@
 # Timbertrail
 
-## Test release 0.7.0
+## Test release 0.7.1
 
-The current Sienilampi/cabin, terrain, parchment UI and survival changes are included in this user-requested GitHub test release. Campfires and the hearth now share turbulent flame animation, glowing coals and sparse sparks, with soft non-tonal fire ambience and occasional crackles. Inside, Kajo alternates sitting, panting, settling and curled sleeping poses with subtle breathing. Existing saves are retained.
+Cabin polish: separate fireplace and kitchen menus, quiet short fire crackles without the whooshing noise bed, drag/drop chest storage with half/exact stack transfers, linen curtains, and original decorative yard props. Sleeping restores one third of maximum health, capped at 100. Existing saves are retained.
 
 ## Sienilampi home (local test update)
 
 Restore roof, facade and yard, then click the door. Inside, A/D pans a 1.5× close-up view; no player avatar is shown. Click visible furniture to use it immediately. The needs/health HUD and Journal remain available. Click the door to leave.
 
-- Fireplace/kitchen: dry branch +45 s, large stick +150 s; cook meat/fish, extinguish or relight. Fire warms the room, burns fuel outdoors too, and produces chimney smoke.
+- Fireplace: add dry branches (+45 s) or large sticks (+150 s), extinguish or relight. Kitchen: cook meat/fish only while the fireplace is lit and has fuel. Fire warms the room, burns fuel outdoors too, and produces chimney smoke.
 - Bed: confirm sleeping until next morning. Energy and health recover; food, water and fuel are consumed overnight.
-- Chest: transfer 1 or All between backpack and 200-unit storage. Tool condition and stored items survive travel/reload.
-- Mug clears thirst once; refill at the canister beside the table. Shutters, lantern, armchair and Kajo are interactive. Furniture is already repaired for testing.
+- Chest: drag stacks between backpack and 200-unit storage. Shift-drag transfers half; selecting a stack exposes 1 / Split half / All and an exact amount field. Transfers have a keyboard/button alternative. Tool condition and stored items survive travel/reload.
+- Mug clears thirst once; refill at the canister beside the table. Curtains, lantern, armchair and Kajo are interactive. Furniture is already repaired for testing.
 - Aarni's canteen costs 2 hides, replacing the compass. Fill at drinking spots, use from Backpack for one full-thirst drink, then refill the reusable bottle. With a rod held, an empty carried bottle fills before fishing. Old compasses migrate to one empty bottle for free. Fill state survives chest transfers/saves.
 - Cold has a light edge frost below 18 warmth, strongest at zero. Thirst damages health faster than hunger; cold damage is very slow.
 
-Keep updates local until GitHub is explicitly requested. Canvas snapshots and automated tests do not replace an in-browser layout/listening playtest.
+Completed, verified requested changes are committed and pushed to main under the user’s ongoing GitHub-update instruction. Canvas snapshots and automated tests do not replace an in-browser layout/listening playtest.
 
 A quiet, original pixel-art wilderness survival prototype. Static HTML/CSS and vanilla JavaScript; Canvas 2D rendering and procedural Web Audio. No runtime dependencies or backend.
 
@@ -120,4 +120,4 @@ At zero health the traveller collapses; Kajo brings them to the nearest lean-to 
 
 ## Repository workflow
 
-This repository is the local Timbertrail game project's working folder. The earlier pine-and-ember folder remains untouched; do not edit both copies. New topical tasks should read AGENTS.md, README.md and DEVELOPMENT.md and work on this repository. Finish one shared-folder code change before starting another, or use separate Git worktrees and integrate deliberately. Work locally by default. Commit/push and Pages publication happen only when the user explicitly requests a GitHub update. There is no background synchronization service.
+This repository is the local Timbertrail game project's working folder. The earlier pine-and-ember folder remains untouched; do not edit both copies. New topical tasks should read AGENTS.md, README.md and DEVELOPMENT.md and work on this repository. Finish one shared-folder code change before starting another, or use separate Git worktrees and integrate deliberately. The user has requested ongoing GitHub updates: verify completed changes, check the remote, then commit and push main without force. There is no background synchronization service.
