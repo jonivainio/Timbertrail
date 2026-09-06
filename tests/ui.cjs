@@ -15,6 +15,7 @@ class Element {
  querySelectorAll(selector){const result=[];for(const c of this.children){if(c.matches(selector))result.push(c);result.push(...c.querySelectorAll(selector));}return result;}querySelector(s){return this.querySelectorAll(s)[0]||null;}closest(s){return this.matches(s)?this:this.parentElement?.closest(s)||null;}
  addEventListener(type,fn){(this.listeners[type]??=[]).push(fn);}dispatch(type,extra={}){const event={target:this,preventDefault(){},...extra};for(let el=this;el;el=el.parentElement)for(const f of el.listeners[type]||[])f(event);}
  focus(){this.ownerDocument.activeElement=this;}getBoundingClientRect(){return{left:0,top:0,width:960,height:540};}requestFullscreen(){this.ownerDocument.fullscreenElement=this;return Promise.resolve();}
+ setPointerCapture(id){this.capture=id;}hasPointerCapture(id){return this.capture===id;}releasePointerCapture(id){if(this.capture===id)this.capture=null;}
  getContext(){return new Proxy({createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),measureText:t=>({width:t.length*8}),createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})},{get:(o,k)=>o[k]||(()=>{}),set:(o,k,v)=>(o[k]=v,true)});}
 }
 function parse(html,parent){const stack=[parent];for(const token of html.match(/<!--[\s\S]*?-->|<[^>]+>|[^<]+/g)||[]){if(token.startsWith('<!--')||token.startsWith('<!'))continue;if(token.startsWith('</')){if(stack.length>1)stack.pop();continue;}if(token[0]==='<'){const m=token.match(/^<([\w-]+)/);if(!m)continue;const el=new Element(m[1],parent.ownerDocument);for(const a of token.slice(m[0].length).matchAll(/([\w-]+)(?:="([^"]*)"|='([^']*)'|=([^\s>]+))?/g))el.setAttribute(a[1],decode(a[2]??a[3]??a[4]??''));stack.at(-1).append(el);if(!['meta','link','br','hr','img','input'].includes(m[1])&&!token.endsWith('/>'))stack.push(el);}else stack.at(-1)._text+=decode(token);}}
@@ -23,10 +24,11 @@ doc.documentElement=doc.querySelector('html');doc.createTreeWalker=scope=>{const
 const storage=new Map([['pine-and-ember-save-v1',JSON.stringify({player:{x:565},inventory:{wood:40,stone:30,fiber:30,berries:3,knife:1,bow:1,arrows:4},completed:{makeKnife:true}})]]);
 let raf;const imageLoads=[];class TestImage{get src(){return this._src;}set src(value){this._src=value;imageLoads.push(Promise.resolve().then(()=>{const b=fs.readFileSync(path.join(dir,value));this.width=b.readUInt32BE(16);this.height=b.readUInt32BE(20);this.onload?.();}));}}
 let timerId=0;const timers=new Map();const advance=()=>{for(let pass=0;pass<8;pass++){const batch=[...timers].filter(([,v])=>v.delay<=350);for(const [id,v]of batch){timers.delete(id);v.fn();}}};
-const context={document:doc,Image:TestImage,console,performance,setTimeout:(fn,delay)=>(timers.set(++timerId,{fn,delay}),timerId),clearTimeout:id=>timers.delete(id),requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},addEventListener(){},};context.window=context;context.globalThis=context;
+const windowEvents={},dispatchWindow=(type,event={})=>{for(const fn of windowEvents[type]||[])fn(event);};
+const context={document:doc,Image:TestImage,console,performance,setTimeout:(fn,delay)=>(timers.set(++timerId,{fn,delay}),timerId),clearTimeout:id=>timers.delete(id),requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},addEventListener(type,fn){(windowEvents[type]??=[]).push(fn);},};context.window=context;context.globalThis=context;
 
 
-vm.createContext(context);for(const file of ['i18n.js','regions.js','cabin-interior.js','engine.js','item-icons.js','equipment.js','fire-effects.js','render.js','panels.js','storage-ui.js'])vm.runInContext(fs.readFileSync(path.join(dir,file),'utf8'),context,{filename:file});
+vm.createContext(context);for(const file of ['i18n.js','regions.js','cabin-interior.js','fishing.js','engine.js','item-icons.js','equipment.js','fire-effects.js','fishing-art.js','render.js','panels.js','storage-ui.js'])vm.runInContext(fs.readFileSync(path.join(dir,file),'utf8'),context,{filename:file});
 let engine;const Base=context.PE.Engine;context.PE.Engine=class extends Base{constructor(...a){super(...a);if(!engine)engine=this;}};
 const sounds=[],mix={soundOn:true,musicOn:true,soundVolume:.7,musicVolume:.4};context.PEAudio={play(n){sounds.push(n);},start(){},toggle(){return false;},pause(){},update(){},settings:()=>({...mix}),configure:p=>Object.assign(mix,p)};
 vm.runInContext(fs.readFileSync(path.join(dir,'game.js'),'utf8'),context,{filename:'game.js'});
@@ -135,4 +137,26 @@ $('storage-amount').value='2';$('storage-amount').dispatch('input');card('wood',
 card('wood','take').dispatch('dragstart',{dataTransfer:dt});click('#close-modal');advance();zone('pack').dispatch('drop',{dataTransfer:dt});assert.equal(home.storage.wood,5,'closing chest cancels pending drag');
 engine.emit('panel',{panel:'home-chest'});context.L.set('fi');click('[data-storage-card="wood"][data-direction="take"]');assert.ok($('modal-content').textContent.includes('Puolita pino'));context.L.set('en');click('#close-modal');advance();
 console.log('PASS chest grid, half/exact split, two-way drag/drop, malformed/foreign/stale/cancelled transfers and Finnish labels.');
+// Pointer routing and paper HUD contracts; renderer/layout are deliberately separate.
+context.PEArt.Renderer.prototype.draw=()=>{};
+const F=context.PEFishing,cv=$('game'),prepareFishing=()=>{engine.transition=null;engine.enterRegion('pond',context.PERegions.pond.chair);engine.state.camera=engine.state.player.x-384;engine.state.player.sitting=true;engine.state.inventory.rod=1;engine.state.equipped='rod';engine.emit('change');};
+prepareFishing();const castPoint={clientX:184,clientY:370,button:0,pointerId:21,target:cv};
+assert.equal($('fishing-card').hidden,false);assert.equal($('reel-button').hidden,true);assert.match($('fishing-label').textContent,/charge a cast/);
+$('game-shell').dispatch('pointermove',castPoint);raf(performance.now()+100);assert.match(cv.style.cursor,/data:image\/svg/);
+cv.dispatch('pointerdown',castPoint);assert.equal(engine.fishing.stage,'charge');assert.equal(cv.capture,21);
+engine.update(.05);engine.emit('change');assert.ok(Number($('fishing-meter').getAttribute('aria-valuenow'))>0);
+dispatchWindow('pointerup',{button:0,pointerId:99});assert.equal(engine.fishing.stage,'charge','foreign pointer cannot release');
+dispatchWindow('pointerup',{button:0,pointerId:21,clientX:-500});assert.equal(engine.fishing.stage,'flight','release outside canvas still casts');assert.equal(cv.capture,null);
+cv.dispatch('click',castPoint);assert.equal(engine.fishing.stage,'flight','synthetic click never starts ordinary interaction');
+for(let i=0;i<200&&engine.fishing.stage==='flight';i++)engine.update(1/120);assert.equal(engine.fishing.stage,'wet');
+cv.dispatch('pointerdown',castPoint);assert.equal(engine.fishing.held,true);dispatchWindow('blur');assert.equal(engine.fishing.held,false);assert.equal(cv.capture,null);
+cv.dispatch('pointerdown',castPoint);click('#journal-button');advance();assert.equal(engine.fishing.held,false);assert.equal(cv.capture,null);const age=engine.fishing.age;raf(performance.now()+200);assert.equal(engine.fishing.age,age,'Journal pauses fishing');click('#close-modal');advance();
+doc.dispatch('keydown',{code:'Escape'});assert.equal(engine.fishing,null);
+for(const cancel of ['pointercancel','lostpointercapture','hidden','blur','Escape']){prepareFishing();cv.dispatch('pointerdown',castPoint);assert.ok(engine.fishing);if(cancel==='hidden'){doc.hidden=true;doc.dispatch('visibilitychange');doc.hidden=false;doc.dispatch('visibilitychange');}else if(cancel==='blur')dispatchWindow('blur');else if(cancel==='Escape')doc.dispatch('keydown',{code:'Escape'});else cv.dispatch(cancel);assert.equal(engine.fishing,null,cancel+' cancels charge');dispatchWindow('pointerup',castPoint);assert.equal(engine.fishing,null);}
+// Retina/scaled CSS canvas coordinates use the same logical cast target.
+prepareFishing();cv.getBoundingClientRect=()=>({left:40,top:80,width:1440,height:810});cv.dispatch('pointerdown',{...castPoint,clientX:40+184*1.5,clientY:80+370*1.5});assert.equal(engine.fishing.stage,'charge');dispatchWindow('blur');delete cv.getBoundingClientRect;
+prepareFishing();F.press(engine,engine.state.player.x-200,370);F.release(engine);const f=engine.fishing,fish=F.shoal(engine).find(a=>a.species==='zander');Object.assign(fish,{weight:9,mode:'hooked',stamina:.1,timer:2});Object.assign(f,{stage:'fight',fish,held:true,slackTime:0,strain:0,run:0,runY:0,surge:0});const tip=F.pose(engine).tip;Object.assign(f.lure,{x:tip.x,y:context.PERegions.pond.surface+2,vx:0,vy:0});f.lineLength=Math.abs(f.lure.y-tip.y);engine.update(1/120);
+assert.equal($('modal').dataset.panel,'fish-catch');assert.ok(doc.querySelector('.catch-illustration.zander'));assert.ok(doc.querySelector('.fish-trophy'));assert.match($('modal-content').textContent,/9.00 kg/);assert.match($('modal-content').textContent,/Zander/);assert.equal(engine.fishing,null);
+context.L.set('fi');engine.emit('change');assert.match($('modal-content').textContent,/Kuha/);context.L.set('en');click('[data-catch-close]');advance();assert.equal($('modal-backdrop').hidden,true);assert.equal(engine.state.player.sitting,true);assert.equal($('fishing-card').hidden,false);
+console.log('PASS fishing pointer capture/outside release, scaled coordinates, cursor/HUD, pause/cancel paths and bilingual trophy catch card.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

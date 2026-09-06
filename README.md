@@ -1,8 +1,22 @@
 # Timbertrail
 
-## Test release 0.7.2
+## Test release 0.8.0 — spinning fishing v1
 
-User-supplied raw/cooked fillet illustrations now replace the old fish icons in backpack, storage, cooking and quick food slots. Pike, zander and perch illustrations are registered separately for species displays; this art update does not add perch spawning or change inventory/save IDs. Source notes: `assets/FISH-ICONS.md`. Spinning-fishing v1 is still in development and is not part of this art-only release.
+Sienilampi's pier now has playable casting, sinking/retrieval, living pike and zander, nibble/rejection behavior and tension-controlled fish fights. Eight dedicated seated poses hold a separately rendered bending rod; the line shares its tip anchor. Lure splashes, quiet reel/brake sounds and tension-driven bubbles give feedback. A landed fish opens a species/weight card using the supplied illustrations, with a gold trophy for the upper 20% of that species' possible weight range. Very large fish are rare, not one in five catches. Personal bests survive saves; existing journeys are preserved.
+
+1. Craft/equip the **Spinning rod** (3 branches + 2 cords, knife required), travel to Sienilampi, and click the pier chair.
+2. Point over water ahead: the cursor becomes a fish. Hold the left mouse button to charge; release to cast. Longer charge means greater distance.
+3. Hold to reel; release to let the lure sink. Reeling first takes up slack. Try a short sinking pause for pike, or about 25–30 seconds for deeper zander.
+4. With a fish hooked, reel while watching tension. Release when it rises toward red, then resume as it drops. Excess tension breaks the line; prolonged slack loses the hook. Escape, Stop fishing or moving cancels.
+5. Landing adds 1–8 raw fillet portions, scaled to weight, for the existing campfire/kitchen recipes. The catch card pauses time. Closing it lets you cast again.
+
+The v1 simulation uses a fixed 120 Hz step and a stylized 2D underwater cutaway, not full hydrodynamics. Forest/river keep their earlier bobber interaction; the cabin spring is drinking-only. Perch remains reserved for a later update. Physics, input/cancel paths, save compatibility, rendering anchors and audio scheduling are automated-tested, with native Canvas visual review. Actual browser animation feel and subjective sound quality still need the user's playtest.
+
+Design, species sources and tuning: `DEVELOPMENT.md`. Generated pose art/prompts and authorized background extraction: `assets/FISHING-ART.md`.
+
+## Fish illustrations (0.7.2)
+
+User-supplied raw/cooked fillet illustrations replace the old fish icons in backpack, storage, cooking and quick food slots. Pike, zander and perch illustrations are registered separately for species displays; the 0.7.2 art update did not add perch spawning or change inventory/save IDs. Source notes: `assets/FISH-ICONS.md`.
 
 ## Cabin polish (0.7.1)
 
@@ -90,7 +104,7 @@ Cabin yards, the Sienilampi trail entrance and spring bank now join the walking 
 - Walk off the right edge of Forest to enter the 6,400-unit Aarni River Trail through a black fade. Its first section is woodland; the route continues along riverbanks and through two shallow stepping-stone crossings. Walk back off its left edge to return.
 - Click the Sienilampi signposted branch before the river. Its pale dashed hover frame has no entry cost. Sienilampi starts at the right edge; walk left to the derelict cabin, then to the pond and pier. Leave through the right edge to return to the branch.
 - Click the cabin's roof, complete facade (walls, door and windows), or yard to approach and restore that section. Hover shows required/owned materials. The three sections are independent, in any order. Materials are charged only when repair finishes; moving cancels without charging.
-- The pond has a visible sloping bed, submerged stones/plants and wind-driven surface motion. Click the chair to sit; move to stand. A short timber pier extends over the steep drop, with its supports visible underwater. No swimming or new pond fishing yet. Only rabbits inhabit this area, besides companion Kajo.
+- The pond has a visible sloping bed, submerged stones/plants and wind-driven surface motion. Click the chair to sit; move to stand. A short timber pier extends over the steep drop, with its supports visible underwater. Spinning fishing is available from the chair; swimming is not. Rabbits inhabit the bank, alongside companion Kajo; pike and zander inhabit the pond cutaway.
 - Journal map is slightly inset/centered. Use red markers to travel to connected or previously visited areas. Gathered resources, fallen trees, camps, wildlife and repairs are stored separately per area; inventory, time and survival stats travel with you. Existing saves load as Forest and are preserved.
 - Native Canvas snapshots checked regional vistas and eight cabin repair combinations. Automated simulation/DOM checks cover travel, save migration, repair costs/cancel, hotspot priority, pier boundaries and fords. These do not replace browser layout, perceived sound, or prolonged playtesting.
 

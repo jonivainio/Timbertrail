@@ -1,6 +1,7 @@
 /* Pine & Ember — simulation, independent of the DOM and rendering. */
 (function(root) {
   'use strict';
+  const fishing=root.PEFishing||(typeof require==='function'?require('./fishing.js'):null);
   const cabin=root.PECabin||(typeof require==='function'?require('./cabin-interior.js'):null);
   const regions=root.PERegions||(typeof require==='function'?require('./regions.js'):null);
   const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -14,7 +15,7 @@
     flintaxe:['Piikivikirves','Alkukantainen kivikirves. Hidas, mutta sillä kaataa kuusen ja pilkkoo rungon.','tool'],
     axe:['Teräskirves','Aarnin teräskirves. Nopeampi ja kestävämpi kuin piikivikirves.','tool'],
     bow:['Saarijousi','Hiljainen jousi metsälle. Varusta, tähtää hiirellä ja laukaise klikkaamalla.','tool'],
-    rod:['Pajuvapa','Taipuisa vapa. Varusta ja klikkaa joen kalapaikkaa.','tool'],
+    rod:['Spinning rod','Sit on the pier with this rod. Hold over the water to charge a cast, release to throw.','tool'],
     arrows:['Nuoli','Suora oksa ja piikivikärki. Yksi nuoli kuluu jokaisesta laukauksesta.','material'],
     wood:['Kuiva oksa','Metsän pohjalta kerättyä kuivaa puuta. Käsitöihin ja nuotion polttoaineeksi.','material'],
     stone:['Jokikivi','Sileä harmaa kivi työkaluihin ja nuotiokehään.','material'],
@@ -40,7 +41,7 @@
     {id:'shelter',name:'Laavusuoja',need:{firewood:8,wood:4,fiber:6,cord:2},tool:'flintaxe',toolAny:['flintaxe','axe'],structure:'shelter',desc:'Oma lepopaikka. Nuku aamuun ja palauta voimasi.'},
     {id:'bow',need:{wood:4,cord:2},tool:'knife',toolAny:['knife','puukko'],desc:'Lähesty riistaa kyykyssä. Muista valmistaa myös nuolia.'},
     {id:'arrows',name:'Neljä nuolta',need:{wood:1,stone:1},tool:'knife',toolAny:['knife','puukko'],amount:4,desc:'Neljä nuolta saarijouseen.'},
-    {id:'rod',need:{wood:3,cord:2},tool:'knife',toolAny:['knife','puukko'],desc:'Vapa veden äärelle. Nosta kala, kun koho nykäisee.'},
+    {id:'rod',need:{wood:3,cord:2},tool:'knife',toolAny:['knife','puukko'],desc:'A spinning rod for the pier. Hold to cast and reel; release to ease the line.'},
     {id:'trap',name:'Rihma-ansa',need:{wood:4,cord:1},tool:'knife',toolAny:['knife','puukko'],structure:'trap',desc:'Aseta polun reunaan. Tarkista minuutin kuluttua.'}
   ];
   const tasks=[['firstGather','Kerää oksia, kiviä ja kuitua'],['makeKnife','Valmista piikiviveitsi'],['makeAxe','Valmista piikivikirves'],['makeFire','Rakenna nuotio'],['makeShelter','Rakenna laavu'],['drink','Juo lähteestä'],['meet','Tapaa erakko Aarni'],['trade','Tee vaihtokauppa'],['meal','Valmista lämmin ateria']];
@@ -57,7 +58,7 @@
   function fresh(){return {
     version:6,running:false,regions:{},visited:{forest:true},cabinRepairs:{},discovered:{berries:true},player:{x:565,facing:1,crouching:false,moving:false,running:false,sitting:false,hunger:88,thirst:86,energy:100,warmth:85,health:100,stride:0},
     dog:{x:506,facing:1,mode:'sit',delay:.8,idle:0,nextDecision:7,lastMoving:false,stride:0},
-    canteenFull:false,inventory:Object.fromEntries(Object.keys(items).map(k=>[k,k==='berries'?3:0])),toolDurability:{},quickFood:'berries',quickTools:{knife:'knife',axe:'flintaxe'},equipped:null,
+    fishery:fishing.restore(),canteenFull:false,inventory:Object.fromEntries(Object.keys(items).map(k=>[k,k==='berries'?3:0])),toolDurability:{},quickFood:'berries',quickTools:{knife:'knife',axe:'flintaxe'},equipped:null,
     structures:[{id:'oldfire',type:'oldfire',x:710,lit:false,fuel:0}],picked:{},completed:{},drops:[],falling:[],traders:{aarni:{introDone:false}},
     journal:{seen:{},hunted:{},caught:{}},day:1,dayTime:.38,weather:'clear',rainIntensity:0,currentMap:'forest',camera:181,playSeconds:0,rowanMet:false,traded:false,
     animals:[['rabbit',1510],['grouse',5480],['deer',2810],['bear',4660]].map(([type,x],i)=>({id:'a'+i,type,x,home:x,vx:0,facing:i%2?1:-1,hp:type==='bear'?5:type==='deer'?2:1,alive:true,mode:x>WORLD?'away':'graze',returnAt:150+i*25,timer:8+i,flight:0,stride:0}))
@@ -93,7 +94,7 @@
     }
     snapshotRegion(){return Object.fromEntries(regions.regionKeys.map(k=>[k,this.state[k]]));}
     requestTravel(id,x){if(cabin.home(this).inside){this.notify('Go outside before travelling.');return false;}if(!regions.canTravel(this.state,id)||this.transition)return false;this.walkTarget=null;this.action=null;this.attack=null;this.fishing=null;this.keys={};this.state.player.moving=false;this.state.player.running=false;this.state.player.sitting=false;this.transition={to:id,x:Number.isFinite(x)?x:regions.maps[id].spawn,time:0,switched:false};this.emit('change');return true;}
-    enterRegion(id,x){if(this.state.cabinHome)this.state.cabinHome.inside=false;
+    enterRegion(id,x){this.pondFish=null;if(this.state.cabinHome)this.state.cabinHome.inside=false;
       const s=this.state;for(const drop of s.drops)delete drop.carriedBy;s.regions[s.currentMap]=this.snapshotRegion();const previous=s.regions[id];this.configureRegion(id,true);if(previous)Object.assign(s,previous);s.visited[id]=true;
       s.player.x=clamp(x??regions.maps[id].spawn,80,WORLD-80);if(id==='pond')s.player.x=Math.max(regions.pond.walkMin,s.player.x);s.player.facing=s.player.x>WORLD/2?-1:1;s.player.moving=false;s.player.running=false;s.player.sitting=false;s.camera=clamp(s.player.x-WIDTH*.4,0,WORLD-WIDTH);Object.assign(s.dog,{x:clamp(s.player.x-s.player.facing*42,35,WORLD-35),mode:'sit',facing:s.player.facing,moving:false,retrieveId:null,delay:.6});
       this.keys={};this.action=null;this.attack=null;this.walkTarget=null;this.fishing=null;this.projectiles=[];this.effects=[];this.activeFire=null;this.pendingDismantle=null;this.endOfTrailShown=false;this.notify(regions.maps[id].name);this.emit('change');this.emit('save');
@@ -129,10 +130,11 @@
     emit(type,data={}){if(type==='change'||type==='save')this.rememberItems();this.onEvent({type,...data});}
     notify(text){this.emit('notice',{text});}
     sound(name,intensity=1){this.emit('sound',{name,intensity});}
-    start(saved=null){if(saved)this.load(saved);this.roomTarget=null;this.roomRest=false;this.roomSteam=0;this.roomHeart=0;this.roomWarningAt=0;this.sprintExhausted=this.state.player.energy<=0;this.needWarnings=new Set();this.needBubble=null;this.configureRegion(this.state.currentMap);this.transition=null;this.pendingDismantle=null;this.state.running=true;this.state.player.moving=false;this.state.player.sitting=false;this.endOfTrailShown=false;this.sinceSave=0;this.effects=[];this.keys={};this.action=null;this.fishing=null;this.walkTarget=null;this.attack=null;this.projectiles=[];this.emit('change');}
-    load(saved,localOnly=false){
+    start(saved=null){this.pondFish=null;this.lastCatch=null;if(saved)this.load(saved);this.roomTarget=null;this.roomRest=false;this.roomSteam=0;this.roomHeart=0;this.roomWarningAt=0;this.sprintExhausted=this.state.player.energy<=0;this.needWarnings=new Set();this.needBubble=null;this.configureRegion(this.state.currentMap);this.transition=null;this.pendingDismantle=null;this.state.running=true;this.state.player.moving=false;this.state.player.sitting=false;this.endOfTrailShown=false;this.sinceSave=0;this.effects=[];this.keys={};this.action=null;this.fishing=null;this.walkTarget=null;this.attack=null;this.projectiles=[];this.emit('change');}
+    load(saved,localOnly=false){this.pondFish=null;this.lastCatch=null;
       const defaults=fresh(),safeNumber=(v,d,min,max)=>Number.isFinite(v)?clamp(v,min,max):d;
       this.state={...defaults,day:safeNumber(saved.day,1,1,9999),dayTime:safeNumber(saved.dayTime,.38,0,1),playSeconds:safeNumber(saved.playSeconds,0,0,1e9),weather:['clear','rain','mist'].includes(saved.weather)?saved.weather:'clear',rowanMet:!!saved.rowanMet,traded:!!saved.traded};
+      this.state.fishery=fishing.restore(saved.fishery);
       this.state.rainIntensity=this.state.weather==='rain'?safeNumber(saved.rainIntensity,.3,.15,1):0;
       this.configureRegion(regions.maps[saved.currentMap]?saved.currentMap:'forest',true);
       for(const k of Object.keys(defaults.inventory))this.state.inventory[k]=Math.floor(safeNumber(saved.inventory?.[k],defaults.inventory[k],0,99999));
@@ -280,7 +282,7 @@
       if(target.type==='trap'){const trap=s.structures.find(v=>v.id===target.id);if(trap.readyAt>s.playSeconds)return this.notify('Ansa on viritetty. Tarkista vähän myöhemmin.');s.drops.push({id:'trapped-'+s.playSeconds,type:'carcass',species:'rabbit',x:target.x+24});s.journal.hunted.rabbit=true;trap.readyAt=s.playSeconds+90;this.notify('Game down. Approach with a flint knife or puukko to recover meat and hide.');this.sound('pickup');this.emit('change');return;}
       if(target.type==='water'){
         if(s.inventory.canteen&&!s.canteenFull){s.canteenFull=true;p.thirst=100;this.finishTask('drink');this.sound('pour',.6);this.notify('Canteen refilled.');this.emit('change');this.emit('save');return;}
-        if(target.noFishing&&!target.drinkOnly&&s.equipped==='rod'){this.notify('Fishing at Sienilampi is coming later. Enjoy the water for now.');return;}
+        if(target.noFishing&&!target.drinkOnly&&s.equipped==='rod'){this.notify('Sit on the pier chair with your spinning rod, then hold over the water to cast.');return;}
         if(s.equipped==='rod'&&!target.drinkOnly){if(!this.fishing){this.fishing={time:0,biteAt:2.5+random(s.playSeconds)*3,stage:'wait',x:target.x};this.sound('cast');this.emit('change');}return;}
         p.thirst=100;if(s.inventory.canteen){s.canteenFull=true;this.sound('pour',.5);this.notify('Canteen refilled.');}this.finishTask('drink');this.sound('water',.7);this.notify('Raikas lähdevesi sammuttaa janon.');this.emit('change');return;
       }
@@ -300,7 +302,7 @@
       else if(offer==='axe'){if(s.inventory.hide<2)return this.notify('Aarni asks for two hides for the steel axe.');s.inventory.hide-=2;s.inventory.axe++;s.toolDurability.axe=toolDurability.axe;}
       else if(offer==='canteen'){if(s.inventory.canteen||cabin.count(cabin.home(this),'canteen')||s.inventory.hide<2)return false;s.inventory.hide-=2;s.inventory.canteen=1;s.canteenFull=false;}else return false;
       s.traded=true;this.finishTask('trade');this.sound('trade');this.emit('change');this.notify('Trade complete. Your supplies are in the backpack.');return true;}
-    reel(){if(!this.fishing)return;const f=this.fishing;this.fishing=null;if(f.stage==='bite'){this.state.inventory.rawFish++;this.state.journal.caught.fish=true;this.sound('catch');this.notify('Sait kalan! Kypsennä se nuotiolla.');}else{this.sound('miss',.5);this.notify('Kala pääsi karkuun. Odota, kunnes koho nykäisee.');}this.emit('change');}
+    reel(){if(this.fishing?.kind==='spinning')return;if(!this.fishing)return;const f=this.fishing;this.fishing=null;if(f.stage==='bite'){this.state.inventory.rawFish++;this.state.journal.caught.fish=true;this.sound('catch');this.notify('Sait kalan! Kypsennä se nuotiolla.');}else{this.sound('miss',.5);this.notify('Kala pääsi karkuun. Odota, kunnes koho nykäisee.');}this.emit('change');}
     shoot(wx,wy){const s=this.state;if(s.equipped!=='bow'||this.shotCooldown>0||this.action||this.attack)return false;if(!s.inventory.arrows){this.notify('Nuolet loppuivat. Valmista lisää käsitöissä.');return false;}
       s.player.facing=wx<s.player.x?-1:1;this.walkTarget=null;this.attack={time:0,duration:.75,wx,wy,released:false};this.shotCooldown=.9;return true;
     }
@@ -315,7 +317,7 @@
       if(this.sprintExhausted&&p.energy>=15&&!shift)this.sprintExhausted=false;
       const sprint=!p.crouching&&shift&&!this.sprintExhausted&&p.energy>0;
       const depletedBefore=['hunger','thirst','warmth','energy'].filter(k=>p[k]<=0);
-      if(manual){this.walkTarget=null;this.action=null;p.sitting=false;}
+      if(manual){fishing.cancel(this);this.walkTarget=null;this.action=null;p.sitting=false;}
       let dir=manual;
       if(this.walkTarget&&!manual){const target=this.targets().find(t=>t.id===this.walkTarget.id);if(!target){this.walkTarget=null;}else if(Math.abs(target.x-p.x)<=this.walkTarget.reach-2){const command=this.walkTarget.command;this.walkTarget=null;this.interact({...target,command});}else dir=target.x<p.x?-1:1;}
       p.moving=!!dir&&!p.sitting&&!this.action&&!this.fishing&&!this.attack;p.running=!!(p.moving&&sprint);const wading=s.currentMap==='river'&&((p.x>3540&&p.x<3770)||(p.x>5080&&p.x<5320));p.wading=wading;const speed=(p.crouching?38:sprint?145:83)*(wading?.7:1);
@@ -345,8 +347,10 @@
       for(const fall of s.falling){fall.time+=dt;if(fall.time>=1.8&&!fall.done){fall.done=true;for(let i=0;i<3;i++)this.scatterDrop('log',fall.x+fall.direction*(35+i*34),i,10);for(let i=0;i<4;i++)this.scatterDrop('wood',fall.x+fall.direction*48,i,70);this.sound('impact',.6);this.emit('change');}}s.falling=s.falling.filter(f=>!f.done);
       for(const fire of s.structures)if(fire.lit){fire.fuel=Math.max(0,(fire.fuel||0)-dt);if(fire.fuel===0){fire.lit=false;this.emit('change');if(Math.abs(fire.x-p.x)<250)this.notify('The campfire has gone out. Add dry wood to relight it.');}}
       if(this.attack){const a=this.attack;a.time+=dt;if(a.time>=.32&&!a.released){a.released=true;const origin=root.PEEquipment?root.PEEquipment.projectileOrigin(this):{x:p.x+p.facing*13,y:ground(p.x,s.currentMap)-(p.crouching?24:40)},dx=a.wx-origin.x,dy=a.wy-origin.y,len=Math.hypot(dx,dy)||1;s.inventory.arrows--;this.projectiles.push({x:origin.x,y:origin.y,vx:dx/len*390,vy:dy/len*390,life:2.5});this.sound('bow',.7);this.emit('change');}if(a.time>=a.duration)this.attack=null;}
-      if(this.fishing){const f=this.fishing;f.time+=dt;if(f.stage==='wait'&&f.time>f.biteAt){f.stage='bite';this.sound('water',.5);this.emit('change');}if(f.time>f.biteAt+1.8){this.fishing=null;this.notify('Kala nykäisi ja katosi. Kokeile uudestaan.');this.emit('change');}}
+      if(this.fishing?.kind==='spinning')fishing.update(this,dt);
+      else if(this.fishing){const f=this.fishing;f.time+=dt;if(f.stage==='wait'&&f.time>f.biteAt){f.stage='bite';this.sound('water',.5);this.emit('change');}if(f.time>f.biteAt+1.8){this.fishing=null;this.notify('Kala nykäisi ja katosi. Kokeile uudestaan.');this.emit('change');}}
       this.updateDog(dt);this.updateAnimals(dt);
+      fishing.ambient(this,dt);
       for(const a of this.projectiles){a.x+=a.vx*dt;a.y+=a.vy*dt;a.vy+=28*dt;a.life-=dt;
         for(const animal of s.animals){if(!animal.alive||animal.mode==='away'||a.life<=0)continue;const h=animal.type==='deer'?42:animal.type==='bear'?32:14;if(Math.abs(a.x-animal.x)<(animal.type==='deer'?22:animal.type==='bear'?28:14)&&a.y>ground(animal.x,s.currentMap)-h&&a.y<ground(animal.x,s.currentMap)+3){a.life=0;animal.hp--;animal.mode='flee';animal.flight=6;animal.departing=animal.type==='bear';animal.facing=a.vx>0?1:-1;this.sound('impact',.5);if(animal.hp<=0){animal.alive=false;animal.respawnAt=s.playSeconds+420;s.drops.push({id:'carcass-'+animal.id+'-'+s.playSeconds,type:'carcass',species:animal.type,x:clamp(animal.x,15,WORLD-15)});s.journal.hunted[animal.type]=true;this.notify('Game down. Approach with a flint knife or puukko to recover meat and hide.');this.emit('change');}break;}}
         if(a.y>ground(a.x,s.currentMap)+5)a.life=0;

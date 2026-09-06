@@ -56,17 +56,29 @@
     const pending=tasks.filter(([k])=>!s.completed[k]);$('task-count').textContent=(tasks.length-pending.length)+' / '+tasks.length;$('task-list').innerHTML=(pending.length?pending.slice(0,3):[['done','Leirisi on valmis. Kulje omaa polkuasi.']]).map(([,title])=>`<li>${title}</li>`).join('');
     document.querySelectorAll('.quick-item').forEach(b=>{const id=b.dataset.use,qty=s.inventory[id]||0,item=items[id],durability=s.toolDurability?.[id],cap=durabilityCaps[id];b.classList.toggle('is-active',s.equipped===id);b.classList.toggle('unavailable',qty<1);b.setAttribute('aria-pressed',String(s.equipped===id));b.querySelector('[data-count]').textContent=id==='bow'?s.inventory.arrows:item?.[2]==='food'?qty:durability!=null&&cap?Math.ceil(durability/cap*100)+'%':'';b.title=name(id)+(qty<1?' · ei repussa':s.equipped===id?' · klikkaa pois käytöstä':item?.[2]==='food'?' · syö':' · varusta');});
     L.apply($('hud'));
-    $('fishing-card').hidden=!engine.fishing;if(engine.fishing){const bite=engine.fishing.stage==='bite';$('fishing-card').classList.toggle('bite',bite);$('fishing-label').textContent=bite?'Koho nykäisi — nosta nyt!':'Hiljaa… odota kohon nykäisyä.';$('reel-button').textContent=bite?'Nosta kala!':'Nosta vapa';L.apply($('fishing-card'));}
+    syncFishingHUD();
   }
   function playBookSequence(opening,done){
     clearTimeout(bookFrameTimer);const image=$('book-animation'),frames=opening?bookFrames:[...bookFrames].reverse();let i=0;
     if(reducedMotion()){image.hidden=true;image.src='assets/book-open.png';done?.();return;}
     image.hidden=false;const next=()=>{if(i>=frames.length){image.hidden=true;done?.();return;}image.src='assets/'+frames[i++]+'.png';bookFrameTimer=setTimeout(next,70);};next();
   }
+  function syncFishingHUD(){
+    const f=engine.fishing,spinning=f?.kind==='spinning'||PEFishing.ready(engine),card=$('fishing-card'),meter=$('fishing-meter'),detail=$('fishing-detail');
+    card.hidden=!f&&!spinning;card.classList.toggle('spinning',spinning);card.classList.toggle('bite',f?.stage==='bite');meter.hidden=detail.hidden=!spinning;$('cancel-fishing').hidden=!f;$('reel-button').hidden=spinning;
+    if(spinning){
+      const stage=f?.stage||'ready',label={ready:'Hold the left mouse button over the water to charge a cast.',charge:'Release to cast. A longer hold casts farther.',flight:'Watch the lure splash down.',wet:f?.nibble?'A nibble! Keep retrieving gently.':'Hold to reel. Release to let the lure sink.',fight:f?.tension>.82?'Ease off! Release the mouse to protect the line.':f?.slack>25?'Reel in the slack — keep contact with the fish.':'Fish on! Reel, but ease off during its runs.'}[stage];
+      $('fishing-label').textContent=L.text(label);const n=Math.round(100*Math.min(1,stage==='charge'?f.power:f?.tension||0));
+      meter.setAttribute('aria-label',L.text(stage==='charge'?'Cast power':'Line tension'));meter.setAttribute('aria-valuenow',String(n));meter.classList.toggle('danger',stage==='fight'&&f.tension>.82);$('fishing-meter-fill').style.width=n+'%';
+      detail.textContent=L.text(stage==='charge'?'Cast power':'Line tension')+': '+n+'%'+(stage==='fight'?' · '+L.text('Fish strength')+': '+Math.round(f.fish.stamina*100)+'%':stage==='wet'?' · '+L.text('Depth')+': '+((f.lure.y-PERegions.pond.surface)/30).toFixed(1)+' m':'');
+      $('cancel-fishing').textContent=L.text('Stop fishing');
+    }else if(f){const bite=f.stage==='bite';$('fishing-label').textContent=L.text(bite?'Koho nykäisi — nosta nyt!':'Hiljaa… odota kohon nykäisyä.');$('reel-button').textContent=L.text(bite?'Nosta kala!':'Nosta vapa');$('cancel-fishing').textContent=L.text('Keskeytä');}
+  }
   // Keep keyboard focus within the closed book until its pages have finished turning.
   function restoreModalFocus(){if(returnFocus?.isConnected&&!returnFocus.closest('nav'))returnFocus.focus();else canvas.focus();}
   function finishModalClose(){if(!modalClosing)return;modalClosing=false;clearTimeout(modalCloseTimer);clearTimeout(bookFrameTimer);modal.classList.remove('is-closing','is-opening','journal-shell');shell.classList.remove('journal-open');$('modal-backdrop').classList.remove('is-closing');$('modal-backdrop').hidden=true;$('book-animation').hidden=true;restoreModalFocus();}
   function openPanel(kind){
+    endFishingPointer(true);PEFishing.release(engine,true);
     if(engine.transition)return;
     if(!engine.state.running&&!['confirm','settings'].includes(kind))return;
     if(panel===kind&&!modalClosing){if(journalPanels.has(kind))return;closePanel();return;}
@@ -81,11 +93,12 @@
   function renderPanel(){
     if(!panel)return;const s=engine.state,oldScroll=content.scrollTop,oldFocus=document.activeElement?.dataset?.select||null;
     const headings={'home-chest':['Storage chest','SIENILAMPI'],'home-hearth':['Fireplace','SIENILAMPI'],'home-kitchen':['Kitchen','SIENILAMPI'],'home-bed':['Sleep until morning','SIENILAMPI'],inventory:['Reppu','KAIKKI TARPEELLINEN MUKANA'],craft:['Käsityöt','OMIN KÄSIN · LUONNON ANTIMISTA'],map:['Korpilaakson kartta','YHDEN POLUN ALKU'],journal:['Kenttämuistiinpanot','PIENIÄ HETKIÄ METSÄSTÄ'],help:['Retkeilijän opas','KULJE OMAAN TAHTIISI'],pause:['Päävalikko','RETKESI ON TURVASSA'],trade:['Aarnin leirillä','VANHAN METSÄNKÄVIJÄN TARINOITA'],fire:['Nuotion äärellä','LÄMPÖÄ JA LÄMMIN ATERIA'],confirm:['Uusi retki?','NYKYINEN RETKI ON TALLENNETTU']};
+    headings['fish-catch']=['Your catch','SIENILAMPI'];
     headings.dismantle=['Dismantle structure?','RECOVER MATERIALS'];headings.dialogue=['Aarni','A WARM HEARTH · A FAMILIAR FACE'];headings.settings=['Settings','MAKE YOURSELF AT HOME'];headings.trade=['Aarni’s table','A FAIR EXCHANGE'];headings.map=['The northern trails','A MAP OF THINGS TO COME'];
     modal.dataset.panel=panel;
     $('modal-title').textContent=headings[panel][0];$('modal-kicker').textContent=headings[panel][1];
     $('journal-tabs').hidden=!journalPanels.has(panel);$('journal-tabs').querySelectorAll('button').forEach(b=>{const active=b.dataset.panel===panel;b.classList.toggle('active',active);b.setAttribute('aria-current',active?'page':'false');});
-    if(panel==='inventory'){
+    if(panel==='fish-catch'){content.innerHTML=PEFishingArt.catchPanel(engine);}else if(panel==='inventory'){
       const visible=Object.keys(items).filter(id=>s.inventory[id]>0&&(tab==='all'||tab==='tools'&&items[id][2]==='tool'||tab==='food'&&['food','raw'].includes(items[id][2])||tab==='material'&&items[id][2]==='material'));
       if(!visible.includes(selected))selected=visible[0];
       const id=selected,data=items[id],use=id==='canteen'||data?.[2]==='tool'||data?.[2]==='food',quick=s.quickFood||'berries',durability=data?.[2]==='tool'&&s.toolDurability?.[id]!=null?Math.ceil(s.toolDurability[id]/durabilityCaps[id]*100):null;
@@ -106,7 +119,7 @@
     }else if(panel==='pause'){
       content.innerHTML='<div class="pause-view"><button class="primary" data-resume="true">Jatka retkeä <span>⟶</span></button><div class="pause-actions"><button data-panel="settings"><span>⚙</span><strong>Asetukset</strong></button><button data-audio="true"><span>♪</span><strong>Äänet</strong><small>Mykistä tai palauta metsän äänet</small></button><button data-panel="help"><span>?</span><strong>Ohjeet</strong></button><button data-fullscreen="true"><span>⛶</span><strong>Koko näyttö</strong></button></div><button class="text-button title-menu-action" data-title-menu="true">Palaa aloitusvalikkoon</button><p>Retkesi tallennetaan ennen aloitusvalikkoon palaamista.</p></div>';
     }else if(panel==='help'){
-      content.innerHTML='<div class="help-view"><dl><div><dt>A / D tai ← / →</dt><dd>Kulje polkua. Shift-näppäimellä juokset.</dd></div><div><dt>S / ↓ · W / ↑</dt><dd>Kyykisty ja nouse. Kyykyssä liikut hiljaisemmin ja pääset lähemmäs riistaa.</dd></div><div><dt>Hiiren klikkaus</dt><dd>Klikkaa korostettua kohdetta: hahmo kävelee viereen ja kerää. Voit myös juoda, käyttää leiriä tai heittää Kajolle kepin.</dd></div><div><dt>Yläreuna</dt><dd>Työkalut, yksi valitsemasi pikaeväs ja päiväkirja tulevat näkyviin.</dd></div><div><dt>Päiväkirja</dt><dd>Reppu, käsityöt, kenttämuistiinpanot ja kartta ovat saman kirjan välilehdillä. Vedä eväs repusta pikaeväspaikkaan tai valitse se painikkeella.</dd></div><div><dt>Piikivikirves</dt><dd>Tee piikiviveitsi ja naru, sitten piikivikirves. Aarnilta voit myöhemmin vaihtaa kestävämmän teräskirveen.</dd></div><div><dt>Jousi ja vapa</dt><dd>Jousella tähtää ja ammu hiirellä. Vavalla klikkaa vettä, odota kohon nykäisyä ja nosta kala.</dd></div></dl><p>Peli tallentaa automaattisesti selaimeen. Valikot ja piilotettu välilehti pysäyttävät peliajan. Metsästä polku jatkuu Aarnijoelle ja Sienilammelle.</p><button class="text-button" data-panel="pause">← Takaisin päävalikkoon</button></div>';
+      content.innerHTML='<div class="help-view"><dl><div><dt>A / D tai ← / →</dt><dd>Kulje polkua. Shift-näppäimellä juokset.</dd></div><div><dt>S / ↓ · W / ↑</dt><dd>Kyykisty ja nouse. Kyykyssä liikut hiljaisemmin ja pääset lähemmäs riistaa.</dd></div><div><dt>Hiiren klikkaus</dt><dd>Klikkaa korostettua kohdetta: hahmo kävelee viereen ja kerää. Voit myös juoda, käyttää leiriä tai heittää Kajolle kepin.</dd></div><div><dt>Yläreuna</dt><dd>Työkalut, yksi valitsemasi pikaeväs ja päiväkirja tulevat näkyviin.</dd></div><div><dt>Päiväkirja</dt><dd>Reppu, käsityöt, kenttämuistiinpanot ja kartta ovat saman kirjan välilehdillä. Vedä eväs repusta pikaeväspaikkaan tai valitse se painikkeella.</dd></div><div><dt>Piikivikirves</dt><dd>Tee piikiviveitsi ja naru, sitten piikivikirves. Aarnilta voit myöhemmin vaihtaa kestävämmän teräskirveen.</dd></div><div><dt>Jousi ja vapa</dt><dd>Aim and click to shoot the bow. Forest and Aarni River still use the earlier bobber fishing: click water with the rod equipped, then reel when it bobs.</dd></div><div><dt>Fishing at Sienilampi</dt><dd>Equip the spinning rod and sit on the pier chair. Hold the left mouse button over water to charge; release to cast. In water: hold to reel, release to sink. Pike patrol the shallows; let the lure sink longer for zander.</dd></div><div><dt>Line tension</dt><dd>Fish on: reel, but release when tension turns red. Too much tension breaks the line; leaving slack too long loses the hook. Escape or moving stops fishing.</dd></div></dl><p>Peli tallentaa automaattisesti selaimeen. Valikot ja piilotettu välilehti pysäyttävät peliajan. Metsästä polku jatkuu Aarnijoelle ja Sienilammelle.</p><button class="text-button" data-panel="pause">← Takaisin päävalikkoon</button></div>';
     }else if(panel==='confirm'){
       content.innerHTML='<div class="confirm-view"><p>Uusi retki korvaa tämän selaimen nykyisen tallennuksen. Vanhan peliversion alkuperäinen tallennus säilyy erikseen.</p><button class="primary" data-new="true">Aloita uusi retki</button><button class="primary" data-cancel="true">Peruuta</button></div>';
     }
@@ -136,6 +149,7 @@
     if(b.dataset.dismantleConfirm){if(panel==='dismantle'){engine.confirmDismantle();closePanel();}return;}
     if(b.id==='journal-button'&&panel&&journalPanels.has(panel)){closePanel();return;}
     if(b.dataset.panel){openPanel(b.dataset.panel);return;}
+    if(b.dataset.catchClose){closePanel();return;}
     if(b.dataset.resume){closePanel();return;}
     if(b.dataset.titleMenu){returnToTitle();return;}
     if(b.dataset.audio){toggleSound();renderPanel();return;}
@@ -171,9 +185,18 @@
   $('modal-backdrop').addEventListener('click',e=>{if(e.target===$('modal-backdrop')){if(pendingTravel)cancelTravel();else closePanel();}});
   function toggleSound(){const on=PEAudio.toggle();notice(on?'Metsän äänet päällä.':'Äänet mykistetty.');return on;}
   async function toggleFullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await shell.requestFullscreen();}catch{notice('Selain ei sallinut koko näytön tilaa.');}}
-  $('dismiss-onboarding').addEventListener('click',()=>$('onboarding').hidden=true);$('reel-button').addEventListener('click',()=>engine.reel());$('cancel-fishing').addEventListener('click',()=>{engine.fishing=null;syncHUD();});
+  $('dismiss-onboarding').addEventListener('click',()=>$('onboarding').hidden=true);$('reel-button').addEventListener('click',()=>engine.reel());$('cancel-fishing').addEventListener('click',()=>{if(engine.fishing?.kind==='spinning')PEFishing.cancel(engine);else engine.fishing=null;syncHUD();});
   function coords(e){const b=canvas.getBoundingClientRect();return{x:(e.clientX-b.left)/b.width*W,y:(e.clientY-b.top)/b.height*H};}
+  let fishingPointer=null,suppressFishingClick=false;
+  const fishCursor='url("data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="28" height="24"><path d="M3 6l6 5c5-8 14-5 17 1-4 7-12 8-17 2l-6 5z" fill="#ead6a5" stroke="#263f37" stroke-width="2"/><circle cx="21" cy="11" r="1.5" fill="#263f37"/></svg>')+'") 14 12, crosshair';
+  function fishingAt(p){return !!p&&PEFishing.canCast(engine,p.x+engine.state.camera,p.y);}
+  function refreshCursor(){canvas.style.cursor=pointerWorld&&(fishingAt(pointer)||engine.fishing?.kind==='spinning')?fishCursor:renderer.hover?'pointer':engine.state.equipped==='bow'?'crosshair':'default';}
+  function endFishingPointer(abort=false){if(fishingPointer===null)return;const id=fishingPointer;fishingPointer=null;PEFishing.release(engine,abort);if(canvas.hasPointerCapture?.(id))canvas.releasePointerCapture(id);syncFishingHUD();}
+  canvas.addEventListener('pointerdown',e=>{if(e.button!==0||fishingPointer!==null||!engine.state.running||panel||modalClosing||engine.transition)return;suppressFishingClick=false;const p=coords(e);if(PEFishing.press(engine,p.x+engine.state.camera,p.y)){fishingPointer=e.pointerId;suppressFishingClick=true;e.preventDefault();canvas.focus();canvas.setPointerCapture?.(e.pointerId);}});
+  window.addEventListener('pointerup',e=>{if(e.button===0&&e.pointerId===fishingPointer)endFishingPointer(false);});
+  canvas.addEventListener('pointercancel',()=>endFishingPointer(true));canvas.addEventListener('lostpointercapture',()=>endFishingPointer(true));
   function targetAt(p){if(!p||engine.transition)return null;if(engine.state.cabinHome?.inside)return PECabin.hit(p,engine);const wx=p.x+engine.state.camera;
+    if(engine.fishing?.kind==='spinning'||fishingAt(p))return null;
     // Roof and yard precede the complete facade at shared boundaries.
     const hotspot=engine.activeHotspots().find(o=>{if(!o.box)return false;const [dx,dy,w,h]=o.type==='exit'?PERegions.trailBox(engine.state.camera):o.box;const x=o.type==='exit'?dx:o.x+dx,y=o.type==='exit'?dy:ground(o.x)+dy;return wx>=x&&wx<=x+w&&p.y>=y&&p.y<=y+h;});if(hotspot)return hotspot;
     return engine.targets().filter(o=>!o.box).map(o=>{const gy=ground(o.x)+(o.depth||0),h=o.type==='shelter'?100:o.type==='cabin'?62:o.type==='tree'?135:o.type==='animal'&&o.species==='deer'?55:['log','carcass'].includes(o.type)?18:27,dx=Math.abs(wx-o.x),dy=Math.abs(p.y-(gy-h*.42));return{o,score:dx+dy*.7,hit:dx<(o.type==='shelter'?48:['fire','oldfire'].includes(o.type)?30:o.type==='cabin'?15:o.type==='water'?40:o.type==='animal'?25:o.type==='tree'?17:23)&&p.y>gy-h-5&&p.y<gy+15};}).filter(v=>v.hit).sort((a,b)=>a.score-b.score)[0]?.o||null;}
@@ -214,30 +237,31 @@
     if(!panel&&!modalClosing&&!top&&document.activeElement?.closest('#quick-rail'))canvas.focus({preventScroll:true});
     pointerWorld=!panel&&!modalClosing&&!overRail;renderer.pointer=pointerWorld?pointer:null;renderer.hover=pointerWorld?targetAt(pointer):null;
     updateTip();
-    canvas.style.cursor=renderer.hover?'pointer':engine.state.equipped==='bow'?'crosshair':'default';
+    refreshCursor();
   });
   shell.addEventListener('pointerleave',()=>{shell.classList.remove('show-top');if(!panel&&!modalClosing&&document.activeElement?.closest('nav'))canvas.focus({preventScroll:true});renderer.hover=null;renderer.pointer=null;pointer=null;$('world-tip').hidden=true;});
   canvas.addEventListener('wheel',e=>{if(!engine.state.running||panel||modalClosing||!e.deltaY)return;const target=targetAt(coords(e)),dog=target?.type==='dog',options=dog?engine.dogActions():engine.structureActions(target);if(!options.length)return;e.preventDefault();const now=performance.now();if(now-lastDogWheel<110)return;lastDogWheel=now;
     if(!dog&&structureChoiceId!==target.id){structureChoiceId=target.id;structureChoice='use';}const choice=dog?dogChoice:structureChoice,next=options[(Math.max(0,options.indexOf(choice))+Math.sign(e.deltaY)+options.length)%options.length];if(dog)dogChoice=next;else structureChoice=next;renderer.hover=target;updateTip();},{passive:false});
-  canvas.addEventListener('click',e=>{if(!engine.state.running||panel||modalClosing||engine.transition)return;const p=coords(e),target=targetAt(p);canvas.focus();if(engine.state.cabinHome?.inside){if(target)PECabin.interact(engine,target.id);return;}if(engine.state.equipped==='bow'&&(!target||target.type==='animal'))engine.shoot(p.x+engine.state.camera,p.y);else engine.interact(target?.type==='dog'?{...target,command:engine.dogActions().includes(dogChoice)?dogChoice:'pet'}:engine.structureActions(target).length?{...target,command:structureChoiceId===target.id?structureChoice:'use'}:target);});
+  canvas.addEventListener('click',e=>{if(suppressFishingClick){suppressFishingClick=false;return;}if(engine.fishing?.kind==='spinning')return;if(!engine.state.running||panel||modalClosing||engine.transition)return;const p=coords(e),target=targetAt(p);canvas.focus();if(engine.state.cabinHome?.inside){if(target)PECabin.interact(engine,target.id);return;}if(engine.state.equipped==='bow'&&(!target||target.type==='animal'))engine.shoot(p.x+engine.state.camera,p.y);else engine.interact(target?.type==='dog'?{...target,command:engine.dogActions().includes(dogChoice)?dogChoice:'pet'}:engine.structureActions(target).length?{...target,command:structureChoiceId===target.id?structureChoice:'use'}:target);});
   document.addEventListener('keydown',e=>{
     if(engine.transition){e.preventDefault();return;}
     if(pendingTravel){if(e.code==='Escape'){e.preventDefault();cancelTravel();return;}if(e.code==='Tab'){e.preventDefault();const cancel=content.querySelector('[data-travel-cancel]'),confirm=content.querySelector('[data-travel-confirm]');(document.activeElement===cancel?confirm:cancel)?.focus();}return;}
     if(e.code==='Tab'&&!e.shiftKey&&(journalPanels.has(panel)||modalClosing)){e.preventDefault();if(!e.repeat)closePanel();return;}
     if(e.code==='Tab'&&!panel&&!modalClosing&&engine.state.running&&!e.shiftKey){e.preventDefault();if(!e.repeat)openPanel('inventory');return;}
+    if(e.code==='Escape'&&!panel&&!modalClosing&&engine.fishing?.kind==='spinning'){endFishingPointer(true);PEFishing.cancel(engine);e.preventDefault();return;}
     if(e.code==='Escape'&&(panel||modalClosing)){e.preventDefault();closePanel();return;}
     if(panel||modalClosing){if(!modalClosing&&['Enter','Space'].includes(e.code)&&e.target.closest?.('#quick-food-drop')&&items[selected]?.[2]==='food'){e.preventDefault();if(engine.assignQuickFood(selected)){renderQuickFood();renderPanel();syncHUD();save();notice('Pikaeväs vaihdettu.');}return;}if(!modalClosing&&e.code==='Tab'){const focusable=[...modal.querySelectorAll('button:not([disabled]),input:not([disabled]),[tabindex="0"]'),...(journalPanels.has(panel)?$('quick-rail').querySelectorAll('button:not([disabled])'):[])],first=focusable[0],end=focusable[focusable.length-1];if(e.shiftKey&&(document.activeElement===first||document.activeElement===modal)){e.preventDefault();end?.focus();}else if(!e.shiftKey&&document.activeElement===end){e.preventDefault();first?.focus();}}return;}
     if(!engine.state.running)return;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','KeyA','KeyD','KeyS','KeyW','ShiftLeft','ShiftRight'].includes(e.code)){e.preventDefault();engine.keys[e.code]=true;if(['ArrowDown','KeyS'].includes(e.code)&&!e.repeat)engine.setCrouch(!engine.state.player.crouching);if(['ArrowUp','KeyW'].includes(e.code))engine.setCrouch(false);}
   });
-  document.addEventListener('keyup',e=>delete engine.keys[e.code]);window.addEventListener('blur',()=>{engine.keys={};});
-  document.addEventListener('visibilitychange',()=>{engine.keys={};last=performance.now();PEAudio.pause(document.hidden);if(document.hidden)save();});window.addEventListener('pagehide',save);
+  document.addEventListener('keyup',e=>delete engine.keys[e.code]);window.addEventListener('blur',()=>{engine.keys={};endFishingPointer(true);PEFishing.release(engine,true);});
+  document.addEventListener('visibilitychange',()=>{engine.keys={};endFishingPointer(true);PEFishing.release(engine,true);last=performance.now();PEAudio.pause(document.hidden);if(document.hidden)save();});window.addEventListener('pagehide',save);
   function frame(now){const dt=Math.min((now-last)/1000,.05);last=now;
-    if(!document.hidden){if(engine.state.running&&!panel&&!modalClosing){engine.update(dt);if(pointer&&pointerWorld){renderer.hover=targetAt(pointer);updateTip();}}renderer.draw(engine);PEAudio.update(engine.state,engine,!!panel||modalClosing);hudClock+=dt;if(hudClock>.25){syncHUD();hudClock=0;}}
+    if(!document.hidden){if(engine.state.running&&!panel&&!modalClosing){engine.update(dt);if(pointer&&pointerWorld){renderer.hover=targetAt(pointer);updateTip();}}refreshCursor();syncFishingHUD();renderer.draw(engine);PEAudio.update(engine.state,engine,!!panel||modalClosing);hudClock+=dt;if(hudClock>.25){syncHUD();hudClock=0;}}
     requestAnimationFrame(frame);
   }
   saved=readSave();renderer.scenery=[null,null,null];let loaded=0,loadFailed=false,equipmentReady=false,bookReady=false;
   const assets=[...['menu_banner','pick_banner1','pick_banner2','pick_banner3'].map(id=>[id,id]),['west','forest-west'],['ravine','forest-ravine'],['upland','forest-upland'],['sprites','traveller-and-kajo'],['wildlife','woodland-wildlife'],['props','timber-props'],['poses','timber-poses'],['chopTree','chop-standing'],['chopLog','chop-ground'],['treeVariants','forest-trees']];
-  assets.push(['runPoses','traveller-run']);
+  assets.push(['runPoses','traveller-run'],['fishingPoses','fishing-poses-v2'],['pikeImage','icon-pike'],['zanderImage','icon-zander']);
   assets.push(['yardProps','cabin-yard-props-final'],['kajoCabin','kajo-cabin-poses'],['cabinInterior','sienilampi-interior'],['groundMaterial','forest-floor-material'],['riverImage','aarni-river'],['pondImage','hiljalampi'],['cabinAtlas','hiljalampi-cabin'],['pierImage','sienilampi-pier'],['springImage','cabin-spring-v2'],['petImage','traveller-pet'],['seatedImage','traveller-seated']);renderer.regionImages={};
   function finishLoading(){if(ready||loadFailed||loaded!==assets.length||!equipmentReady||!bookReady)return;ready=true;$('start-button').disabled=false;refreshTitle();}
   for(const [key,path]of assets){const img=new Image();img.onload=()=>{const i=['west','ravine','upland'].indexOf(key);if(i>=0){renderer.scenery[i]=img;if(i===0)renderer.forest=img;}else{renderer[key]=img;if(key==='riverImage')renderer.regionImages.river=img;if(key==='pondImage')renderer.regionImages.pond=img;}loaded++;if(key==='wildlife')paintWildlife(content);finishLoading();};img.onerror=()=>{loadFailed=true;$('load-note').textContent='Metsäkuvaa ei voitu ladata. Tarkista, että assets-kansio on index.html-tiedoston vieressä.';$('start-button').textContent='Lataus epäonnistui';L.apply($('title-card'));};img.src='assets/'+path+'.png';}

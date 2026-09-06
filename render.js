@@ -212,7 +212,8 @@
         line(c,[[x-7,y-2],[x+8,y+1]],'#bda06d',2);line(c,[[x+1,y],[x+3,y-4]],'#8e7950',1);
       }
       for(const a of engine.projectiles){const len=Math.hypot(a.vx,a.vy);line(c,[[a.x-a.vx/len*15,a.y-a.vy/len*15],[a.x,a.y]],'#d2bd89',1);rect(c,a.x,a.y,2,1,'#d6d4b6');}
-      if(engine.fishing){const f=engine.fishing,p=s.player,tip=root.PEEquipment?root.PEEquipment.fishingLineOrigin(engine):{x:p.x+22,y:ground(p.x)-39},y=ground(f.x);line(c,[[tip.x,tip.y],[f.x,y-10]],'#c9c4a788',1);rect(c,f.x,y-8+Math.sin(t*5)*(f.stage==='bite'?4:1),3,5,'#cf9255');}
+      if(s.currentMap==='pond')root.PEFishingArt?.world(this,engine);
+      else if(engine.fishing){const f=engine.fishing,p=s.player,tip=root.PEEquipment?root.PEEquipment.fishingLineOrigin(engine):{x:p.x+22,y:ground(p.x)-39},y=ground(f.x);line(c,[[tip.x,tip.y],[f.x,y-10]],'#c9c4a788',1);rect(c,f.x,y-8+Math.sin(t*5)*(f.stage==='bite'?4:1),3,5,'#cf9255');}
       if(this.hover?.box){} // Screen-readable construction outlines are drawn after lighting.
       else if(this.hover){const o=this.hover,y=ground(o.x),w=o.type==='tree'?24:o.type==='animal'?24:17;line(c,[[o.x-w,y-5],[o.x-w,y+3],[o.x-w+7,y+3]],'#e5d6a2',1);line(c,[[o.x+w-7,y+3],[o.x+w,y+3],[o.x+w,y-5]],'#e5d6a2',1);}
       c.restore();

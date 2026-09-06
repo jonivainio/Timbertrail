@@ -12,7 +12,7 @@ Five original source files were supplied by the user on 2026-09-06. They are PNG
 
 `item-icons.js` records tight source rectangles and centers each image with its original aspect ratio. The same renderer supplies backpack, chest, crafting/cooking, ground-item and quick-food icons. All five assets preload before play. Species illustration IDs do not become inventory items or alter species spawning. Existing `rawFish` and `cookedFish` save keys are unchanged.
 
-The in-progress spinning-fishing catch card references the pike and zander files directly with CSS `contain`; that unfinished fishing feature is separate from the 0.7.2 icon-only publication.
+The 0.8.0 spinning-fishing catch card references pike/zander directly with CSS `contain`; the same supplied illustrations render swimming fish underwater. Perch is not spawned in v1. The earlier 0.7.2 publication was art-only.
 
 ## Original-file SHA-256
 

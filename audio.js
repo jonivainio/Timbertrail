@@ -134,6 +134,11 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     else if (name === 'bow') { noiseBurst(.12, .026 * v, 3600, 620, now, pan); synthTone(188, 96, .18, .025 * v, 'triangle', now, pan); }
     else if (name === 'impact') { noiseBurst(.14, .045 * v, 780, 48, now, pan); synthTone(75, 48, .16, .03 * v, 'sine', now, pan); }
     else if (name === 'cast') { noiseBurst(.34, .019 * v, 4200, 900, now, pan); synthTone(510, 260, .3, .009 * v, 'sine', now + .04, pan); }
+    else if(name==='lureSplash'){noiseBurst(.18,.05*v,2700,180,now,pan,true);synthTone(470,145,.12,.013*v,'sine',now+.04,pan);noiseBurst(.22,.013*v,1700,380,now+.12,pan);}
+    else if(name==='fishNibble'){synthTone(320,170,.085,.011*v,'sine',now,pan);noiseBurst(.05,.013*v,1600,300,now,pan,true);}
+    else if(name==='fishHook'){noiseBurst(.12,.036*v,2100,230,now,pan,true);noiseBurst(.17,.02*v,1200,160,now+.1,pan);}
+    else if(name==='lineSnap'){noiseBurst(.028,.048*v,5100,900,now,pan,true,.003);}
+    else if(name==='reelDrag'||name==='reelWind'){for(let i=0;i<(name==='reelDrag'?4:2);i++)noiseBurst(.012,.018*v,2600,800,now+i*.025,pan,true,.002);}
     else if (name === 'catch') { noiseBurst(.38, .035 * v, 3000, 380, now, pan); synthTone(330, 520, .25, .018 * v, 'triangle', now + .08, pan); }
     else if (name === 'miss') { synthTone(210, 125, .22, .016 * v, 'sine', now, pan); noiseBurst(.18, .012 * v, 1800, 340, now, pan); }
     else if (name === 'sleep') { noiseBurst(1.1, .02 * v, 820, 30, now, pan); synthTone(174, 220, 1.4, .018 * v, 'sine', now, pan); }
@@ -208,6 +213,10 @@ root.PEAudio={
   start(state){game=state;ensureAudio();audio?.resume?.();},
   toggle(){configure({soundOn:!soundOn});return soundOn;},
   pause(paused){if(audioBus)audioBus.master.gain.setTargetAtTime(paused?.0001:.62,audio.currentTime,.15);if(!paused&&audio)audioClock.nextMusic=audio.currentTime+.1;},
-  update(state,engine,paused){game=state;keys=engine.keys;animals=state.animals;waterSpots=engine.water;overlay=paused;updateAudio();}
+  update(state,engine,paused){game=state;keys=engine.keys;animals=state.animals;waterSpots=engine.water;overlay=paused;updateAudio();
+    const f=engine.fishing;if(!paused&&state.running&&f?.kind==='spinning'&&['wet','fight'].includes(f.stage)&&(f.held||f.tension>.3)&&state.playSeconds>=(audioClock.nextReel||0)){
+      playSfx(f.stage==='fight'&&!f.held?'reelDrag':'reelWind',f.stage==='fight'&&!f.held?.4:.15,-.15);audioClock.nextReel=state.playSeconds+(f.stage==='fight'&&!f.held?.14:.28);
+    }
+  }
 };
 })(typeof window!=='undefined'?window:globalThis);

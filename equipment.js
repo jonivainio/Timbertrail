@@ -146,6 +146,7 @@
   }
   function drawActor(renderer,engine){
     if(!renderer||!renderer.sprites)return false;
+    if(root.PEFishingArt?.actor(renderer,engine))return true;
     const c=renderer.c,s=engine.state,p=s.player,y=root.PE?root.PE.ground(p.x,engine.state.currentMap):0,type=TOOLS.has(s.equipped)?s.equipped:null;
     shadow(c,p.x,y,16);const [layer,lc]=makeLayer(renderer);
     if(engine.action&&['tree','log'].includes(engine.action.target.type))axeAction(renderer,lc,engine);
