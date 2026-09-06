@@ -139,6 +139,7 @@
     c.save();c.globalAlpha=strength;c.drawImage(r._coldEdge,0,0);c.restore();}
   class Renderer{
     constructor(canvas,forest,makeCanvas){this.canvas=canvas;this.makeCanvas=makeCanvas||((w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c;});this.surface=this.makeCanvas(W,H);this.nearSurface=this.makeCanvas(W,H);this.c=this.surface.getContext('2d');this.forest=forest;this.hover=null;this.pointer=null;this.fade=new Map();}
+    resetFrame(){this.surface.width=W;this.c=this.surface.getContext('2d');this._terrain=null;this._backdrop=null;this._lightSurface=null;this.fade.clear();}
     prop(kind,x,y,height,angle=0,opacity=1){if(!this.props)return false;const boxes={cabin:[28,24,602,534],shelter:[666,157,542,409],tree:[66,557,355,711],mound:[472,868,744,379]},b=boxes[kind],w=height*b[2]/b[3],c=this.c;c.save();c.translate(Math.round(x),Math.round(y));c.rotate(angle);c.globalAlpha=opacity;c.drawImage(this.props,...b,-Math.round(w/2),-Math.round(height),Math.round(w),Math.round(height));c.restore();return true;}
     groundedProp(kind,x,y,height,angle=0){
       const width=kind==='cabin'?height*.53:kind==='shelter'?height*.57:kind==='tree'?height*.085:height*.65;

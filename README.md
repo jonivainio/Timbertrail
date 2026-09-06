@@ -1,5 +1,13 @@
 # Timbertrail
 
+## Test release 0.8.3 — startup, terrain and quiet footsteps
+
+The first world frame waits for all required images. Landscape caches also invalidate when a late ground material or panorama arrives, fixing the floating Aarni cabin caused by network load order. Production scripts/styles and the audio registry now share a release cache key.
+
+Fixed a non-finite outdoor-fire volume that could throw in Web Audio and stop the animation loop while existing sound continued. Optional audio failures are isolated from gameplay; core frame errors pause visibly with a retry button that preserves the journey. Four recut, leveled and deliberately quiet forest footfalls replace the uneven clips, load first, and follow the character's stride with small pitch/level variation. New journeys reset audio timing. Pending/blocked samples use non-tonal soil/needle foley.
+
+Verified with delayed-image/cache regression tests, finite AudioParam and lifecycle tests, and an isolated real-browser production build: walking from spawn, immediate sampled steps, restarting after a long clock, Aarni's yard, injected audio failure, and render-fault retry. Tester-specific freezes without their error logs remain unconfirmed; final perceived footstep balance still needs a listening playtest. Existing saves are unchanged.
+
 ## Pixabay sound update
 
 53 sound events now use 27 locally hosted Pixabay recordings: fishing, footsteps, gathering/tools, cabin interactions, Journal/UI, Kajo, and birds/water/wind/rain. Reel and brake loops follow the existing fishing load model and stop on release/cancel/pause/mute. Clips now use source-specific spectral noise attenuation, softer frequency balance, longer raised-cosine fades, active-window leveling and varied footsteps/crackles. Stream ambience is continuous with an overlapped seam; the full bank is about 3.0 MB. Music and night insect synthesis remain unchanged. All files decoded successfully in an actual browser; perceived quality and balance still need a listening playtest. Sources, edits and explicit listening-review status are in `assets/audio/library.json`; see `assets/PIXABAY-AUDIO.md`.

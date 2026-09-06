@@ -31,7 +31,9 @@ const context={document:doc,Image:TestImage,console,performance,setTimeout:(fn,d
 vm.createContext(context);for(const file of ['i18n.js','regions.js','cabin-interior.js','fishing.js','engine.js','item-icons.js','equipment.js','fire-effects.js','fishing-art.js','render.js','panels.js','storage-ui.js'])vm.runInContext(fs.readFileSync(path.join(dir,file),'utf8'),context,{filename:file});
 let engine;const Base=context.PE.Engine;context.PE.Engine=class extends Base{constructor(...a){super(...a);if(!engine)engine=this;}};
 const sounds=[],mix={soundOn:true,musicOn:true,soundVolume:.7,musicVolume:.4};context.PEAudio={play(n){sounds.push(n);},start(){},toggle(){return false;},pause(){},update(){},settings:()=>({...mix}),configure:p=>Object.assign(mix,p)};
+let renderCount=0;const realDraw=context.PEArt.Renderer.prototype.draw;context.PEArt.Renderer.prototype.draw=function(e){renderCount++;return realDraw.call(this,e);};
 vm.runInContext(fs.readFileSync(path.join(dir,'game.js'),'utf8'),context,{filename:'game.js'});
+raf(performance.now());assert.equal(renderCount,0,'partial image loads cannot populate permanent landscape caches');
 const $=id=>doc.getElementById(id),click=sel=>{const b=doc.querySelector(sel);assert.ok(b,'Element exists: '+sel);assert.equal(b.disabled,false);b.dispatch('click');};
 (async()=>{await Promise.all(imageLoads);await Promise.resolve();await Promise.resolve();
 assert.equal($('title-card').querySelector('.eyebrow'),null);assert.equal($('title-card').querySelector('.title-rule'),null);assert.equal($('title-card').querySelector('.title-foot'),null);assert.equal($('load-note').textContent,'');assert.equal($('title-card').querySelectorAll('.menu-scroll').length,2);
@@ -162,4 +164,10 @@ prepareFishing();F.press(engine,engine.state.player.x-200,370);F.release(engine)
 assert.equal($('modal').dataset.panel,'fish-catch');assert.ok(doc.querySelector('.catch-illustration.zander'));assert.ok(doc.querySelector('.fish-trophy'));assert.match($('modal-content').textContent,/9.00 kg/);assert.match($('modal-content').textContent,/Zander/);assert.equal(engine.fishing,null);
 context.L.set('fi');engine.emit('change');assert.match($('modal-content').textContent,/Kuha/);context.L.set('en');click('[data-catch-close]');advance();assert.equal($('modal-backdrop').hidden,true);assert.equal(engine.state.player.sitting,true);assert.equal($('fishing-card').hidden,false);
 console.log('PASS fishing pointer capture/outside release, scaled coordinates, cursor/HUD, pause/cancel paths and bilingual trophy catch card.');
+const runtimeErrors=[],savedBefore=storage.get('timbertrail-save-v3');context.console={...console,error(...v){runtimeErrors.push(v);}};
+context.PEArt.Renderer.prototype.draw=()=>{throw Error('simulated transient renderer failure');};
+raf(performance.now()+500);assert.equal($('runtime-status').hidden,false,'core failure is visible rather than a silent frozen character');assert.equal(runtimeErrors.length,1);
+const pausedTime=engine.state.playSeconds;raf(performance.now()+550);assert.equal(engine.state.playSeconds,pausedTime,'failed renderer pauses gameplay');assert.equal(runtimeErrors.length,1,'no per-frame error flood');assert.equal(storage.get('timbertrail-save-v3'),savedBefore,'recovery never resets the saved journey');
+context.PEArt.Renderer.prototype.draw=realDraw;click('#runtime-retry');assert.equal($('runtime-status').hidden,true);engine.state.player.sitting=false;doc.dispatch('keydown',{code:'KeyD'});const resumedX=engine.state.player.x;raf(context.performance.now()+650);doc.dispatch('keyup',{code:'KeyD'});assert.ok(engine.state.player.x>resumedX,'input and frames resume without reloading/resetting');
+console.log('PASS load gate, explicit render-fault pause, retained save and retry/input recovery.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -247,6 +247,7 @@
     if(!dog&&structureChoiceId!==target.id){structureChoiceId=target.id;structureChoice='use';}const choice=dog?dogChoice:structureChoice,next=options[(Math.max(0,options.indexOf(choice))+Math.sign(e.deltaY)+options.length)%options.length];if(dog)dogChoice=next;else structureChoice=next;renderer.hover=target;updateTip();},{passive:false});
   canvas.addEventListener('click',e=>{if(suppressFishingClick){suppressFishingClick=false;return;}if(engine.fishing?.kind==='spinning')return;if(!engine.state.running||panel||modalClosing||engine.transition)return;const p=coords(e),target=targetAt(p);canvas.focus();if(engine.state.cabinHome?.inside){if(target)PECabin.interact(engine,target.id);return;}if(engine.state.equipped==='bow'&&(!target||target.type==='animal'))engine.shoot(p.x+engine.state.camera,p.y);else engine.interact(target?.type==='dog'?{...target,command:engine.dogActions().includes(dogChoice)?dogChoice:'pet'}:engine.structureActions(target).length?{...target,command:structureChoiceId===target.id?structureChoice:'use'}:target);});
   document.addEventListener('keydown',e=>{
+    if(frameFault)return;
     if(engine.transition){e.preventDefault();return;}
     if(pendingTravel){if(e.code==='Escape'){e.preventDefault();cancelTravel();return;}if(e.code==='Tab'){e.preventDefault();const cancel=content.querySelector('[data-travel-cancel]'),confirm=content.querySelector('[data-travel-confirm]');(document.activeElement===cancel?confirm:cancel)?.focus();}return;}
     if(e.code==='Tab'&&!e.shiftKey&&(journalPanels.has(panel)||modalClosing)){e.preventDefault();if(!e.repeat)closePanel();return;}
@@ -258,9 +259,21 @@
   });
   document.addEventListener('keyup',e=>delete engine.keys[e.code]);window.addEventListener('blur',()=>{engine.keys={};endFishingPointer(true);PEFishing.release(engine,true);});
   document.addEventListener('visibilitychange',()=>{engine.keys={};endFishingPointer(true);PEFishing.release(engine,true);last=performance.now();PEAudio.pause(document.hidden);if(document.hidden)save();});window.addEventListener('pagehide',save);
-  function frame(now){const dt=Math.min((now-last)/1000,.05);last=now;
-    if(!document.hidden){if(engine.state.running&&!panel&&!modalClosing){engine.update(dt);if(pointer&&pointerWorld){renderer.hover=targetAt(pointer);updateTip();}}refreshCursor();syncFishingHUD();renderer.draw(engine);PEAudio.update(engine.state,engine,!!panel||modalClosing);hudClock+=dt;if(hudClock>.25){syncHUD();hudClock=0;}}
-    requestAnimationFrame(frame);
+  let frameFault=false;
+  $('runtime-retry').addEventListener('click',()=>{renderer.resetFrame();engine.keys={};frameFault=false;shell.classList.remove('runtime-paused');$('runtime-status').hidden=true;last=performance.now();PEAudio.pause(false);canvas.focus();});
+  function frame(now){const dt=Math.max(0,Math.min((now-last)/1000,.05));last=now;
+    try{
+      // Do not build permanent scenery from partially loaded images on the title.
+      if(!ready||frameFault||document.hidden)return;
+      if(engine.state.running&&!panel&&!modalClosing){engine.update(dt);if(pointer&&pointerWorld){renderer.hover=targetAt(pointer);updateTip();}}
+      refreshCursor();syncFishingHUD();renderer.draw(engine);PEAudio.update(engine.state,engine,!!panel||modalClosing);hudClock+=dt;if(hudClock>.25){syncHUD();hudClock=0;}
+    }catch(error){
+      // Preserve the current journey and last visible frame. A core failure is
+      // explicit and recoverable, never an apparently unresponsive character.
+      frameFault=true;engine.keys={};engine.state.player.moving=false;engine.state.player.running=false;
+      PEAudio.pause(true);console.error('Timbertrail frame failed',error);
+      shell.classList.add('runtime-paused');$('runtime-status').hidden=false;L.apply($('runtime-status'));$('runtime-retry').focus();
+    }finally{requestAnimationFrame(frame);}
   }
   saved=readSave();renderer.scenery=[null,null,null];let loaded=0,loadFailed=false,equipmentReady=false,bookReady=false;
   const assets=[...['menu_banner','pick_banner1','pick_banner2','pick_banner3'].map(id=>[id,id]),['west','forest-west'],['ravine','forest-ravine'],['upland','forest-upland'],['sprites','traveller-and-kajo'],['wildlife','woodland-wildlife'],['props','timber-props'],['poses','timber-poses'],['chopTree','chop-standing'],['chopLog','chop-ground'],['treeVariants','forest-trees']];

@@ -10,6 +10,12 @@ for(const e of entries){
   const rate=format.readUInt32LE(4),duration=pcm.length/2/rate;assert.ok(e.offset+e.duration<=duration+.0001,e.event+' playback range');
   let peak=0,sum=0;for(let i=0;i<pcm.length;i+=2){const v=pcm.readInt16LE(i)/32768;peak=Math.max(peak,Math.abs(v));sum+=v*v;}
   assert.ok(peak<=.421,e.event+' bounded peaks');assert.ok(Math.sqrt(sum/(pcm.length/2))>.0005,e.event+' audible data');
+  if(e.event==='step'){
+    assert.equal(e.regions.length,4,'four forest footfalls');assert.ok(e.gain<=.65,'restrained continuous-listening mix');
+    const defaultWalk=e.gain*.56*1.06*.7*.78*.62;
+    assert.ok(Math.sqrt(sum/(pcm.length/2))*defaultWalk<.014,'footsteps stay low in the default full mix');
+    assert.ok(peak*defaultWalk<.06,'no startling footstep peaks');
+  }
   for(const r of e.regions||[{offset:e.offset,duration:e.duration}]){
     assert.ok(r.offset+r.duration<=duration+.0001,e.event+' variant range');
     if(!e.loop){assert.equal(pcm.readInt16LE(Math.round(r.offset*rate)*2),0,e.event+' zero attack');assert.equal(pcm.readInt16LE((Math.round((r.offset+r.duration)*rate)-1)*2),0,e.event+' zero release');}

@@ -927,33 +927,37 @@
     "title": "Footsteps in Forest",
     "creator": "freesound_community",
     "downloadedOn": "2026-09-06",
-    "gain": 0.7,
+    "gain": 0.65,
     "loop": false,
-    "attack": 0.015,
+    "attack": 0.006,
     "release": 0.06,
     "loopAttack": 0.12,
     "loopRelease": 0.2,
     "reviewed": true,
     "listeningReviewed": false,
     "offset": 0,
-    "duration": 0.29,
-    "file": "step-4e8bbeaa8df594de82f88e05b74970f8a5445656340a55502be874cf5361cfd6.wav",
-    "sha256": "4e8bbeaa8df594de82f88e05b74970f8a5445656340a55502be874cf5361cfd6",
+    "duration": 0.37,
+    "file": "step-757cd9090762fb4be44d6d8f7e05a974864ba60d2ddbafedb48138e1d3000ae2.wav",
+    "sha256": "757cd9090762fb4be44d6d8f7e05a974864ba60d2ddbafedb48138e1d3000ae2",
     "license": "Pixabay Content License",
     "licenseUrl": "https://pixabay.com/service/terms/",
-    "notes": "Refined from original source 83834; smoothed spectral noise attenuation strength 1.25, floor 0.1; soft band 100–4300 Hz. Active-window leveling, at most 1.5x boost, peak <=0.42. Raised-cosine asset attack 0.015 s / release 0.12 s, plus live envelope. Exact cuts in assets/audio-processing.json. Listening review pending.",
+    "notes": "Refined from original source 83834; smoothed spectral noise attenuation strength 0.65, floor 0.28; soft band 65–3800 Hz. Active-window leveling, at most 8x boost, peak <=0.42. Raised-cosine asset attack 0.006 s / release 0.1 s, plus live envelope. Exact cuts in assets/audio-processing.json. Listening review pending.",
     "regions": [
       {
         "offset": 0.0,
-        "duration": 0.29
+        "duration": 0.37
       },
       {
-        "offset": 0.29,
-        "duration": 0.29
+        "offset": 0.37,
+        "duration": 0.38
       },
       {
-        "offset": 0.58,
-        "duration": 0.29
+        "offset": 0.75,
+        "duration": 0.36
+      },
+      {
+        "offset": 1.11,
+        "duration": 0.37
       }
     ]
   },

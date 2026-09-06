@@ -77,8 +77,12 @@ def pcm(a):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--sources', type=pathlib.Path, required=True)
+    parser.add_argument('--event', help='Rebuild one event and preserve the other registrations')
     args = parser.parse_args()
     plan = json.loads((ROOT/'assets/audio-processing.json').read_text())
+    if args.event:
+        plan = [e for e in plan if e['event'] == args.event]
+        if not plan: parser.error('Unknown sound event')
     output = ROOT/'assets/audio'
     report, manifest = [], []
     raw_cache, clean_cache = {}, {}
@@ -130,6 +134,8 @@ def main():
                      + " Exact cuts in assets/audio-processing.json. Listening review pending.")
         if len(regions)>1: entry['regions'] = regions
         manifest.append(entry)
+    if args.event:
+        manifest += [e for e in json.loads((output/'library.json').read_text(encoding='utf-8')) if e['event'] != args.event]
     (output/'library.json').write_text(json.dumps(sorted(manifest,key=lambda e:e['event']),indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
     (args.sources/'refinement').mkdir(exist_ok=True)
     (args.sources/'refinement/report.json').write_text(json.dumps(report,indent=2))

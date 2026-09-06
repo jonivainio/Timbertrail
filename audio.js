@@ -1,6 +1,6 @@
 (function(root) { 'use strict';
 let audio=null, audioBus=null, soundOn=true, game={playSeconds:0}, overlay=null, keys={}, animals=[], waterSpots=[];
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), distance=(a,b)=>Math.abs(a-b), seeded=n=>((Math.sin(n*91.733+17.31)*43758.5453)%1+1)%1;
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)), distance=(a,b)=>Math.abs(a-b), seeded=n=>((Math.sin(n*91.733+17.31)*43758.5453)%1+1)%1;
 const daylight=()=>.12+.88*Math.max(0,Math.sin((game.dayTime-.22)*Math.PI*2));
 const preferences={soundOn:true,musicOn:true,soundVolume:.7,musicVolume:.4};
 try{const saved=JSON.parse(localStorage.getItem('timbertrail-audio')||'{}');for(const key of ['soundOn','musicOn'])if(typeof saved[key]==='boolean')preferences[key]=saved[key];for(const key of ['soundVolume','musicVolume'])if(Number.isFinite(saved[key]))preferences[key]=clamp(saved[key],0,1);}catch{}
@@ -10,6 +10,22 @@ function updateTitle(retry=false){if(audioBus)root.PETitleMusic?.set(audio,audio
 function applyMix(){if(!audioBus)return;if(!soundOn)root.PEAudioSamples?.stopLoops?.(audio);const t=audio.currentTime;audioBus.ambience.gain.setTargetAtTime(soundOn?preferences.soundVolume*.7:0,t,.12);audioBus.sfx.gain.setTargetAtTime(soundOn?preferences.soundVolume*.78:0,t,.12);audioBus.music.gain.setTargetAtTime(preferences.musicOn?preferences.musicVolume*.48:0,t,.5);}
 function configure(patch){for(const key of ['soundOn','musicOn'])if(typeof patch[key]==='boolean')preferences[key]=patch[key];for(const key of ['soundVolume','musicVolume'])if(Number.isFinite(patch[key]))preferences[key]=clamp(patch[key],0,1);soundOn=preferences.soundOn;ensureAudio();audio?.resume?.();applyMix();updateTitle(true);try{localStorage.setItem('timbertrail-audio',JSON.stringify(preferences));}catch{}return {...preferences};}
 const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nextFireCrackle:0,nextWater:0};
+let stepState=null,stepStride=0,stepMoving=false,stepTime=-1,stepSide=1;
+function resetClocks(state){for(const key of ['nextBird','nextAnimal','nextStep','nextFireCrackle','nextWater','nextReel'])audioClock[key]=state.playSeconds||0;stepState=state;stepStride=state.player?.stride||0;stepMoving=false;stepTime=-1;}
+function footsteps(inside){
+  const p=game.player,stride=Number.isFinite(p.stride)?p.stride:0,time=game.playSeconds;
+  if(stepState!==game||time<stepTime)resetClocks(game);
+  if(inside||!p.moving||overlay){stepStride=stride;stepMoving=false;stepTime=time;return;}
+  if(time===stepTime)return;
+  // Follow the animated feet, not a timer left over from a previous journey.
+  // At most one contact per frame: never replay a backlog after pause/loading.
+  if(!stepMoving||stride-stepStride>=Math.PI){
+    stepSide=-stepSide;
+    playSfx(p.wading?'water':'step',p.wading?.18:p.crouching?.26:p.running?.72:.56,stepSide*.07);
+    stepStride=stride;
+  }
+  stepMoving=true;stepTime=time;
+}
   function ensureAudio() {
     if ((!soundOn && !preferences.musicOn) || audio) return;
     try {
@@ -109,6 +125,7 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     if (!soundOn) return;
     ensureAudio();
     if (!audioBus) return;
+    intensity=Number.isFinite(intensity)?clamp(intensity,0,2):0;pan=Number.isFinite(pan)?clamp(pan,-1,1):0;if(intensity<=0)return;
     const now = audio.currentTime, v = intensity;
     if(root.PEAudioSamples?.play(name,audio,audioBus.sfx,intensity,pan))return;
     if (name === 'uiOpen') { synthTone(218, 292, .11, .018 * v, 'triangle', now, pan); noiseBurst(.055, .009 * v, 1600, 330, now, pan); }
@@ -122,7 +139,13 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     else if(['door','shutter','chestOpen'].includes(name)){noiseBurst(.34,.014*v,650,85,now,pan);synthTone(name==='door'?145:210,90,.28,.009*v,'triangle',now,pan);noiseBurst(.06,.027*v,820,75,now+.31,pan);}
     else if(['cloth','storage'].includes(name)){noiseBurst(.28,.019*v,1650,270,now,pan);if(name==='storage')noiseBurst(.06,.016*v,750,120,now+.2,pan);}
     else if(name==='floorStep'){noiseBurst(.08,.014*v,410,45,now,pan);synthTone(98,68,.07,.008*v,'triangle',now,pan);}
-    else if (name === 'step') { noiseBurst(.09, .026 * v, 760, 45, now, pan); synthTone(82, 55, .07, .014 * v, 'sine', now, pan); }
+    else if (name === 'step') {
+      // Soft soil contact followed by dry needle/leaf friction; no pitched thump.
+      const q=.9+Math.random()*.2;
+      noiseBurst(.11*q,.075*v,620,65,now,pan,true,.007);
+      noiseBurst(.2*q,.042*v,3300,480,now+.018,pan,true,.013);
+      noiseBurst(.09,.018*v,2100,240,now+.12*q,pan,true,.014);
+    }
     else if (name === 'wood') { noiseBurst(.13, .035 * v, 1180, 120, now, pan); synthTone(126, 74, .11, .021 * v, 'triangle', now, pan); }
     else if (name === 'stone') { synthTone(690, 570, .12, .022 * v, 'sine', now, pan); synthTone(1030, 790, .08, .013 * v, 'sine', now + .025, pan); }
     else if (name === 'rustle') { noiseBurst(.22, .021 * v, 3100, 520, now, pan); noiseBurst(.15, .014 * v, 2100, 350, now + .11, pan); }
@@ -186,6 +209,7 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
     const nearWater = !inside&&waterSpots.find(w => distance(w.x, game.player.x) < 150);
     const streamLevel=soundOn&&!overlay&&nearWater?.12*clamp(1-distance(nearWater.x,game.player.x)/180,.2,1):0;
     const sampleStream=root.PEAudioSamples?.setLoop?.('stream',audio,audioBus.ambience,streamLevel,nearWater?clamp((nearWater.x-game.player.x)/130,-.75,.75):0);
+    footsteps(inside);
     if(overlay)return;
 
     if (!inside && daylight() > .42 && game.weather !== 'rain' && game.playSeconds >= audioClock.nextBird) {
@@ -194,11 +218,6 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
       const pan = seeded(game.playSeconds + 91) * 1.4 - .7;
       for (let i = 0; i < 3; i++) synthTone(2350 + i * 170, 2210 + i * 150, .035, .0028, 'sine', now + i * .11, pan, audioBus.ambience);
       audioClock.nextBird = game.playSeconds + 2.8 + seeded(game.playSeconds + 33) * 4.5;
-    }
-    if (game.player.moving && !overlay && game.playSeconds >= audioClock.nextStep) {
-      const crouching = game.player.crouching, running = game.player.running;
-      playSfx(inside?'floorStep':game.player.wading?'water':'step',game.player.wading?.25:crouching?.32:running?1.12:.76,game.player.facing*.05);
-      audioClock.nextStep = game.playSeconds + (crouching ? .62 : running ? .29 : .46);
     }
     const nearFire=inside?(game.cabinHome.fire.lit&&game.cabinHome.fire.fuel>0?{x:game.player.x}:null):game.structures.filter(s=>(s.type==='fire'||s.type==='oldfire')&&s.lit&&s.fuel>0&&distance(s.x,game.player.x)<150).sort((a,b)=>distance(a.x,game.player.x)-distance(b.x,game.player.x))[0];
     if(nearFire){
@@ -223,7 +242,7 @@ const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nex
 root.PEAudio={
   play:playSfx,
   settings:()=>({...preferences}),configure,musicWindow,
-  start(state){game=state;ensureAudio();audio?.resume?.();updateTitle(true);},
+  start(state){game=state;resetClocks(state);ensureAudio();audio?.resume?.();updateTitle(true);},
   title(state){game=state;ensureAudio();audio?.resume?.();updateTitle(true);},
   toggle(){configure({soundOn:!soundOn});return soundOn;},
   pause(paused){if(paused&&audio)root.PEAudioSamples?.stopLoops?.(audio);if(audioBus)audioBus.master.gain.setTargetAtTime(paused?.0001:.62,audio.currentTime,.15);if(!paused&&audio)audioClock.nextMusic=audio.currentTime+.1;},
@@ -241,4 +260,10 @@ root.PEAudio={
     }
   }
 };
+// Optional audio must never abort movement, a region fade, or the next frame.
+// Keep the original exception in the local console; no automatic telemetry.
+const warned=new Set();
+for(const key of Object.keys(root.PEAudio)){
+  const fn=root.PEAudio[key];root.PEAudio[key]=function(...args){try{return fn(...args);}catch(error){if(!warned.has(key)){warned.add(key);root.console?.warn('Timbertrail audio '+key+' failed; gameplay continues.',error);}return undefined;}};
+}
 })(typeof window!=='undefined'?window:globalThis);

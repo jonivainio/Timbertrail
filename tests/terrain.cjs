@@ -15,3 +15,14 @@ const e=new PE.Engine();e.start();assert.equal(e.npc.depth,-R.aarni.setback);con
 const camp=new PE.Engine();camp.start();camp.enterRegion('pond',R.pond.spring-30);Object.assign(camp.state.inventory,{stone:20,wood:20,flintaxe:1});camp.state.toolDurability.flintaxe=100;const inventory=JSON.stringify(camp.state.inventory);assert.equal(camp.craft('campfire'),false);assert.equal(JSON.stringify(camp.state.inventory),inventory);assert.equal(camp.state.structures.length,0);camp.state.player.x=R.pond.spring-250;assert.equal(camp.craft('campfire'),true);
 const html=fs.readFileSync('index.html','utf8'),build=fs.readFileSync('scripts/build.cjs','utf8');assert.ok(html.indexOf('terrain-surface.js')<html.indexOf('world-art.js'));assert.ok(build.includes("'terrain-surface.js'"));assert.ok(html.includes('assets/timber-wordmark.png'));
 console.log('PASS shared depth surfaces, continuous ground, opaque edges, hillside sockets, immutable saves and production wiring.');
+// Reproduce network order: panoramas arrive before the ground material.
+global.PE=PE;global.PERegions=R;const world=require('../world-art.js');
+let writes=0;
+const makeCanvas=(width,height)=>({width,height,getContext(){return new Proxy({getImageData:(x,y,w,h)=>({data:new Uint8ClampedArray(w*h*4)}),putImageData(){writes++;}},{get:(o,k)=>o[k]||(()=>{})});}});
+const renderer={makeCanvas,c:makeCanvas(960,540).getContext(),fade:new Map(),scenery:[{width:1000},{width:1000},{width:1000}],regionImages:{}};
+world.prepare(renderer,'forest');world.drawLandscape(renderer,3200);const early=renderer._terrain;assert.ok(early);assert.equal(writes,0);
+renderer.groundMaterial={};world.prepare(renderer,'forest');world.drawLandscape(renderer,3200);assert.notEqual(renderer._terrain,early,'late ground material rebuilds the yard under Aarni');assert.equal(writes,1);
+const complete=renderer._terrain;world.prepare(renderer,'forest');world.drawLandscape(renderer,3200);assert.equal(renderer._terrain,complete,'ready terrain remains cached');
+renderer.scenery[1]={width:1000};world.prepare(renderer,'forest');assert.equal(renderer._terrain,null,'changed backdrop invalidates sampled soil');
+world.prepare(renderer,'pond');world.drawLandscape(renderer,5000);const fallback=renderer._backdrop;renderer.regionImages.pond={width:1000};world.prepare(renderer,'pond');world.drawLandscape(renderer,5000);assert.notEqual(renderer._backdrop,fallback,'late regional panorama replaces fallback');
+console.log('PASS delayed ground/panorama load order, cache reuse and region invalidation.');

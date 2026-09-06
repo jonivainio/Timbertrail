@@ -1011,34 +1011,38 @@
     "creator": "freesound_community",
     "downloadedOn": "2026-09-06",
     "sourceId": "83834",
-    "start": 1.27,
-    "length": 0.24,
-    "gain": 0.7,
+    "start": 0.015,
+    "length": 0.37,
+    "gain": 0.65,
     "loop": false,
-    "highpass": 100,
-    "lowpass": 4300,
-    "noiseStrength": 1.25,
-    "noiseFloor": 0.1,
-    "fadeIn": 0.015,
-    "fadeOut": 0.12,
-    "target": 0.04,
-    "maxBoost": 1.5,
-    "attack": 0.015,
+    "highpass": 65,
+    "lowpass": 3800,
+    "noiseStrength": 0.65,
+    "noiseFloor": 0.28,
+    "fadeIn": 0.006,
+    "fadeOut": 0.1,
+    "target": 0.072,
+    "maxBoost": 8,
+    "attack": 0.006,
     "release": 0.06,
     "loopAttack": 0.12,
     "loopRelease": 0.2,
     "ranges": [
       [
-        1.22,
-        0.29
+        0.015,
+        0.37
       ],
       [
-        2.65,
-        0.29
+        0.48,
+        0.38
       ],
       [
-        3.33,
-        0.29
+        1.24,
+        0.36
+      ],
+      [
+        2.18,
+        0.37
       ]
     ]
   },

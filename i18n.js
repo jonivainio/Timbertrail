@@ -2,6 +2,8 @@
 (function(root){
   'use strict';
   const pairs=[
+    ['Peli pysähtyi odottamattoman virheen vuoksi. Retkeäsi ei ole nollattu.','The game paused after an unexpected error. Your journey has not been reset.'],
+    ['Yritä uudelleen','Try again'],
     ['Katsele ympärillesi · Klikkaa käyttääksesi','Look around · Click to use'],
     ["Mene ulos","Go outside"],
     ["Keittiö","Kitchen"],

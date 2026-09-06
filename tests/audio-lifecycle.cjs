@@ -1,0 +1,22 @@
+// Browser-like finite AudioParams plus start/restart/paused locomotion checks.
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const warnings=[],played=[],nodes=[];
+const param=()=>({value:0,setValueAtTime(v,t){assert.ok(Number.isFinite(v)&&Number.isFinite(t),'finite AudioParam');this.value=v;},linearRampToValueAtTime(v,t){this.setValueAtTime(v,t);},exponentialRampToValueAtTime(v,t){this.setValueAtTime(v,t);},setTargetAtTime(v,t,c){this.setValueAtTime(v,t);assert.ok(Number.isFinite(c)&&c>0);}});
+const node=()=>({gain:param(),frequency:param(),Q:param(),pan:param(),threshold:param(),knee:param(),ratio:param(),attack:param(),release:param(),connect(n){return n;},start(){},stop(){}});
+class AudioContext{constructor(){this.currentTime=0;this.state='running';this.sampleRate=8000;this.destination=node();}createGain(){return node();}createBiquadFilter(){return node();}createDynamicsCompressor(){return node();}createStereoPanner(){return node();}createOscillator(){const n=node();nodes.push({kind:'tone',n});return n;}createBufferSource(){const n=node();nodes.push({kind:'noise',n});return n;}createBuffer(_,n,r){return{duration:n/r,getChannelData:()=>new Float32Array(n)};}resume(){return Promise.resolve();}}
+const ctx={AudioContext,console:{warn(...v){warnings.push(v);}},localStorage:{getItem(){},setItem(){}},PEAudioSamples:{load(){},play(n,ctx,dst,v,pan){assert.ok(Number.isFinite(v)&&Number.isFinite(pan),'valid sample intensity/pan');played.push({n,v,pan});return n!=='step';}}};ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync('audio.js','utf8'),ctx);
+const audio=ctx.PEAudio,game=()=>({running:true,playSeconds:0,dayTime:.5,weather:'clear',structures:[],animals:[],player:{x:565,moving:true,stride:0,facing:1}}),e={keys:{},water:[]};let s=game();audio.start(s);audio.configure({musicOn:false});
+const steps=()=>played.filter(p=>p.n==='step').length;
+audio.update(s,e,false);assert.equal(steps(),1,'first forest contact works before sample load');assert.equal(played.find(p=>p.n==='step').v,.56,'walking stays at background level');const tones=nodes.filter(n=>n.kind==='tone').length;assert.equal(tones,1,'fallback steps add no pitched oscillators beyond wind LFO');
+for(let i=0;i<30;i++)audio.update(s,e,false);assert.equal(steps(),1,'same simulation time never stacks contacts');
+s.playSeconds+=.4;s.player.stride+=Math.PI+.01;audio.update(s,e,false);assert.equal(steps(),2);assert.notEqual(played.filter(p=>p.n==='step')[0].pan,played.at(-1).pan,'alternating feet');
+s.player.moving=false;s.playSeconds+=10;audio.update(s,e,false);assert.equal(steps(),2,'standing is silent');
+s.player.moving=true;s.player.stride+=10;s.playSeconds+=.1;audio.update(s,e,true);assert.equal(steps(),2,'menu pauses steps');s.playSeconds+=.1;audio.update(s,e,false);assert.equal(steps(),3,'resume has one contact, not backlog');
+s.playSeconds=5000;s.player.stride+=Math.PI+.01;audio.update(s,e,false);s=game();audio.start(s);const before=steps();audio.update(s,e,false);assert.equal(steps(),before+1,'new journey starts immediately despite old large clock');
+s.playSeconds=100;s.player.stride+=4;audio.update(s,e,false);s.playSeconds=.1;s.player.stride=.1;const rollback=steps();audio.update(s,e,false);assert.equal(steps(),rollback+1,'same-state clock rewind recovers');
+s.structures=[{type:'fire',lit:true,fuel:80,x:s.player.x+20}];s.playSeconds+=10;audio.update(s,e,false);assert.ok(played.some(p=>p.n==='fireCrackle'&&p.v>0&&p.v<1),'outdoor fire volume is finite');assert.equal(warnings.length,0,'no swallowed Web Audio errors');
+const calls=played.length;audio.play('step',NaN);audio.play('step',Infinity);assert.equal(played.length,calls,'invalid levels never reach browser audio');
+s.cabinHome={inside:true,fire:{lit:false,fuel:0}};s.playSeconds+=1;s.player.stride+=4;const indoor=steps();audio.update(s,e,false);assert.equal(steps(),indoor,'indoor camera does not walk');
+audio.configure({soundOn:false});s.cabinHome.inside=false;s.playSeconds+=1;s.player.stride+=4;const muted=played.length;audio.update(s,e,false);assert.equal(played.length,muted);
+audio.configure({soundOn:true});ctx.PEAudioSamples.play=()=>{throw Error('simulated device failure');};assert.doesNotThrow(()=>audio.play('gatherWood'),'optional sound failure never escapes into engine update');assert.equal(warnings.length,1);
+console.log('PASS finite outdoor-fire audio, immediate and restarted footsteps, stride sync, non-tonal fallback, pause/mute and audio fault isolation.');

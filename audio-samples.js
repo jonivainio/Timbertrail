@@ -9,6 +9,10 @@
       try{
         const response=await fetch('assets/audio/library.json');if(!response.ok)return;
         const entries=await response.json();
+        // First footsteps should not wait behind every item, animal and reel clip.
+        const priority=['step','water','gatherWood','gatherStone'];
+        const rank=e=>priority.includes(e.event)?priority.indexOf(e.event):priority.length;
+        entries.sort((a,b)=>rank(a)-rank(b));
         // A small worker pool keeps the first actions responsive without flooding requests.
         let next=0;
         await Promise.all(Array.from({length:Math.min(4,entries.length)},async()=>{while(next<entries.length){
@@ -28,16 +32,22 @@
   }
   function play(name,context,destination,intensity,pan){
     const e=clips.get(name);if(!e)return false;
+    if(!Number.isFinite(intensity)||intensity<=0)return true;
+    pan=Number.isFinite(pan)?pan:0;
     const source=context.createBufferSource(),gain=context.createGain(),now=context.currentTime;
     source.buffer=e.buffer;
-    const region=e.regions[e.next++%e.regions.length],duration=region.duration;
-    const volume=Math.max(.0001,Math.min(1,e.gain*intensity));
+    const region=e.regions[e.next++%e.regions.length];
+    const varyRate=name==='step'&&source.playbackRate?.setValueAtTime;
+    const speed=varyRate ? 0.965+Math.random()*0.07 : 1;
+    if(varyRate)source.playbackRate.setValueAtTime(speed,now);
+    const duration=region.duration/speed;
+    const volume=Math.max(.0001,Math.min(1,e.gain*intensity*(name==='step'?.94+Math.random()*.12:1)));
     gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(volume,now+Math.min(e.attack??.015,duration*.25));
     gain.gain.setValueAtTime(volume,now+duration-Math.min(e.release??.06,duration*.5));gain.gain.linearRampToValueAtTime(0,now+duration);
     source.connect(gain);let panner=null;
     if(context.createStereoPanner){panner=context.createStereoPanner();panner.pan.value=Math.max(-1,Math.min(1,pan));gain.connect(panner).connect(destination);}else gain.connect(destination);
     source.onended=()=>{source.disconnect();gain.disconnect();panner?.disconnect();};
-    source.start(now,region.offset,duration);return true;
+    source.start(now,region.offset,region.duration);return true;
   }
   function stopLoop(name,context,quick=false){
     const active=loops.get(name);if(!active)return;
@@ -47,6 +57,7 @@
   }
   function setLoop(name,context,destination,level,pan=0){
     const e=clips.get(name);if(!e?.loop)return false;
+    if(!Number.isFinite(level))level=0;if(!Number.isFinite(pan))pan=0;
     if(level<=0){stopLoop(name,context);return true;}
     let active=loops.get(name);
     if(!active){

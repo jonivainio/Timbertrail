@@ -2,7 +2,13 @@
 (function(root){
   'use strict';
   const {WIDTH:W,HEIGHT:H,WORLD,random,clamp}=root.PE;let currentMap='forest';const ground=x=>root.PE.ground(x,currentMap);
-  function prepare(renderer,map){currentMap=map;if(renderer._region!==map){renderer._region=map;renderer._backdrop=null;renderer._terrain=null;renderer.fade.clear();}}
+  function prepare(renderer,map){currentMap=map;if(renderer._region!==map){renderer._region=map;renderer._backdrop=null;renderer._terrain=null;renderer.fade.clear();}
+    // Network image completion order is not stable. A late material or panorama
+    // must invalidate the early title-screen cache just like changing regions.
+    const images=[...(renderer.scenery||[]),renderer.regionImages?.[map]],old=renderer._landscapeInputs;
+    if(!old||images.some((image,i)=>image!==old[i])){renderer._landscapeInputs=images;renderer._backdrop=null;renderer._terrain=null;}
+    if(renderer._groundInput!==renderer.groundMaterial){renderer._groundInput=renderer.groundMaterial;renderer._terrain=null;}
+  }
   const BW=4880,SW=1680,OVERLAP=80;
   const rect=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h);};
   function line(c,p,color,width=1){c.beginPath();c.strokeStyle=color;c.lineWidth=width;for(let i=0;i<p.length;i++)i?c.lineTo(...p[i]):c.moveTo(...p[i]);c.stroke();}
