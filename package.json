@@ -1,13 +1,13 @@
 {
   "name": "timbertrail",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "private": true,
   "description": "A quiet pixel-art wilderness survival prototype",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "test": "node tests/engine.cjs && node tests/regions.cjs && node tests/cabin.cjs && node tests/poses.cjs && node tests/terrain.cjs && node tests/ui.cjs && node tests/audio.cjs && node tests/fire.cjs && node tests/item-icons.cjs && node tests/fishing.cjs && node scripts/check-assets.cjs && node tests/sounds.cjs && node tests/audio-library.cjs",
+    "test": "node tests/engine.cjs && node tests/regions.cjs && node tests/cabin.cjs && node tests/poses.cjs && node tests/terrain.cjs && node tests/ui.cjs && node tests/audio.cjs && node tests/fire.cjs && node tests/item-icons.cjs && node tests/fishing.cjs && node tests/fish-motion.cjs && node scripts/check-assets.cjs && node tests/sounds.cjs && node tests/audio-library.cjs",
     "build": "node scripts/build.cjs",
     "check:secrets": "node scripts/check-secrets.cjs",
     "sounds": "node scripts/sounds.cjs"

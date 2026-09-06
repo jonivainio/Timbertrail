@@ -13,15 +13,25 @@ const polygon=(c,points,color)=>{c.fillStyle=color;c.beginPath();points.forEach(
 // Every bone is measured back from the mouth: a hooked mouth stays on the line.
 function fishShape(a,length){const pike=a.species==='pike',beat=a.beat||0,effort=a.effort||0;
  const heights=pike?[.012,.03,.048,.085,.105,.105,.09,.073,.05,.022,.013]:[.018,.075,.12,.145,.15,.142,.12,.09,.056,.026,.015];
- const at=u=>[-u*length*.88,Math.sin(beat-u*5.8)*length*(.021+effort*.065)*u*u];
+ const at=u=>[-u*length*.88,Math.sin(beat-u*4.8)*length*(.012+effort*.028)*u*u];
  const spine=heights.map((_,i)=>at(i/10)),top=spine.map(([x,y],i)=>[x,y-heights[i]*length]),bottom=spine.map(([x,y],i)=>[x,y+heights[i]*length*.8]);
- const tail=at(1),sweep=Math.sin(beat-6.5)*length*(.035+effort*.07);
- return{at,top,bottom,outline:[...top,...bottom.slice().reverse()],tail:[tail,[-length*1.08,tail[1]-length*.15+sweep],[-length*.99,tail[1]+sweep],[-length*1.08,tail[1]+length*.15+sweep]],pike};
+ const tail=at(1),sweep=Math.sin(beat-5.4)*length*(.012+effort*.025),span=length*(pike?.092:.10);
+ return{at,top,bottom,outline:[...top,...bottom.slice().reverse()],tail:[tail,[-length*1.025,tail[1]-span+sweep],[-length*.97,tail[1]+sweep],[-length*1.025,tail[1]+span+sweep]],pike};
 }
-function fish(r,a,alpha=1){const c=r.c,length=18+Math.sqrt(a.weight)*8,g=fishShape(a,length),angle=a.angle??(a.vx<0?Math.PI:0),facing=Math.cos(angle)<0?-1:1;
- const pitch=Math.max(-1.15,Math.min(1.15,Math.atan2(Math.sin(angle),Math.abs(Math.cos(angle))))),beat=a.beat||0,fin=Math.sin(beat+1)*length*.035;
- c.save();c.globalAlpha=alpha;c.translate(a.x,a.y);c.scale(facing,1);c.rotate(pitch*facing);
+// Continuous projected yaw, separate from pitch: there is no sign()/mirror jump.
+function fishView(a){const yaw=a.yaw??(a.vx<0?Math.PI:0),pitch=a.pitch||0,sx=Math.cos(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);return{sx,pitch,front:1-Math.abs(sx),profile:Math.min(1,Math.abs(sx)/.18),project:([x,y])=>[a.x+sx*(cp*x-sp*y),a.y+sp*x+cp*y]};}
+function fish(r,a,alpha=a.visibility??.42){const c=r.c,length=root.PEFishing.bodyLength(a),g=fishShape(a,length),v=fishView(a),beat=a.beat||0,fin=Math.sin(beat+1)*length*.015;
+ c.save();c.globalAlpha=alpha;c.translate(a.x,a.y);
  const finColor=g.pike?'#7b8053':'#728e82',back=g.pike?'#526345':'#536d62',side=g.pike?'#87976b':'#9cac8b';
+ // A narrow end-on head/body keeps real volume as the side profile turns away.
+ // Without this, scaling through zero would make a fish disappear for a frame.
+ if(v.front>0){c.save();c.globalAlpha=alpha*v.front;c.translate(-length*.18*v.sx,-length*.18*Math.sin(v.pitch));
+  for(const side of [-1,1])polygon(c,[[side*length*.04,length*.015],[side*length*(.12+Math.sin(beat)*.012),length*.08],[side*length*.055,length*.05]],finColor);
+  c.fillStyle=back;c.beginPath();c.ellipse(0,0,length*.07,length*(g.pike?.095:.12),0,0,Math.PI*2);c.fill();c.fillStyle=side;c.beginPath();c.ellipse(0,length*.025,length*.048,length*.055,0,0,Math.PI*2);c.fill();
+  c.fillStyle='#d6c88a';for(const side of [-1,1]){c.fillRect(side*length*.049-length*.012,-length*.027,length*.024,length*.021);}stroke(c,[[-length*.025,length*.035],[length*.025,length*.035]],'#304235',.45);c.restore();}
+ // Fade the vanishing side profile into its end-on volume before the transform
+ // becomes singular, avoiding a one-frame stroke collapse at exactly 90°.
+ c.globalAlpha=alpha*v.profile;c.scale(v.sx,1);c.rotate(v.pitch);
  polygon(c,g.tail,finColor);stroke(c,[g.tail[1],g.tail[0],g.tail[3]],'#a9b18a',.5);
  // Pike has a rear dorsal; zander has the characteristic two spiny sails.
  const dorsal=(lo,hi,h,spines)=>{const pts=[g.top[lo]];for(let i=lo;i<=hi;i++){const [x,y]=g.top[i];pts.push([x+length*.018,y-h*(i%2&&spines?.8:1)+fin*.35],[x-length*.025,y-h*.35]);}pts.push(g.top[hi]);polygon(c,pts,finColor);stroke(c,pts,'#a3af87',.45);};
@@ -41,17 +51,21 @@ function fish(r,a,alpha=1){const c=r.c,length=18+Math.sqrt(a.weight)*8,g=fishSha
  c.restore();
 }
 function world(r,e){const f=e.fishing?.kind==='spinning'?e.fishing:null,c=r.c,pond=root.PERegions.pond,water=pond.surface;
- c.save();c.beginPath();c.rect(pond.chair-430,water+2,414,154);c.clip();
- for(const a of e.pondFish||[]){if(a.mode==='caught'||a===f?.fish)continue;fish(r,a,['strike','inspect'].includes(a.mode)?.64:.38);}
- if(f?.fish&&!f.airborne)fish(r,f.fish,.86);
- for(const b of f?.bubbles||[]){c.strokeStyle='#cadbd1b0';c.lineWidth=.65;c.beginPath();c.arc(b.x,b.y,b.size,0,Math.PI*2);c.stroke();}c.restore();if(!f)return;
- if(f.airborne&&f.fish){c.save();c.beginPath();c.rect(pond.chair-470,water-90,480,250);c.clip();fish(r,f.fish,1);c.restore();}
- for(const p of f.spray||[]){c.fillStyle='#d1e6d2';c.globalAlpha=Math.min(1,p.life*2);c.fillRect(p.x,p.y,1,1.8);}c.globalAlpha=1;
+ c.save();c.beginPath();c.rect(pond.chair-485,water-110,545,278);c.clip();
+ // One stable draw order/clip/opacity path for swimming, hooked, jumping and
+ // released fish. No whole-sprite pop when its mouth crosses the water surface.
+ for(const a of e.pondFish||[])if(a.mode!=='caught')fish(r,a);
+ const banks=[e.pondFish?e.pondWater:null,f].filter(Boolean);
+ for(const bank of banks){
+  for(const b of bank.bubbles||[]){c.strokeStyle='#cadbd1b0';c.lineWidth=.65;c.beginPath();c.arc(b.x,b.y,b.size,0,Math.PI*2);c.stroke();}
+  for(const p of bank.spray||[]){c.save();c.fillStyle='#d1e6d2';c.globalAlpha=Math.min(1,p.life*2);c.fillRect(p.x,p.y,1,1.8);c.restore();}
+  for(const v of bank.ripples){c.save();c.globalAlpha=v.life*.6;c.strokeStyle='#daebe1';c.lineWidth=.8;c.beginPath();c.ellipse(v.x,v.y,2+(1-v.life)*19,1+(1-v.life)*5,0,0,Math.PI*2);c.stroke();c.restore();}
+ }
+ c.restore();if(!f)return;
  if(f.points.length){stroke(c,f.points.map(p=>[p.x,p.y]),f.strain>.35?'#eccba7cc':'#d8ded49a',.7);}
- for(const v of f.ripples){c.save();c.globalAlpha=v.life*.6;c.strokeStyle='#daebe1';c.lineWidth=.8;c.beginPath();c.ellipse(v.x,v.y,2+(1-v.life)*19,1+(1-v.life)*5,0,0,Math.PI*2);c.stroke();c.restore();}
  if(f.lure&&f.stage!=='fight'){const l=f.lure;c.save();c.translate(l.x,l.y);c.rotate(Math.atan2(l.vy,l.vx));stroke(c,[[-3,0],[3,0]],'#d5b575',2);stroke(c,[[-2,1],[-4,2],[-5,0]],'#d6dfd0',.65);c.restore();}
 }
 const trophy='<svg class="fish-trophy" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M9 3h14v4h6v5c0 5-4 8-9 8v5h6v4H6v-4h6v-5C7 20 3 17 3 12V7h6zm14 7v6c2-1 3-2 3-4v-2zM6 10v2c0 2 1 3 3 4v-6z"/></svg>';
 function catchPanel(e){const f=e.lastCatch;if(!f)return '';const T=x=>root.L?.text(x)||x,sp=root.PEFishing.species[f.species];return '<div class="catch-sheet"><p class="eyebrow">'+T(f.trophy?'TROPHY FISH':'A MOMENT TO REMEMBER')+'</p><div class="catch-illustration '+f.species+'" role="img" aria-label="'+T(sp.name)+'"></div><h3>'+T(sp.name)+'</h3><p class="catch-weight">'+f.weight.toFixed(2)+' kg '+(f.trophy?trophy+'<span class="sr-only">'+T('Trophy fish')+'</span>':'')+'</p><p>'+T(f.best?'Your new personal best.':'A fine catch.')+'</p><p>'+T('Raw fillets added to backpack')+': '+f.portions+'</p><button class="primary" data-catch-close="true">'+T('Back to the lake')+'</button></div>';}
-root.PEFishingArt={actor,world,fish,fishShape,catchPanel};if(typeof module!=='undefined')module.exports=root.PEFishingArt;
+root.PEFishingArt={actor,world,fish,fishShape,fishView,catchPanel};if(typeof module!=='undefined')module.exports=root.PEFishingArt;
 })(typeof window==='undefined'?globalThis:window);

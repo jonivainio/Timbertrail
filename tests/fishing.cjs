@@ -40,7 +40,7 @@ if(require.main===module){
   natural[e.lastCatch?.species||'empty']++;
  }
  assert.ok(natural.pike>=4&&natural.zander>=4&&natural.empty>0,JSON.stringify(natural));assert.ok(followed&&rejected,'fish follow and sometimes reject instead of automatically hooking');
- for(const mode of ['follow','inspect','strike','reject'])assert.ok(modes.has(mode),'natural lure behavior: '+mode);for(const behavior of ['run','dive','circle','rest','surface'])assert.ok(behaviors.has(behavior),'natural fight behavior: '+behavior);assert.ok(jumped,'natural fights include surface jumps without forcing state');
+ for(const mode of ['follow','inspect','strike','reject'])assert.ok(modes.has(mode),'natural lure behavior: '+mode);for(const behavior of ['run','dive','circle','rest'])assert.ok(behaviors.has(behavior),'natural fight behavior: '+behavior);assert.ok(jumped,'natural fights include surface jumps without forcing state');
  const ambient=setup(),shoal=F.shoal(ambient),oldX=shoal[0].x;F.ambient(ambient,.05);assert.notEqual(shoal[0].x,oldX,'fish roam without casting');ambient.enterRegion('forest',565);assert.equal(ambient.pondFish,null,'travel discards transient shoal');
  console.log('PASS fishing charge/range, splash/sink/slack, trophy distribution, both species landing, line break/slack escape, persistence, fixed timestep, cancellation; controlled fights',landed+'/40; natural casts',natural);
 }

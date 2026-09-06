@@ -10,12 +10,23 @@ function weight(id,random){const s=species[id];for(let i=0;i<100;i++){const z=Ma
 const trophyLimit=id=>species[id].min+.8*(species[id].max-species[id].min);
 const approach=(value,target,rate,dt)=>value+clamp(target-value,-rate*dt,rate*dt);
 function strength(fish){return(.45+.55*fish.stamina)*(1+Math.sqrt(fish.weight)*.16)*species[fish.species].burst/1.3;}
+const bodyLength=fish=>24*Math.cbrt(fish.weight);
+function waterBounds(){const p=root.PERegions.pond;return{left:p.chair-410,right:p.chair-16,top:p.surface+2,bottom:p.surface+154};}
+function contain(a,dt){const b=waterBounds();a.x=clamp(a.x+a.vx*dt,b.left,b.right);a.y=a.airborne?a.y+a.vy*dt:clamp(a.y+a.vy*dt,b.top,b.bottom);if(a.x<=b.left&&a.vx<0||a.x>=b.right&&a.vx>0)a.vx=0;if(!a.airborne&&(a.y<=b.top&&a.vy<0||a.y>=b.bottom&&a.vy>0))a.vy=0;}
 function animateFish(fish,dt){
  const speed=Math.hypot(fish.vx,fish.vy),active=fish.mode==='strike'||fish.mode==='hooked';
- fish.beat=(fish.beat||0)+dt*(3.6+Math.min(12,speed*.19)+(active?3:0));
- fish.effort=approach(fish.effort||0,clamp(speed/45+(active?.25:0),0,1),2.5,dt);
- if(speed>1){const target=Math.atan2(fish.vy,fish.vx),angle=fish.angle??target;fish.angle=angle+clamp(Math.atan2(Math.sin(target-angle),Math.cos(target-angle)),-dt*4,dt*4);}
- fish.jaw=approach(fish.jaw||0,fish.mode==='strike'?1:fish.mode==='inspect'?.3:fish.mode==='hooked'?.45:0,5,dt);
+ fish.beatRate=approach(fish.beatRate??3,2.4+Math.min(6,speed*.1)+(active?1.2:0),4,dt);
+ fish.beat=(fish.beat||0)+dt*fish.beatRate;
+ fish.effort=approach(fish.effort||0,clamp(speed/65+(active?.15:0),0,1),1.2,dt);
+ // Hysteresis avoids left/right chatter at nearly vertical motion. Yaw crosses
+ // through an end-on view instead of instantly mirroring about the mouth.
+ if(Math.abs(fish.vx)>5)fish.facing=fish.vx<0?-1:1;
+ fish.yaw=approach(fish.yaw??(fish.facing<0?Math.PI:0),fish.facing<0?Math.PI:0,1.9,dt);
+ const pitch=clamp(Math.atan2(fish.vy,Math.max(16,Math.abs(fish.vx))),-.8,.8);
+ fish.pitch=approach(fish.pitch||0,pitch,1.6,dt);
+ fish.jaw=approach(fish.jaw||0,fish.mode==='strike'?1:fish.mode==='inspect'?.2:fish.mode==='hooked'?.35:0,3,dt);
+ const visible=fish.mode==='hooked'?.78:['strike','inspect'].includes(fish.mode)?.6:.42;
+ fish.visibility=approach(fish.visibility??.42,visible,.32,dt);
 }
 function restore(raw={}){const out={casts:0,caught:0,best:{pike:0,zander:0}};for(const k of ['casts','caught'])if(Number.isSafeInteger(raw?.[k])&&raw[k]>=0)out[k]=Math.min(raw[k],1e8);for(const id of Object.keys(species)){const w=raw?.best?.[id];if(Number.isFinite(w)&&w>=species[id].min&&w<=species[id].max)out.best[id]=w;}return out;}
 function ready(e){const s=e.state,p=s.player;return s.running&&!e.transition&&!s.cabinHome?.inside&&s.currentMap==='pond'&&p.sitting&&Math.abs(p.x-root.PERegions.pond.chair)<8&&s.equipped==='rod'&&s.inventory.rod>0;}
@@ -36,8 +47,9 @@ function pose(e){const f=e.fishing,p=e.state.player;let phase=0;
  return {phase,frame,scale:poseScale,grip,angle,tip,c1,c2,bend};
 }
 function shoal(e){if(e.pondFish)return e.pondFish;const random=rng(89731+e.state.day*997+e.state.fishery.caught*71),p=root.PERegions.pond;
- e.pondFish=Array.from({length:8},(_,i)=>{const id=i%2?'zander':'pike',s=species[id];return{id:i,species:id,weight:weight(id,random),x:p.chair-65-random()*275,y:p.surface+s.depth+random()*32,vx:0,vy:0,mode:'roam',timer:random()*4+1,interest:0,cooldown:random()*5,stamina:1,heading:random()<.5?-1:1,beat:random()*6.28,angle:0,effort:0,jaw:0,random};});return e.pondFish;}
-function cancel(e,message){if(!e.fishing||e.fishing.kind!=='spinning')return;const f=e.fishing;if(f.fish){f.fish.mode='roam';f.fish.cooldown=9;f.fish.interest=0;}e.fishing=null;if(message)e.notify(message);e.emit('change');}
+ e.pondWater={ripples:[],spray:[],bubbles:[]};
+ e.pondFish=Array.from({length:6},(_,i)=>{const id=i%2?'zander':'pike',s=species[id],heading=random()<.5?-1:1;return{id:i,species:id,weight:weight(id,random),x:p.chair-75-i/5*245+(random()-.5)*18,y:p.surface+s.depth+random()*24,vx:heading*s.speed*.2,vy:0,mode:'roam',timer:random()*4+1,interest:0,cooldown:random()*5,stamina:1,heading,facing:heading,yaw:heading<0?Math.PI:0,pitch:0,beat:random()*6.28,effort:0,jaw:0,visibility:.42,random};});return e.pondFish;}
+function cancel(e,message){if(!e.fishing||e.fishing.kind!=='spinning')return;const f=e.fishing;if(f.fish){f.fish.mode='roam';f.fish.cooldown=9;f.fish.interest=0;f.fish.airborne=!!f.airborne;}if(e.pondWater)for(const k of ['ripples','spray','bubbles'])e.pondWater[k].push(...(f[k]||[]));e.fishing=null;if(message)e.notify(message);e.emit('change');}
 function press(e,x,y){const f=e.fishing;if(f?.kind==='spinning'){if(['flight','wet','fight'].includes(f.stage)){f.held=true;return true;}return false;}if(!canCast(e,x,y))return false;
  e.state.fishery||=restore();e.state.fishery.casts++;shoal(e);e.action=null;e.walkTarget=null;e.keys={};e.fishing={kind:'spinning',stage:'charge',held:true,power:0,age:0,accumulator:0,tension:0,strain:0,slack:0,lineLength:0,points:[],ripples:[],bubbles:[],random:rng(13981+e.state.fishery.casts*1777+e.state.day*391)};e.emit('change');return true;}
 function release(e,abort=false){const f=e.fishing;if(f?.kind!=='spinning')return;f.held=false;if(abort){if(f.stage==='charge')cancel(e);return;}if(f.stage!=='charge')return;
@@ -46,12 +58,15 @@ function release(e,abort=false){const f=e.fishing;if(f?.kind!=='spinning')return
 function ripple(f,x,y){f.ripples.push({x,y,life:1});}
 function splash(e,f,amount=1){const l=f.lure,water=root.PERegions.pond.surface;ripple(f,l.x,water);f.spray||=[];for(let i=0;i<10*amount;i++)f.spray.push({x:l.x,y:water,vx:(f.random()-.5)*55,vy:-18-f.random()*48,life:.45+f.random()*.4});e.sound('fishSplash',.45*amount);}
 function land(e,f){const fish=f.fish,id=fish.species,record={species:id,weight:fish.weight,trophy:fish.weight>=trophyLimit(id),portions:Math.min(8,Math.max(1,Math.round(fish.weight))),best:fish.weight>e.state.fishery.best[id]};
- e.state.fishery.caught++;e.state.fishery.best[id]=Math.max(e.state.fishery.best[id],fish.weight);e.state.inventory.rawFish+=record.portions;e.state.discovered.rawFish=true;e.state.journal.caught.fish=true;e.lastCatch=record;fish.mode='caught';fish.cooldown=65;e.fishing=null;e.sound('catch',.5);e.emit('change');e.emit('save');e.emit('panel',{panel:'fish-catch'});}
+ e.state.fishery.caught++;e.state.fishery.best[id]=Math.max(e.state.fishery.best[id],fish.weight);e.state.inventory.rawFish+=record.portions;e.state.discovered.rawFish=true;e.state.journal.caught.fish=true;e.lastCatch=record;fish.mode='caught';fish.visibility=0;fish.cooldown=65;e.fishing=null;e.sound('catch',.5);e.emit('change');e.emit('save');e.emit('panel',{panel:'fish-catch'});}
 function updateFish(e,f,dt){const pond=root.PERegions.pond;
  for(const fish of shoal(e)){
   if(fish===f.fish&&f.stage==='fight')continue;
   const sp=species[fish.species],random=fish.random;fish.cooldown=Math.max(0,fish.cooldown-dt);fish.timer-=dt;
-  if(fish.mode==='caught'){if(fish.cooldown<=0){fish.mode='roam';fish.x=pond.chair-300;fish.weight=weight(fish.species,random);}continue;}
+  if(fish.mode==='caught'){if(fish.cooldown<=0){Object.assign(fish,{mode:'roam',x:pond.chair-380,y:pond.surface+sp.depth,vx:sp.speed*.2,vy:0,stamina:1,heading:1,facing:1,yaw:0,pitch:0,visibility:0,airborne:false,weight:weight(fish.species,random)});}continue;}
+  // A released jumping fish completes the same arc; it never snaps back into
+  // the narrower roaming depth range when a cast is cancelled or the line breaks.
+  if(fish.airborne){fish.vy+=210*dt;fish.vx*=Math.exp(-.35*dt);contain(fish,dt);if(fish.y>=pond.surface+2&&fish.vy>0){fish.airborne=false;fish.vy*=.25;splash(e,{...e.pondWater,lure:fish,random},.7);}animateFish(fish,dt);continue;}
   const l=f.lure,dist=l?Math.hypot(fish.x-l.x,fish.y-l.y):Infinity,depth=l?l.y-pond.surface:0;
   const available=f.stage==='wet'&&l&&fish.cooldown===0&&(fish.species==='pike'?depth<100:depth>55)&&f.wetTime>1.3;
   let tx=fish.x+fish.heading*45,ty=pond.surface+sp.depth+Math.sin((fish.beat||0)*.16+fish.id)*18,speed=sp.speed*.3;
@@ -63,20 +78,24 @@ function updateFish(e,f,dt){const pond=root.PERegions.pond;
    if(fish.mode==='inspect'){tx=l.x+fish.side*18;ty=l.y+Math.sin(fish.interest*4)*9;speed=sp.speed*.65;if(fish.timer<=0){fish.mode='strike';fish.timer=.7+random()*.3;}}
    if(fish.mode==='strike'){
     tx=l.x+l.vx*.1;ty=l.y+l.vy*.1;speed=sp.speed*(fish.species==='pike'?3:2.4);
-    if(dist<9){e.sound('fishNibble',.35);f.nibble=1.2;fish.cooldown=3+random()*5;
+    if(dist<4){e.sound('fishNibble',.35);f.nibble=1.2;fish.cooldown=3+random()*5;
      if(random()<sp.commit&&(f.tension>.05||f.held)){
       Object.assign(f,{stage:'fight',age:0,fish,slackTime:0,strain:0,surge:1,run:-1,runY:.1,behavior:'run',hookGrace:1,jumpCooldown:4+f.random()*4,airborne:false,dragRate:0});
-      Object.assign(fish,{mode:'hooked',stamina:1,timer:2.6,x:l.x,y:l.y});f.tension=Math.min(f.tension,.2);e.sound('fishHook',.5);e.emit('change');return;
+      // The tiny lure meets the mouth; the much larger fish is never teleported.
+      Object.assign(l,{x:fish.x,y:fish.y,vx:fish.vx,vy:fish.vy});Object.assign(fish,{mode:'hooked',stamina:1,timer:2.6});f.tension=Math.min(f.tension,.2);e.sound('fishHook',.5);e.emit('change');continue;
      }
      fish.timer=.8+random()*.8;fish.mode='reject';fish.retreatX=fish.x+(fish.x<l.x?-45:45);fish.retreatY=clamp(fish.y+(random()-.5)*65,pond.surface+15,pond.surface+145);fish.interest=0;
     }else if(fish.timer<=0){fish.mode='roam';fish.cooldown=1.5;}
    }
   }else{fish.mode='roam';fish.interest=0;if(fish.timer<=0){fish.timer=1.5+random()*4;fish.heading=random()<.5?-1:1;fish.cruise=random()<.2?.05:.18+random()*.35;}speed=sp.speed*(fish.cruise??.25);}
+  // Anticipate the shoreline/depth limits before collision. The same hard limits
+  // are shared by free and hooked fish, including fish just released near a pier.
+  const bounds=waterBounds(),pursuing=['follow','inspect','strike'].includes(fish.mode);tx=clamp(tx,bounds.left+(pursuing?0:30),bounds.right-(pursuing?0:30));ty=clamp(ty,bounds.top+(pursuing?0:16),bounds.bottom-(pursuing?0:18));
   // Soft steering, changing depth and neighbor separation avoid sliding icon clusters.
   const dx=tx-fish.x,dy=ty-fish.y,len=Math.hypot(dx,dy)||1;let sx=0,sy=0;
   if(fish.mode!=='strike')for(const other of e.pondFish){if(other===fish||other.mode==='caught')continue;const x=fish.x-other.x,y=fish.y-other.y,d=Math.hypot(x,y);if(d>0&&d<22){sx+=x/d*(22-d)*.8;sy+=y/d*(22-d)*.8;}}
-  const turn=fish.mode==='strike'?9:3;fish.vx+=(dx/len*speed+sx-fish.vx)*Math.min(1,turn*dt);fish.vy+=(dy/len*speed+sy-fish.vy)*Math.min(1,turn*dt);
-  fish.x=clamp(fish.x+fish.vx*dt,pond.chair-390,pond.chair-38);fish.y=clamp(fish.y+fish.vy*dt,pond.surface+12,pond.surface+151);if(fish.x<=pond.chair-389)fish.heading=1;if(fish.x>=pond.chair-39)fish.heading=-1;animateFish(fish,dt);
+  const turn=fish.mode==='strike'?5:2,accel=fish.mode==='strike'?135:65;fish.vx+=clamp((dx/len*speed+sx-fish.vx)*turn,-accel,accel)*dt;fish.vy+=clamp((dy/len*speed+sy-fish.vy)*turn,-accel,accel)*dt;
+  contain(fish,dt);if(fish.x<bounds.left+35)fish.heading=1;if(fish.x>bounds.right-35)fish.heading=-1;animateFish(fish,dt);
  }
 }
 function chooseRun(f){const fish=f.fish,q=f.random(),canJump=fish.stamina>.24&&f.jumpCooldown<=0;
@@ -115,10 +134,10 @@ function linePoints(f,tip,dt){const N=18,l=f.lure;if(!l)return;const d=Math.hypo
  // Damped rope modes anchored at both ends: slack droops, taut line straightens.
  for(let i=0;i<=N;i++){const u=i/N,p=f.points[i],x=mix(tip.x,l.x,u),y=mix(tip.y,l.y,u)+Math.sin(Math.PI*u)*sag;if(i===0||i===N){p.x=x;p.y=y;p.vx=p.vy=0;}else{p.vx+=(x-p.x)*150*dt;p.vy+=(y-p.y)*150*dt;const damping=Math.exp(-17*dt);p.vx*=damping;p.vy*=damping;p.x+=p.vx*dt;p.y+=p.vy*dt;}}
 }
-function substep(e,f,dt){f.age+=dt;f.nibble=Math.max(0,(f.nibble||0)-dt);const water=root.PERegions.pond.surface;
- if(f.stage==='charge'){f.power=clamp(f.age/1.55,0,1);return;}
- const l=f.lure,tip=pose(e).tip;f.ripples=f.ripples.filter(r=>(r.life-=dt)>0);f.bubbles=f.bubbles.filter(b=>{b.y-=dt*9;return(b.life-=dt)>0;});
- f.spray=(f.spray||[]).filter(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=100*dt;return(p.life-=dt)>0;});
+function updateEffects(f,dt){if(!f)return;f.ripples=f.ripples.filter(r=>(r.life-=dt)>0);f.bubbles=f.bubbles.filter(b=>{b.y-=dt*9;return(b.life-=dt)>0;});f.spray=(f.spray||[]).filter(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=100*dt;return(p.life-=dt)>0;});}
+function substep(e,f,dt){f.age+=dt;f.nibble=Math.max(0,(f.nibble||0)-dt);const water=root.PERegions.pond.surface;updateEffects(e.pondWater,dt);updateEffects(f,dt);
+ if(f.stage==='charge'){f.power=clamp(f.age/1.55,0,1);updateFish(e,f,dt);return;}
+ const l=f.lure,tip=pose(e).tip;
  if(f.stage==='flight'){l.vy+=260*dt;l.x+=l.vx*dt;l.y+=l.vy*dt;f.lineLength=Math.hypot(l.x-tip.x,l.y-tip.y)+8;
   if(l.y>=water&&l.vy>0){l.y=water+1;l.vx*=.08;l.vy=8;f.stage='wet';f.age=0;f.wetTime=0;f.lineLength+=18;ripple(f,l.x,water);e.sound('lureSplash',.55);e.emit('change');}
  }else{
@@ -129,15 +148,14 @@ function substep(e,f,dt){f.age+=dt;f.nibble=Math.max(0,(f.nibble||0)-dt);const w
    l.vx+=(dx/d*extension*20-l.vx*3)*dt;l.vy+=(19+dy/d*extension*20-l.vy*2.7)*dt;
    if(d<65&&f.held){cancel(e,'The lure is back. Try a different depth.');return;}
   }else if(f.stage==='fight'&&!fightStep(e,f,tip,dt))return;
-  l.x=clamp(l.x+l.vx*dt,e.state.player.x-410,e.state.player.x-16);l.y=f.airborne?l.y+l.vy*dt:clamp(l.y+l.vy*dt,water+2,water+154);
-  if(f.airborne&&l.y>=water+2&&l.vy>0){f.airborne=false;l.y=water+2;l.vy*=.25;f.behavior='rest';f.fish.timer=1.6;f.run=.15;f.runY=.1;f.surge=.1;splash(e,f,1);}
-  if(l.y>=water+154)l.vy=Math.min(0,l.vy);if(l.x<=e.state.player.x-410||l.x>=e.state.player.x-16)l.vx=0;
-  if(f.stage==='fight'){f.fish.x=l.x;f.fish.y=l.y;f.fish.vx=l.vx;f.fish.vy=l.vy;animateFish(f.fish,dt);}
-  updateFish(e,f,dt);
+  l.airborne=!!f.airborne;contain(l,dt);
+  if(f.airborne&&l.y>=water+2&&l.vy>0){f.airborne=l.airborne=false;l.vy*=.25;f.behavior='rest';f.fish.timer=1.6;f.run=.15;f.runY=.1;f.surge=.1;splash(e,f,1);}
+  if(f.stage==='fight'){f.fish.x=l.x;f.fish.y=l.y;f.fish.vx=l.vx;f.fish.vy=l.vy;f.fish.airborne=!!f.airborne;animateFish(f.fish,dt);}
  }
+ updateFish(e,f,dt);
  linePoints(f,pose(e).tip,dt);
 }
-function ambient(e,dt){if(e.state.currentMap==='pond'&&e.state.player.x<root.PERegions.pond.shore+100&&!e.fishing)updateFish(e,{stage:'idle',lure:null},Math.min(.05,dt));}
-function update(e,dt){const f=e.fishing;if(f?.kind!=='spinning')return;if(!ready(e)){cancel(e);return;}f.accumulator+=Math.min(.1,Math.max(0,dt));while(e.fishing===f&&f.accumulator>=1/120){f.accumulator-=1/120;substep(e,f,1/120);}}
-root.PEFishing={species,rng,weight,trophyLimit,restore,ready,canCast,pose,poseFrames,shoal,press,release,cancel,update,ambient,strength};if(typeof module!=='undefined')module.exports=root.PEFishing;
+function ambient(e,dt){if(e.state.currentMap!=='pond'||e.state.player.x>=root.PERegions.pond.shore+100||e.fishing)return;shoal(e);e.pondWater.accumulator=(e.pondWater.accumulator||0)+Math.min(.1,Math.max(0,dt));while(e.pondWater.accumulator+1e-10>=1/120){e.pondWater.accumulator=Math.max(0,e.pondWater.accumulator-1/120);updateFish(e,{stage:'idle',lure:null},1/120);updateEffects(e.pondWater,1/120);}}
+function update(e,dt){const f=e.fishing;if(f?.kind!=='spinning')return;if(!ready(e)){cancel(e);return;}f.accumulator+=Math.min(.1,Math.max(0,dt));while(e.fishing===f&&f.accumulator+1e-10>=1/120){f.accumulator=Math.max(0,f.accumulator-1/120);substep(e,f,1/120);}}
+root.PEFishing={species,rng,weight,trophyLimit,restore,ready,canCast,pose,poseFrames,shoal,press,release,cancel,update,ambient,strength,animateFish,bodyLength,waterBounds};if(typeof module!=='undefined')module.exports=root.PEFishing;
 })(typeof window==='undefined'?globalThis:window);
