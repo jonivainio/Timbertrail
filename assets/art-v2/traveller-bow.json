@@ -1,0 +1,227 @@
+{
+  "id": "traveller-bow",
+  "file": "assets/art-v2/traveller-bow.png",
+  "nativeSize": [
+    192,
+    120
+  ],
+  "palette": [
+    "#222b28",
+    "#3b3328",
+    "#594532",
+    "#79563a",
+    "#9e723f",
+    "#bd9458",
+    "#d0ac73",
+    "#e1ba83",
+    "#a47654",
+    "#633925",
+    "#935133",
+    "#b66a3b",
+    "#253b3c",
+    "#3b5352",
+    "#5b7066",
+    "#9a9d83"
+  ],
+  "frames": [
+    {
+      "id": "stand",
+      "rect": [
+        0,
+        0,
+        96,
+        96
+      ],
+      "anchor": [
+        40,
+        88
+      ],
+      "kind": "body",
+      "shoulder": [
+        39,
+        46
+      ],
+      "preparation": {
+        "id": "stand",
+        "crop": [
+          0,
+          0,
+          650,
+          850
+        ],
+        "origin": [
+          349,
+          786
+        ],
+        "scale": 0.095,
+        "rect": [
+          0,
+          0,
+          96,
+          96
+        ],
+        "anchor": [
+          40,
+          88
+        ],
+        "shoulder": [
+          39,
+          46
+        ],
+        "retainedSourcePixels": 152639
+      }
+    },
+    {
+      "id": "crouch",
+      "rect": [
+        96,
+        0,
+        96,
+        96
+      ],
+      "anchor": [
+        40,
+        88
+      ],
+      "kind": "body",
+      "shoulder": [
+        40,
+        53
+      ],
+      "preparation": {
+        "id": "crouch",
+        "crop": [
+          680,
+          100,
+          574,
+          750
+        ],
+        "origin": [
+          975,
+          786
+        ],
+        "scale": 0.095,
+        "rect": [
+          96,
+          0,
+          96,
+          96
+        ],
+        "anchor": [
+          40,
+          88
+        ],
+        "shoulder": [
+          40,
+          53
+        ],
+        "retainedSourcePixels": 144420
+      }
+    },
+    {
+      "id": "upper-arm",
+      "rect": [
+        0,
+        96,
+        40,
+        24
+      ],
+      "anchor": [
+        10,
+        12
+      ],
+      "kind": "joint",
+      "end": [
+        24,
+        12
+      ],
+      "preparation": {
+        "id": "upper-arm",
+        "crop": [
+          120,
+          900,
+          440,
+          250
+        ],
+        "origin": [
+          242,
+          1034
+        ],
+        "scale": 0.06862745098039216,
+        "rect": [
+          0,
+          96,
+          40,
+          24
+        ],
+        "anchor": [
+          10,
+          12
+        ],
+        "end": [
+          24,
+          12
+        ],
+        "kind": "joint",
+        "retainedSourcePixels": 32672
+      }
+    },
+    {
+      "id": "forearm-hand",
+      "rect": [
+        40,
+        96,
+        40,
+        24
+      ],
+      "anchor": [
+        10,
+        12
+      ],
+      "kind": "joint",
+      "end": [
+        24,
+        12
+      ],
+      "preparation": {
+        "id": "forearm-hand",
+        "crop": [
+          760,
+          900,
+          410,
+          250
+        ],
+        "origin": [
+          853,
+          1036
+        ],
+        "scale": 0.06542056074766354,
+        "rect": [
+          40,
+          96,
+          40,
+          24
+        ],
+        "anchor": [
+          10,
+          12
+        ],
+        "end": [
+          24,
+          12
+        ],
+        "kind": "joint",
+        "retainedSourcePixels": 26280
+      }
+    }
+  ],
+  "sha256": "cf651cf44a007125022b4b52958d7ef94e73d19536e11b6cfa19de10b827957a",
+  "source": {
+    "file": "work/overhaul/bow-source/bow-source.png",
+    "sha256": "9be268ef9e6cb6e68148fbe7407b176447688bd1d45843f801b45b0024455f15",
+    "prompt": "work/overhaul/bow-source/PROMPT.md",
+    "method": "Original raster body and articulated cloth parts. Measured joints; fixed body scale; exterior-connected checker extraction; binary alpha and shared palette. Limbs retain width while rotating at joints."
+  },
+  "license": "original-generated",
+  "status": "calibration"
+}

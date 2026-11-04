@@ -1,0 +1,43 @@
+#game-shell:not(.playing):before {
+  background:url('assets/title-shore-nov2.png') center/cover no-repeat;
+  image-rendering:pixelated;
+}
+#game-shell:not(.playing) .menu-atmosphere { display:none; }
+#title-card.title-card {
+  left:58%;right:auto;top:11%;width:34%;max-width:none;
+  padding:clamp(12px,2cqw,28px);box-sizing:border-box;
+  color:#eadbb9;text-align:left;filter:none;
+  background:linear-gradient(135deg,#1b2926d9,#101d1edb);
+  border:1px solid #b69d6f88;border-radius:0;
+  box-shadow:inset 0 0 0 3px #101d1d99,inset 0 0 0 4px #b49b6844,0 8px 30px #07131177;
+}
+#title-card .title-brand { display:flex;flex-direction:column;align-items:flex-start;gap:clamp(4px,.6cqw,9px); }
+#title-card .title-mark { color:#c5a971;font:400 clamp(12px,1.5cqw,20px)/1 'Pixelify',sans-serif; }
+#title-card h1 {
+  display:block;position:static;width:auto;height:auto;overflow:visible;clip:auto;clip-path:none;
+  margin:0;color:#f0e1bd;font:600 clamp(22px,3.35cqw,46px)/1 'Pixelify','Segoe UI',sans-serif;
+  letter-spacing:.01em;text-shadow:0 2px #0a1511;
+}
+#title-card .title-brand-rule { width:100%;height:1px;background:linear-gradient(90deg,#c4a36e,transparent); }
+#title-card .menu-quote {
+  max-width:none;margin:clamp(8px,1.1cqw,16px) 0;
+  color:#dfd2b4;font:400 clamp(10px,1.25cqw,16px)/1.25 'Kalam','Segoe Print',cursive;
+}
+#title-card .quote-author { display:block;margin-top:2px;color:#bda980;font-size:.85em; }
+#title-card .title-actions { display:grid;gap:clamp(5px,.7cqw,10px); }
+#title-card .title-action,#title-card .title-action.secondary {
+  display:flex;align-items:center;justify-content:space-between;width:100%;min-width:0;
+  min-height:clamp(28px,3.2cqw,44px);margin:0;padding:5px 12px;box-sizing:border-box;
+  border:1px solid #bfaa7b;border-radius:1px;background:#d8c59c;color:#293029;
+  box-shadow:inset 0 0 0 2px #f2e5c044,0 2px 4px #08100c70;
+  font:600 clamp(11px,1.35cqw,17px)/1.15 'Pixelify','Segoe UI',sans-serif;
+  text-shadow:none;transform:none;transition:background-color .15s,color .15s;
+}
+#title-card .title-action[hidden] { display:none; }
+#title-card .title-action.secondary { background:#27332e;color:#e7d5ac; }
+#title-card .title-action:hover:not(:disabled) { background:#eee0b8;color:#18231e; }
+#title-card .title-action:focus-visible,#title-card .title-settings:focus-visible { outline:2px solid #f1d69b;outline-offset:3px; }
+#title-card .title-action:disabled { opacity:.65;cursor:wait; }
+#title-card .title-footer { margin-top:clamp(8px,1.1cqw,16px);border-top:1px solid #c4a36e55;padding-top:clamp(4px,.6cqw,8px); }
+#title-card .title-settings { margin:0;padding:2px 0;color:#c8b994;font:400 clamp(9px,1cqw,13px)/1.3 'Pixelify','Segoe UI',sans-serif; }
+#title-card #load-note { margin:3px 0 0;color:#ddc99e;font:400 clamp(9px,.9cqw,12px)/1.2 'Pixelify',sans-serif; }

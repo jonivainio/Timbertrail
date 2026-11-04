@@ -6,7 +6,8 @@
   const SAVE='timbertrail-save-v3',LEGACY='pine-and-ember-save-v1';
   let pendingTravel=null;
   let panel=null,selected='berries',recipe='knife',tab='all',returnFocus=null,ready=false,last=performance.now(),hudClock=0,toastTimer=0,saveFailed=false,saved=null,modalClosing=false,modalCloseTimer=0,bookFrameTimer=0;
-  let pointer=null,pointerWorld=false,dialogueStage='welcome',visits=0,dogChoice='pet',lastDogWheel=-Infinity,structureChoice='use',structureChoiceId=null;
+  let pointer=null,pointerDisplay=null,pointerWorld=false,dialogueStage='welcome',visits=0,dogChoice='pet',lastDogWheel=-Infinity,structureChoice='use',structureChoiceId=null;
+  let tasksExpanded=false,taskViewKey='';
   const journalPanels=new Set(['inventory','craft','journal','map']);
   const bookFrames=['book-opening-1','book-opening-2','book-opening-3','book-opening-4','book-open'];
   const reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -18,6 +19,8 @@
     if(event.type==='save')save();
   });
   const renderer=new PEArt.Renderer(canvas,null);
+  const visualManifest=window.PEVisualManifest;
+  if(visualManifest?.enabled){renderer.visualV2=true;renderer.setArtResolution(visualManifest.artWidth);renderer.outdoorZoom=visualManifest.outdoorZoom||1;renderer.pondZoom=visualManifest.pondZoom||1;}
   const ground=x=>PE.ground(x,engine.state.currentMap);
   const art=(type,cls='')=>`<canvas width="96" height="96" data-art="${type}" class="${cls}" aria-hidden="true"></canvas>`;
   const wildlifeBoxes=[[62,124,244,320],[390,173,286,270],[743,83,332,374],[1106,165,413,289]],wildlifeIndex={rabbit:0,grouse:1,deer:2,bear:3};
@@ -28,9 +31,9 @@
   const name=id=>L.text(items[id]?.[0]||recipes.find(r=>r.id===id)?.name||id);
   const storageUI=PEStorage.create(engine,content,{art,name,active:()=>panel==='home-chest'&&!modalClosing,refresh:renderPanel,notice});
   const category={tool:'TYÖKALU',material:'TARVIKE',food:'EVÄS',raw:'KYPSENNETTÄVÄ'};
-  function paintIcon(ctx,type,x,y,size){if(window.PEEquipment?.isTool?.(type))window.PEEquipment.drawIcon(ctx,type,x,y,size);else PEArt.icon(ctx,type,x,y,size);}
-  function paintIcons(scope=document){scope.querySelectorAll('canvas[data-art]').forEach(c=>{const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=false;paintIcon(ctx,c.dataset.art,0,0,c.width);});}
-  function paintRecipeSilhouettes(scope=document){scope.querySelectorAll('canvas[data-recipe-silhouette]').forEach(c=>{const r=recipes[Number(c.dataset.recipeSilhouette)];if(!r)return;const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=false;PEArt.icon(ctx,r.id==='wood'?'kindling':r.id,0,0,c.width);ctx.globalCompositeOperation='source-in';ctx.fillStyle='#8b897d';ctx.fillRect(0,0,c.width,c.height);ctx.globalCompositeOperation='source-over';});}
+  function paintIcon(ctx,type,x,y,size,illustration=false){if(!illustration&&visualManifest?.enabled&&window.PEUIIcons?.draw(ctx,type,x,y,size,renderer.makeCanvas))return;if(window.PEEquipment?.isTool?.(type))window.PEEquipment.drawIcon(ctx,type,x,y,size);else PEArt.icon(ctx,type,x,y,size);}
+  function paintIcons(scope=document){scope.querySelectorAll('canvas[data-art]').forEach(c=>{const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=false;paintIcon(ctx,c.dataset.art,0,0,c.width,c.classList.contains('detail-art')&&['pike','zander','perch','rawFish','cookedFish'].includes(c.dataset.art));});}
+  function paintRecipeSilhouettes(scope=document){scope.querySelectorAll('canvas[data-recipe-silhouette]').forEach(c=>{const r=recipes[Number(c.dataset.recipeSilhouette)];if(!r)return;const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=false;paintIcon(ctx,r.id==='wood'?'kindling':r.id,0,0,c.width);ctx.globalCompositeOperation='source-in';ctx.fillStyle='#8b897d';ctx.fillRect(0,0,c.width,c.height);ctx.globalCompositeOperation='source-over';});}
   function paintWildlife(scope=document){if(!renderer.wildlife)return;scope.querySelectorAll('canvas[data-wildlife]').forEach(c=>{const b=wildlifeBoxes[Number(c.dataset.wildlife)];if(!b)return;const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=false;ctx.save();if(c.dataset.silhouette){ctx.fillStyle='#8a887c';ctx.fillRect(0,0,c.width,c.height);ctx.globalCompositeOperation='destination-in';}const scale=Math.min(c.width/b[2],c.height/b[3])*.84,w=b[2]*scale,h=b[3]*scale;ctx.drawImage(renderer.wildlife,...b,(c.width-w)/2,(c.height-h)/2,w,h);ctx.restore();});}
   function notice(text){$('toast').textContent=L.text(text);$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,4300);}
   function readSave(){for(const key of [SAVE,'pine-and-ember-save-v2',LEGACY])try{const raw=localStorage.getItem(key);if(raw){const value=JSON.parse(raw);if(value&&value.player&&value.inventory)return value;}}catch{}return null;}
@@ -39,7 +42,7 @@
   function start(continuing){if(!ready)return;if(panel&&!modalClosing)closePanel();if(modalClosing)finishModalClose();if(!continuing)engine.state=new Engine().state;engine.start(continuing?saved:null);$('title-card').hidden=true;$('hud').hidden=false;shell.classList.add('playing');PEAudio.start(engine.state);canvas.focus();syncHUD();save();notice(continuing?'Tervetuloa takaisin metsään.':'Aloita läheltä: klikkaa polun oksia, kiviä ja kuitunippuja.');}
   function returnToTitle(){save();if(panel&&!modalClosing){panel=null;modalClosing=true;}if(modalClosing)finishModalClose();engine.state.running=false;$('hud').hidden=true;$('title-card').hidden=false;shell.classList.remove('playing','show-top');refreshTitle();PEAudio.title?.(engine.state);(saved?$('continue-button'):$('start-button')).focus();}
   for(const [id,label,color]of[['hunger','RUOKA','#c0a475'],['thirst','VESI','#87adad'],['energy','VOIMA','#a4b887'],['warmth','LÄMPÖ','#bf8965'],['health','TERVEYS','#bf7565']]){
-    const el=document.createElement('div');el.className=id==='health'?'stat health-stat':'stat';el.innerHTML=`<span>${label}</span><b id="value-${id}">100</b><div class="stat-meter" role="meter" aria-label="${label}" aria-valuemin="0" aria-valuemax="100" id="meter-${id}"><span id="bar-${id}" style="--stat-color:${color}"></span></div>`;$('stat-bars').append(el);
+    const el=document.createElement('div');el.className=id==='health'?'stat health-stat':'stat';el.dataset.stat=id;el.innerHTML=`<span>${label}</span><b id="value-${id}">100</b><div class="stat-meter" role="meter" aria-label="${label}" aria-valuemin="0" aria-valuemax="100" id="meter-${id}"><span id="bar-${id}" style="--stat-color:${color}"></span></div>`;$('stat-bars').append(el);
   }
   function renderQuickTools(){const s=engine.state;const slots=[['knife',s.quickTools.knife],['axe',s.quickTools.axe],['bow','bow'],['rod','rod']];$('quick-tools').innerHTML=slots.map(([slot,id])=>`<button class="quick-item" data-slot="${slot}" data-use="${id}" aria-label="${name(id)}" aria-pressed="false" title="${name(id)}">${art(id)}<span data-count="${id}"></span></button>`).join('');paintIcons($('quick-tools'));}
   renderQuickTools();
@@ -53,13 +56,14 @@
     $('stance-label').textContent=p.crouching?'Hiljaa aluskasvillisuudessa':'Hiljainen vaeltaja';const depleted=['hunger','thirst','warmth','energy'].filter(k=>p[k]<=0),healthStatus=$('health-status'),warning=depleted.length?L.text('Empty needs drain health'):p.health<=25?L.text('Low health — rest and recover'):'';if(healthStatus.textContent!==warning)healthStatus.textContent=warning;$('meter-health').parentElement.classList.toggle('health-danger',p.health<=25||depleted.length>0);
     $('equipped-label').innerHTML=(s.equipped?name(s.equipped)+(s.equipped==='bow'?' · '+s.inventory.arrows+' nuolta':''):'Vapaat kädet')+'<span>'+(p.crouching?'S / W / ↑ nouse seisomaan':'Yläreunasta työkalut ja eväät')+'</span>';
     $('day-label').textContent='PÄIVÄ '+s.day;const mins=Math.floor(s.dayTime*1440);$('clock-label').textContent=String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');$('weather-label').textContent=s.weather==='rain'?'SADE':s.dayTime<.22||s.dayTime>.8?'YÖ':'TYYNI';$('weather-icon').textContent=s.weather==='rain'?'☂':s.dayTime<.22||s.dayTime>.8?'☾':'☀';
-    const pending=tasks.filter(([k])=>!s.completed[k]);$('task-count').textContent=(tasks.length-pending.length)+' / '+tasks.length;$('task-list').innerHTML=(pending.length?pending.slice(0,3):[['done','Leirisi on valmis. Kulje omaa polkuasi.']]).map(([,title])=>`<li>${title}</li>`).join('');
+    const pending=tasks.filter(([k])=>!s.completed[k]),viewKey=JSON.stringify([tasksExpanded,pending.map(([k])=>k)]);if(viewKey!==taskViewKey){taskViewKey=viewKey;$('task-count').textContent=(tasks.length-pending.length)+' / '+tasks.length;$('task-list').innerHTML=(pending.length?(tasksExpanded?pending:pending.slice(0,1)):[['done','Leirisi on valmis. Kulje omaa polkuasi.']]).map(([,title])=>`<li>${title}</li>`).join('');$('task-toggle').hidden=!pending.length;$('task-toggle').setAttribute('aria-expanded',String(tasksExpanded));$('task-toggle').textContent=tasksExpanded?'Näytä vain seuraava tavoite':'Näytä kaikki tavoitteet';}
     document.querySelectorAll('.quick-item').forEach(b=>{const id=b.dataset.use,qty=s.inventory[id]||0,item=items[id],durability=s.toolDurability?.[id],cap=durabilityCaps[id];b.classList.toggle('is-active',s.equipped===id);b.classList.toggle('unavailable',qty<1);b.setAttribute('aria-pressed',String(s.equipped===id));b.querySelector('[data-count]').textContent=id==='bow'?s.inventory.arrows:item?.[2]==='food'?qty:durability!=null&&cap?Math.ceil(durability/cap*100)+'%':'';b.title=name(id)+(qty<1?' · ei repussa':s.equipped===id?' · klikkaa pois käytöstä':item?.[2]==='food'?' · syö':' · varusta');});
     L.apply($('hud'));
     syncFishingHUD();
   }
   function playBookSequence(opening,done){
     clearTimeout(bookFrameTimer);const image=$('book-animation'),frames=opening?bookFrames:[...bookFrames].reverse();let i=0;
+    if(modal.classList.contains('pixel-journal')){image.hidden=true;modal.dataset.bookMotion=opening?'opening':'closing';const finish=()=>{delete modal.dataset.bookMotion;done?.();};if(reducedMotion())finish();else bookFrameTimer=setTimeout(finish,320);return;}
     if(reducedMotion()){image.hidden=true;image.src='assets/book-open.png';done?.();return;}
     image.hidden=false;const next=()=>{if(i>=frames.length){image.hidden=true;done?.();return;}image.src='assets/'+frames[i++]+'.png';bookFrameTimer=setTimeout(next,70);};next();
   }
@@ -68,7 +72,7 @@
     card.hidden=!f&&!spinning;card.classList.toggle('spinning',spinning);card.classList.toggle('bite',f?.stage==='bite');meter.hidden=detail.hidden=!spinning;$('cancel-fishing').hidden=!f;$('reel-button').hidden=spinning;
     shell.classList.toggle('spinning-ready',spinning);
     if(spinning){
-      card.style.setProperty('--fishing-x',clamp((engine.state.player.x-engine.state.camera)/W*100,22,78)+'%');
+      card.style.setProperty('--fishing-x',clamp(screenPoint({x:engine.state.player.x-engine.state.camera,y:0}).x/W*100,22,78)+'%');
       const stage=f?.stage||'ready',label={ready:'Hold the left mouse button over the water to charge a cast.',charge:'Release to cast. A longer hold casts farther.',flight:'Watch the lure splash down.',wet:f?.nibble?'A nibble! Keep retrieving gently.':'Hold to reel. Release to let the lure sink.',fight:f?.tension>.82?'Ease off! Release the mouse to protect the line.':f?.slack>25?'Reel in the slack — keep contact with the fish.':'Fish on! Reel, but ease off during its runs.'}[stage];
       $('fishing-label').textContent=L.text(label);const n=Math.round(100*Math.min(1,stage==='charge'?f.power:f?.tension||0));
       meter.setAttribute('aria-label',L.text(stage==='charge'?'Cast power':'Line tension'));meter.setAttribute('aria-valuenow',String(n));meter.classList.toggle('danger',stage==='fight'&&f.tension>.82);$('fishing-meter-fill').style.width=n+'%';
@@ -78,7 +82,7 @@
   }
   // Keep keyboard focus within the closed book until its pages have finished turning.
   function restoreModalFocus(){if(returnFocus?.isConnected&&!returnFocus.closest('nav'))returnFocus.focus();else canvas.focus();}
-  function finishModalClose(){if(!modalClosing)return;modalClosing=false;clearTimeout(modalCloseTimer);clearTimeout(bookFrameTimer);modal.classList.remove('is-closing','is-opening','journal-shell');shell.classList.remove('journal-open');$('modal-backdrop').classList.remove('is-closing');$('modal-backdrop').hidden=true;$('book-animation').hidden=true;restoreModalFocus();}
+  function finishModalClose(){if(!modalClosing)return;modalClosing=false;clearTimeout(modalCloseTimer);clearTimeout(bookFrameTimer);modal.classList.remove('is-closing','is-opening','journal-shell','pixel-journal');delete modal.dataset.bookMotion;shell.classList.remove('journal-open');$('modal-backdrop').classList.remove('is-closing');$('modal-backdrop').hidden=true;$('book-animation').hidden=true;restoreModalFocus();}
   function openPanel(kind){
     endFishingPointer(true);PEFishing.release(engine,true);
     if(engine.transition)return;
@@ -88,13 +92,14 @@
     if(panel&&journalPanels.has(panel)&&journalPanels.has(kind)&&!modalClosing){panel=kind;renderPanel();PEAudio.play('pageFlip',.6);return;}
     if(kind==='dialogue'){dialogueStage=engine.state.traders.aarni.introDone?'smalltalk':'welcome';visits++;}
     clearTimeout(modalCloseTimer);clearTimeout(bookFrameTimer);modalClosing=false;modal.classList.remove('is-closing');$('modal-backdrop').classList.remove('is-closing');returnFocus=document.activeElement;storageUI.reset();panel=kind;engine.keys={};engine.walkTarget=null;engine.state.player.moving=false;renderer.hover=null;$('world-tip').hidden=true;$('modal-backdrop').hidden=false;
-    const isJournal=journalPanels.has(kind);shell.classList.toggle('journal-open',isJournal);modal.classList.toggle('journal-shell',isJournal);modal.classList.toggle('is-opening',isJournal);renderPanel();modal.focus();if(kind==='dismantle')content.querySelector('[data-cancel]')?.focus();
+    const isJournal=journalPanels.has(kind);shell.classList.toggle('journal-open',isJournal);modal.classList.toggle('journal-shell',isJournal);modal.classList.toggle('pixel-journal',isJournal&&!!visualManifest?.enabled);modal.classList.toggle('is-opening',isJournal);renderPanel();modal.focus();if(kind==='dismantle')content.querySelector('[data-cancel]')?.focus();
     if(isJournal)playBookSequence(true,()=>modal.classList.remove('is-opening'));PEAudio.play(isJournal?'pageTurn':'uiOpen',.5);
   }
   function closePanel(){if(!panel||modalClosing)return;pendingTravel=null;engine.pendingDismantle=null;storageUI.reset();const wasJournal=journalPanels.has(panel);panel=null;modalClosing=true;modal.classList.remove('is-opening');modal.classList.add('is-closing');$('modal-backdrop').classList.add('is-closing');if(wasJournal){playBookSequence(false,finishModalClose);PEAudio.play('pageTurn',.5);}else{modalCloseTimer=setTimeout(finishModalClose,reducedMotion()?0:180);PEAudio.play('uiClose',.5);}save();}
   function cancelTravel(){const id=pendingTravel;pendingTravel=null;renderPanel();content.querySelector('[data-travel="'+id+'"]')?.focus();PEAudio.play('uiClose',.25);}
   function renderPanel(){
-    if(!panel)return;const s=engine.state,oldScroll=content.scrollTop,oldFocus=document.activeElement?.dataset?.select||null;
+    if(!panel)return;const s=engine.state,oldScroll=content.scrollTop,oldFocus=document.activeElement?.dataset?.select||null,oldRecipeFocus=document.activeElement?.dataset?.recipe||null;
+    const paneScroll=modal.dataset.panel===panel?['inventory-grid','recipe-list','wildlife-entries'].map(cls=>[cls,content.querySelector('.'+cls)?.scrollTop||0]):[];
     const headings={'home-chest':['Storage chest','SIENILAMPI'],'home-hearth':['Fireplace','SIENILAMPI'],'home-kitchen':['Kitchen','SIENILAMPI'],'home-bed':['Sleep until morning','SIENILAMPI'],inventory:['Reppu','KAIKKI TARPEELLINEN MUKANA'],craft:['Käsityöt','OMIN KÄSIN · LUONNON ANTIMISTA'],map:['Korpilaakson kartta','YHDEN POLUN ALKU'],journal:['Kenttämuistiinpanot','PIENIÄ HETKIÄ METSÄSTÄ'],help:['Retkeilijän opas','KULJE OMAAN TAHTIISI'],pause:['Päävalikko','RETKESI ON TURVASSA'],trade:['Aarnin leirillä','VANHAN METSÄNKÄVIJÄN TARINOITA'],fire:['Nuotion äärellä','LÄMPÖÄ JA LÄMMIN ATERIA'],confirm:['Uusi retki?','NYKYINEN RETKI ON TALLENNETTU']};
     headings['fish-catch']=['Your catch','SIENILAMPI'];
     headings['home-letter']=['A letter to the traveller','SIENILAMPI'];
@@ -107,7 +112,14 @@
       if(!visible.includes(selected))selected=visible[0];
       const id=selected,data=items[id],use=id==='canteen'||data?.[2]==='tool'||data?.[2]==='food',quick=s.quickFood||'berries',durability=data?.[2]==='tool'&&s.toolDurability?.[id]!=null?Math.ceil(s.toolDurability[id]/durabilityCaps[id]*100):null;
       content.innerHTML=`<div class="inventory-toolbar"><div class="tabs">${[['all','Kaikki'],['tools','Työkalut'],['food','Eväät'],['material','Tarvikkeet']].map(([key,label])=>`<button data-tab="${key}" class="${tab===key?'active':''}">${label}</button>`).join('')}</div></div><div class="pack-body"><div class="inventory-grid">${visible.map(key=>`<button class="item-slot ${key===id?'selected':''} ${s.equipped===key?'equipped':''} ${quick===key?'quick-assigned':''}" data-select="${key}" ${(items[key][2]==='food'||engine.isKnife(key)||engine.isAxe(key))?`draggable="true" data-item-drag="${key}"`:''} aria-label="${name(key)}, ${s.inventory[key]} kappaletta" aria-pressed="${key===id}">${art(key)}<span class="count">${s.inventory[key]}</span></button>`).join('')}${Array.from({length:Math.max(0,15-visible.length)},()=>'<div class="item-slot empty"></div>').join('')}</div><div class="item-detail">${data?`${art(id,'detail-art')}<div class="detail-category">${category[data[2]]}</div><h3>${data[0]}</h3><p>${data[1]}</p><p class="detail-meta">Repussa ${s.inventory[id]} kpl${s.equipped===id?' · Käytössä':''}${id==='canteen'?' · '+L.text(s.canteenFull?'Full · one drink':'Empty · refill at water'):''}${durability!=null?' · Kunto '+durability+' %':''}</p>${use?`<button class="primary" data-use="${id}" ${id==='canteen'&&!s.canteenFull?'disabled':''}>${id==='canteen'?L.text(s.canteenFull?'Drink':'Empty'):data[2]==='food'?'Syö eväs':s.equipped===id?'Pois kädestä':'Ota käyttöön'} <span>↗</span></button>${data[2]==='food'?`<button class="text-button quick-assign-button" data-assign-slot="food" data-item="${id}" ${quick===id?'disabled':''}>${quick===id?'Valittu pikaevääksi':'Aseta pikaevääksi'}</button>`:''}`:data[2]==='raw'?'<button class="text-button" data-panel="help">Kypsennä palavan nuotion äärellä.</button>':'<button class="text-button" data-panel="craft">Avaa käsityöt →</button>'}`:'<p class="empty-message">Tässä taskussa ei vielä ole mitään. Kerää polulta tarvikkeita hiirellä.</p>'}</div></div>`;
-      const slot=engine.isKnife(id)?'knife':engine.isAxe(id)?'axe':null;if(slot){const action=document.createElement('button');action.className='text-button';action.dataset.assignSlot=slot;action.dataset.item=id;action.textContent='Aseta pikapaikkaan';content.querySelector('.item-detail').append(action);}
+      // Keep item actions outside the independently scrolling description.
+      // This changes presentation only; existing delegated actions stay authoritative.
+      const detail=content.querySelector('.item-detail'),summary=document.createElement('div'),actions=document.createElement('div');
+      summary.className='item-summary';actions.className='item-actions';
+      const children=Array.from(detail.children);detail.innerHTML='';
+      for(const child of children)(child.tagName==='BUTTON'?actions:summary).append(child);
+      detail.append(summary);detail.append(actions);
+      const slot=engine.isKnife(id)?'knife':engine.isAxe(id)?'axe':null;if(slot){const action=document.createElement('button');action.className='text-button';action.dataset.assignSlot=slot;action.dataset.item=id;action.textContent='Aseta pikapaikkaan';actions.append(action);}
       const hint=document.createElement('p');hint.className='belt-hint';hint.textContent='Vedä puukko, kirves tai eväs yläpalkin vastaavaan paikkaan.';content.querySelector('.inventory-toolbar').append(hint);
     }else if(panel==='craft'){
       // The engine owns permanent material discovery and recipe visibility.
@@ -116,7 +128,7 @@
       const can=r&&engine.requirements(r);
       const rows=recipes.map(v=>{const discovered=recipeKnown(v);return discovered?`<button class="recipe-row ${v.id===r?.id?'selected':''}" data-recipe="${v.id}" aria-pressed="${v.id===r?.id}">${art(v.id==='wood'?'kindling':v.id)}<span>${v.name||name(v.id)}<small class="${engine.requirements(v)?'':'missing'}">${engine.requirements(v)?'Tarvikkeet valmiina':'Katso tarvikkeet'}</small></span></button>`:`<div class="recipe-row undiscovered" role="img" aria-label="Undiscovered recipe">${unknownRecipeArt(v.id)}<span class="visually-hidden">Undiscovered recipe</span></div>`;}).join('');
       const options=r?(r.toolAny||(r.tool?[r.tool]:[])):[],toolReady=options.some(id=>engine.toolReady?engine.toolReady(id):s.inventory[id]>0),toolLabel=options.map(id=>name(id).toLowerCase()).join(' / ');
-      const detail=r?`<div class="recipe-detail"><div class="recipe-top">${art(r.id==='wood'?'kindling':r.id)}<div><p class="detail-category">${r.structure?'LEIRIN RAKENTAMINEN':'KÄSIN VALMISTETTU'}</p><h3>${r.name||name(r.id)}</h3></div></div><p>${r.desc}</p><div class="ingredients">${Object.entries(r.need).map(([k,n])=>`<div class="ingredient ${s.inventory[k]<n?'missing':''}">${art(k)}<span>${name(k)}</span><strong>${s.inventory[k]} / ${n}</strong></div>`).join('')}</div>${options.length?`<div class="requirement ${toolReady?'':'missing'}">${toolReady?'✓':'◇'} Sopiva työkalu: ${toolLabel}.<br>Työkalu ei kulu valmistuksessa.${toolReady?'':` <button class="text-button" data-recipe="${r.tool}">Katso sen resepti →</button>`}</div>`:'<div class="requirement">Valmistuu paljain käsin. Et tarvitse muita työkaluja.</div>'}<button class="primary" data-craft="${r.id}" ${can?'':'disabled'}>${can?r.structure?'Rakenna tähän':'Valmista':'Tarvikkeita puuttuu'} <span>↗</span></button></div>`:`<div class="recipe-detail discovery-note"><div class="recipe-top">${art('journal')}<div><p class="detail-category">TUNTEMATON KÄSITYÖ</p><h3>Kerää ja tunnista tarvikkeita</h3></div></div><p>Uudet reseptit piirtyvät tähän, kun olet löytänyt niiden tarvitsemat tarviketyypit.</p></div>`;
+      const detail=r?`<div class="recipe-detail"><div class="recipe-scroll"><div class="recipe-top">${art(r.id==='wood'?'kindling':r.id)}<div><p class="detail-category">${r.structure?'LEIRIN RAKENTAMINEN':'KÄSIN VALMISTETTU'}</p><h3>${r.name||name(r.id)}</h3></div></div><p>${r.desc}</p><div class="ingredients">${Object.entries(r.need).map(([k,n])=>`<div class="ingredient ${s.inventory[k]<n?'missing':''}">${art(k)}<span>${name(k)}</span><strong>${s.inventory[k]} / ${n}</strong></div>`).join('')}</div>${options.length?`<div class="requirement ${toolReady?'':'missing'}">${toolReady?'✓':'◇'} Sopiva työkalu: ${toolLabel}.<br>Työkalu ei kulu valmistuksessa.${toolReady?'':` <button class="text-button" data-recipe="${r.tool}">Katso sen resepti →</button>`}</div>`:'<div class="requirement">Valmistuu paljain käsin. Et tarvitse muita työkaluja.</div>'}</div><button class="primary" data-craft="${r.id}" ${can?'':'disabled'}>${can?r.structure?'Rakenna tähän':'Valmista':'Tarvikkeita puuttuu'} <span>↗</span></button></div>`:`<div class="recipe-detail discovery-note"><div class="recipe-top">${art('journal')}<div><p class="detail-category">TUNTEMATON KÄSITYÖ</p><h3>Kerää ja tunnista tarvikkeita</h3></div></div><p>Uudet reseptit piirtyvät tähän, kun olet löytänyt niiden tarvitsemat tarviketyypit.</p></div>`;
       content.innerHTML=`<div class="craft-layout"><div class="recipe-list">${rows}</div>${detail}</div>`;
     }else if(panel==='journal'){
       content.innerHTML=`<div class="journal-view wildlife-journal"><div class="journal-intro"><p class="detail-category">METSÄN ASUKKAAT</p><h3>Metsän asukkaat</h3><p>Hiljainen kulkija näkee enemmän. Lähesty riistaa kyykyssä ja anna metsän kertoa nimensä omassa tahdissaan.</p><p class="journal-count">${Object.keys(animalNames).filter(k=>s.journal.seen[k]).length} / ${Object.keys(animalNames).length} havaittu</p></div><div class="wildlife-entries">${Object.entries(animalNames).map(([k,n])=>{const seen=!!s.journal.seen[k];return `<article class="journal-animal ${seen?'observed':'undiscovered'}">${animalArt(k,seen)}${seen?`<div><h4>${n}</h4><span>${s.journal.hunted[k]?'Saaliiksi saatu':'Havaittu'}</span></div>`:'<div class="unknown-animal" aria-label="Unknown wildlife entry"><b>?</b><span class="visually-hidden">Unknown wildlife entry</span></div>'}</article>`;}).join('')}</div></div>`;
@@ -141,7 +153,9 @@
       content.innerHTML='<div class="confirm-view dismantle-view"><h3>'+label+'</h3><p>Are you sure you want to dismantle this structure?</p><p>About half of its building materials will be left on the ground. Odd amounts are rounded down. Added fuel is not recovered.</p><div class="ingredients">'+(target?Object.entries(engine.dismantleReturn(target)).map(([id,n])=>'<div class="ingredient">'+art(id)+'<span>'+name(id)+'</span><strong>× '+n+'</strong></div>').join(''):'')+'</div><button class="primary" data-cancel="true">Cancel</button><button class="primary" data-dismantle-confirm="true" '+(target?'':'disabled')+'>Dismantle</button></div>';
     }
     if(panel==='settings')content.innerHTML=TimberPanels.settings();
-    L.apply(modal);paintIcons(content);paintRecipeSilhouettes(content);paintWildlife(content);content.scrollTop=oldScroll;if(oldFocus)content.querySelector(`[data-select="${oldFocus}"]`)?.focus({preventScroll:true});
+    L.apply(modal);paintIcons(content);paintRecipeSilhouettes(content);paintWildlife(content);content.scrollTop=oldScroll;
+    for(const [cls,top]of paneScroll){const pane=content.querySelector('.'+cls);if(pane)pane.scrollTop=top;}
+    if(oldFocus)content.querySelector(`[data-select="${oldFocus}"]`)?.focus({preventScroll:true});else if(oldRecipeFocus)content.querySelector(`[data-recipe="${oldRecipeFocus}"]`)?.focus({preventScroll:true});
   }
   document.addEventListener('click',e=>{
     // A closing cover remains modal even though its panel contents are already released.
@@ -190,8 +204,24 @@
   $('modal-backdrop').addEventListener('click',e=>{if(e.target===$('modal-backdrop')){if(pendingTravel)cancelTravel();else closePanel();}});
   function toggleSound(){const on=PEAudio.toggle();notice(on?'Metsän äänet päällä.':'Äänet mykistetty.');return on;}
   async function toggleFullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await shell.requestFullscreen();}catch{notice('Selain ei sallinut koko näytön tilaa.');}}
+  $('task-toggle').addEventListener('click',()=>{tasksExpanded=!tasksExpanded;syncHUD();});
   $('dismiss-onboarding').addEventListener('click',()=>$('onboarding').hidden=true);$('reel-button').addEventListener('click',()=>engine.reel());$('cancel-fishing').addEventListener('click',()=>{if(engine.fishing?.kind==='spinning')PEFishing.cancel(engine);else engine.fishing=null;syncHUD();});
-  function coords(e){const b=canvas.getBoundingClientRect();return{x:(e.clientX-b.left)/b.width*W,y:(e.clientY-b.top)/b.height*H};}
+  function displayCoords(e){const b=canvas.getBoundingClientRect();return{x:(e.clientX-b.left)/b.width*W,y:(e.clientY-b.top)/b.height*H};}
+  function scenePoint(p){return renderer.screenToScene?.(engine.state,p)||p;}
+  function screenPoint(p){return renderer.sceneToScreen?.(engine.state,p)||p;}
+  function coords(e){return scenePoint(displayCoords(e));}
+  function placeWorldTip(tip,anchor){
+    const box=canvas.getBoundingClientRect(),height=(tip.offsetHeight||64)/box.height*H,width=(tip.offsetWidth||190)/box.width*W;
+    const above=tip.classList.contains('construction-tip'),padding=8;
+    let x=clamp(anchor.x,Math.min(W/2,width/2+padding),Math.max(W/2,W-width/2-padding)),y=clamp(anchor.y,above?Math.min(H-padding,height+padding):padding,above?H-padding:Math.max(padding,H-height-padding));
+    const vitals=shell.querySelector('.vitals')?.getBoundingClientRect();
+    if(vitals&&vitals.width<box.width*.65){const left=(vitals.left-box.left)/box.width*W,right=(vitals.right-box.left)/box.width*W,top=(vitals.top-box.top)/box.height*H,bottom=(vitals.bottom-box.top)/box.height*H;
+      if(x+width/2>left&&x-width/2<right&&(above?y:y+height)>top&&(above?y-height:y)<bottom){
+        const beside=right+padding+width/2;
+        if(beside+width/2<=W-padding)x=beside;else y=Math.max(above?height+padding:padding,top-padding-(above?0:height));
+      }}
+    tip.style.left=x/W*100+'%';tip.style.top=y/H*100+'%';
+  }
   let fishingPointer=null,suppressFishingClick=false;
   const fishCursor='url("data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="28" height="24"><path d="M3 6l6 5c5-8 14-5 17 1-4 7-12 8-17 2l-6 5z" fill="#ead6a5" stroke="#263f37" stroke-width="2"/><circle cx="21" cy="11" r="1.5" fill="#263f37"/></svg>')+'") 14 12, crosshair';
   function fishingAt(p){return !!p&&PEFishing.canCast(engine,p.x+engine.state.camera,p.y);}
@@ -233,18 +263,20 @@
     else{tip.textContent=L.text(engine.label(o));tip.dataset.costKey='';}
     if(!parchment)tip.dataset.scrollKey='';
     tip.classList.toggle('construction-tip',!!o.box&&!parchment);
-    if(o.type==='exit'){const [x,y,w]=PERegions.trailBox(engine.state.camera);tip.style.left=clamp((x+w/2-engine.state.camera)/W*100,18,82)+'%';tip.style.top=Math.max(12,(y-10)/H*100)+'%';return;}
-    tip.style.left=clamp((o.x+(o.box?o.box[0]+o.box[2]/2:0)-engine.state.camera)/W*100,18,82)+'%';tip.style.top=(o.type==='cabinDoor'?ground(o.x)+o.box[1]+o.box[3]+14:o.box&&!parchment?Math.max(65,ground(o.x)+o.box[1]-12):Math.min(ground(o.x)+23,H-45))/H*100+'%';}}
+    if(o.type==='exit'){const [x,y,w]=PERegions.trailBox(engine.state.camera),anchor=screenPoint({x:x+w/2-engine.state.camera,y:y-10});placeWorldTip(tip,anchor);return;}
+    const anchor=screenPoint({x:o.x+(o.box?o.box[0]+o.box[2]/2:0)-engine.state.camera,y:o.type==='cabinDoor'?ground(o.x)+o.box[1]+o.box[3]+14:o.box&&!parchment?Math.max(65,ground(o.x)+o.box[1]-12):Math.min(ground(o.x)+23,H-45)});
+    placeWorldTip(tip,anchor);}}
   shell.addEventListener('pointermove',e=>{
-    pointer=coords(e);if(!engine.state.running)return;
-    const overRail=!!e.target.closest('nav'),top=pointer.y<H/6||!!e.target.closest('#quick-rail');
+    pointerDisplay=displayCoords(e);pointer=scenePoint(pointerDisplay);if(!engine.state.running)return;
+    const overRail=!!e.target.closest('nav'),top=pointerDisplay.y<H/6||!!e.target.closest('#quick-rail');
     shell.classList.toggle('show-top',top&&!panel&&!modalClosing);
     if(!panel&&!modalClosing&&!top&&document.activeElement?.closest('#quick-rail'))canvas.focus({preventScroll:true});
-    pointerWorld=!panel&&!modalClosing&&!overRail;renderer.pointer=pointerWorld?pointer:null;renderer.hover=pointerWorld?targetAt(pointer):null;
+    const overHUD=!!e.target.closest('.vitals,.field-notes,.time-card,.onboarding,.cabin-camera-hint');
+    pointerWorld=!panel&&!modalClosing&&!overRail&&!overHUD;renderer.pointer=pointerWorld?pointer:null;renderer.hover=pointerWorld?targetAt(pointer):null;
     updateTip();
     refreshCursor();
   });
-  shell.addEventListener('pointerleave',()=>{shell.classList.remove('show-top');if(!panel&&!modalClosing&&document.activeElement?.closest('nav'))canvas.focus({preventScroll:true});renderer.hover=null;renderer.pointer=null;pointer=null;$('world-tip').hidden=true;});
+  shell.addEventListener('pointerleave',()=>{shell.classList.remove('show-top');if(!panel&&!modalClosing&&document.activeElement?.closest('nav'))canvas.focus({preventScroll:true});renderer.hover=null;renderer.pointer=null;pointer=null;pointerDisplay=null;$('world-tip').hidden=true;});
   canvas.addEventListener('wheel',e=>{if(!engine.state.running||panel||modalClosing||!e.deltaY)return;const target=targetAt(coords(e)),dog=target?.type==='dog',options=dog?engine.dogActions():engine.structureActions(target);if(!options.length)return;e.preventDefault();const now=performance.now();if(now-lastDogWheel<110)return;lastDogWheel=now;
     if(!dog&&structureChoiceId!==target.id){structureChoiceId=target.id;structureChoice='use';}const choice=dog?dogChoice:structureChoice,next=options[(Math.max(0,options.indexOf(choice))+Math.sign(e.deltaY)+options.length)%options.length];if(dog)dogChoice=next;else structureChoice=next;renderer.hover=target;updateTip();},{passive:false});
   canvas.addEventListener('click',e=>{if(suppressFishingClick){suppressFishingClick=false;return;}if(engine.fishing?.kind==='spinning')return;if(!engine.state.running||panel||modalClosing||engine.transition)return;const p=coords(e),target=targetAt(p);canvas.focus();if(engine.state.cabinHome?.inside){if(target)PECabin.interact(engine,target.id);return;}if(engine.state.equipped==='bow'&&(!target||target.type==='animal'))engine.shoot(p.x+engine.state.camera,p.y);else engine.interact(target?.type==='dog'?{...target,command:engine.dogActions().includes(dogChoice)?dogChoice:'pet'}:engine.structureActions(target).length?{...target,command:structureChoiceId===target.id?structureChoice:'use'}:target);});
@@ -253,7 +285,7 @@
     if(engine.transition){e.preventDefault();return;}
     if(pendingTravel){if(e.code==='Escape'){e.preventDefault();cancelTravel();return;}if(e.code==='Tab'){e.preventDefault();const cancel=content.querySelector('[data-travel-cancel]'),confirm=content.querySelector('[data-travel-confirm]');(document.activeElement===cancel?confirm:cancel)?.focus();}return;}
     if(e.code==='Tab'&&!e.shiftKey&&(journalPanels.has(panel)||modalClosing)){e.preventDefault();if(!e.repeat)closePanel();return;}
-    if(e.code==='Tab'&&!panel&&!modalClosing&&engine.state.running&&!e.shiftKey){e.preventDefault();if(!e.repeat)openPanel('inventory');return;}
+    if(e.code==='Tab'&&!panel&&!modalClosing&&engine.state.running&&!e.shiftKey&&!e.target.closest?.('button')){e.preventDefault();if(!e.repeat)openPanel('inventory');return;}
     if(e.code==='Escape'&&!panel&&!modalClosing&&engine.fishing?.kind==='spinning'){endFishingPointer(true);PEFishing.cancel(engine);e.preventDefault();return;}
     if(e.code==='Escape'&&(panel||modalClosing)){e.preventDefault();closePanel();return;}
     if(panel||modalClosing){if(!modalClosing&&['Enter','Space'].includes(e.code)&&e.target.closest?.('#quick-food-drop')&&items[selected]?.[2]==='food'){e.preventDefault();if(engine.assignQuickFood(selected)){renderQuickFood();renderPanel();syncHUD();save();notice('Pikaeväs vaihdettu.');}return;}if(!modalClosing&&e.code==='Tab'){const focusable=[...modal.querySelectorAll('button:not([disabled]),input:not([disabled]),[tabindex="0"]'),...(journalPanels.has(panel)?$('quick-rail').querySelectorAll('button:not([disabled])'):[])],first=focusable[0],end=focusable[focusable.length-1];if(e.shiftKey&&(document.activeElement===first||document.activeElement===modal)){e.preventDefault();end?.focus();}else if(!e.shiftKey&&document.activeElement===end){e.preventDefault();first?.focus();}}return;}
@@ -267,7 +299,7 @@
     try{
       // Do not build permanent scenery from partially loaded images on the title.
       if(!ready||frameFault||document.hidden)return;
-      if(engine.state.running&&!panel&&!modalClosing){engine.update(dt);if(pointer&&pointerWorld){renderer.hover=targetAt(pointer);updateTip();}}
+      if(engine.state.running&&!panel&&!modalClosing){engine.update(dt);if(pointerDisplay&&pointerWorld){pointer=scenePoint(pointerDisplay);renderer.pointer=pointer;renderer.hover=targetAt(pointer);updateTip();}}
       refreshCursor();syncFishingHUD();renderer.draw(engine);PEAudio.update(engine.state,engine,!!panel||modalClosing);hudClock+=dt;if(hudClock>.25){syncHUD();hudClock=0;}
     }catch(error){
       // Preserve the current journey and last visible frame. A core failure is
@@ -280,10 +312,11 @@
   saved=readSave();renderer.scenery=[null,null,null];let loaded=0,loadFailed=false,equipmentReady=false,bookReady=false;
   const assets=[...['menu_banner','pick_banner1','pick_banner2','pick_banner3'].map(id=>[id,id]),['west','forest-west'],['ravine','forest-ravine'],['upland','forest-upland'],['sprites','traveller-and-kajo'],['wildlife','woodland-wildlife'],['props','timber-props'],['poses','timber-poses'],['chopTree','chop-standing'],['chopLog','chop-ground'],['treeVariants','forest-trees']];
   assets.push(['runPoses','traveller-run'],['fishingPoses','fishing-poses-v2'],['pikeImage','icon-pike'],['zanderImage','icon-zander']);
+  if(visualManifest?.enabled)assets.push(...visualManifest.assets);
   assets.push(['letterImage','cabin-letter']);
   assets.push(['yardProps','cabin-yard-props-final'],['kajoCabin','kajo-cabin-poses'],['cabinInterior','sienilampi-interior'],['groundMaterial','forest-floor-material'],['riverImage','aarni-river'],['pondImage','hiljalampi'],['cabinAtlas','hiljalampi-cabin'],['pierImage','sienilampi-pier'],['springImage','cabin-spring-v2'],['petImage','traveller-pet'],['seatedImage','traveller-seated']);renderer.regionImages={};
   function finishLoading(){if(ready||loadFailed||loaded!==assets.length||!equipmentReady||!bookReady)return;ready=true;$('start-button').disabled=false;refreshTitle();PEAudio.title?.(engine.state);}
-  for(const [key,path]of assets){const img=new Image();img.onload=()=>{const i=['west','ravine','upland'].indexOf(key);if(i>=0){renderer.scenery[i]=img;if(i===0)renderer.forest=img;}else{renderer[key]=img;if(key==='riverImage')renderer.regionImages.river=img;if(key==='pondImage')renderer.regionImages.pond=img;}loaded++;if(key==='wildlife')paintWildlife(content);finishLoading();};img.onerror=()=>{loadFailed=true;$('load-note').textContent='Metsäkuvaa ei voitu ladata. Tarkista, että assets-kansio on index.html-tiedoston vieressä.';$('start-button').textContent='Lataus epäonnistui';L.apply($('title-card'));};img.src='assets/'+path+'.png';}
+  for(const [key,path]of assets){const img=new Image();img.onload=()=>{const i=['west','ravine','upland'].indexOf(key);if(i>=0){renderer.scenery[i]=img;if(i===0)renderer.forest=img;}else{renderer[key]=img;if(key==='riverImage')renderer.regionImages.river=img;if(key==='pondImage')renderer.regionImages.pond=img;}loaded++;if(key==='wildlife')paintWildlife(content);finishLoading();};img.onerror=()=>{loadFailed=true;$('load-note').textContent='Metsäkuvaa ei voitu ladata. Tarkista, että assets-kansio on index.html-tiedoston vieressä.';$('start-button').textContent='Lataus epäonnistui';L.apply($('title-card'));};img.src='assets/'+path+'.png'+(visualManifest?.buildToken?'?v='+visualManifest.buildToken:'');}
   Promise.all([window.PEEquipment?.loadAssets?.(),window.PEIcons?.load?.()]).then(()=>{equipmentReady=true;paintIcons();finishLoading();}).catch(()=>{loadFailed=true;$('load-note').textContent='Työkalukuvia ei voitu ladata assets-kansiosta.';$('start-button').textContent='Lataus epäonnistui';L.apply($('title-card'));});
   Promise.all(['book-icon',...bookFrames].map(frame=>new Promise((resolve,reject)=>{const img=new Image();img.onload=resolve;img.onerror=reject;img.src='assets/'+frame+'.png';}))).then(()=>{bookReady=true;finishLoading();}).catch(()=>{loadFailed=true;$('load-note').textContent='Journal images could not be loaded.';});
   L.apply(document);syncHUD();requestAnimationFrame(frame);

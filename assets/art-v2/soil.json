@@ -1,0 +1,48 @@
+{
+  "id": "soil",
+  "kind": "opaque-material",
+  "file": "assets/art-v2/soil.png",
+  "source": {
+    "file": "work/overhaul/soil-source/soil-source.png",
+    "sha256": "883584132a5b015935176d236223ba11fa6a6ed39f559d411d0c5b6db1ef4f33",
+    "type": "original-built-in-image-generation",
+    "license": "original-generated"
+  },
+  "license": "original-generated",
+  "nativeSize": [
+    192,
+    96
+  ],
+  "palette": [
+    "#393e30",
+    "#494d35",
+    "#585a3d",
+    "#697047",
+    "#7b8054",
+    "#909068",
+    "#484333",
+    "#5a4d37",
+    "#6e5c3f",
+    "#806d4b",
+    "#96815b",
+    "#a48f67"
+  ],
+  "frames": [
+    {
+      "id": "woodland-soil",
+      "rect": [
+        0,
+        0,
+        192,
+        96
+      ],
+      "anchor": [
+        96,
+        95
+      ]
+    }
+  ],
+  "sha256": "973b9ffbd094012f32aceeb98853de34bae6fbcd807a387d06226c88bcc6e2ca",
+  "preparation": "Area-downsample to192x96,12-color palette, merge isolated color cells using3x3 majority; opaque material, no extracted scenery. Source preserved.",
+  "status": "calibration"
+}

@@ -1,0 +1,341 @@
+{
+  "id": "traveller-fishing",
+  "file": "assets/art-v2/traveller-fishing.png",
+  "nativeSize": [
+    384,
+    192
+  ],
+  "palette": [
+    "#222b28",
+    "#3b3328",
+    "#594532",
+    "#79563a",
+    "#9e723f",
+    "#bd9458",
+    "#d0ac73",
+    "#e1ba83",
+    "#a47654",
+    "#633925",
+    "#935133",
+    "#b66a3b",
+    "#253b3c",
+    "#3b5352",
+    "#5b7066",
+    "#9a9d83"
+  ],
+  "frames": [
+    {
+      "id": "idle",
+      "rect": [
+        0,
+        0,
+        96,
+        96
+      ],
+      "anchor": [
+        40,
+        88
+      ],
+      "seat": [
+        40,
+        69
+      ],
+      "hand": [
+        56,
+        56
+      ],
+      "socket": [
+        66,
+        55
+      ],
+      "handleAngle": 0,
+      "preparation": {
+        "sourceCell": [
+          0,
+          0,
+          384,
+          512
+        ],
+        "axis": 145,
+        "base": 483,
+        "scale": 0.145,
+        "retainedSourcePixels": 59404
+      }
+    },
+    {
+      "id": "raise-low",
+      "rect": [
+        96,
+        0,
+        96,
+        96
+      ],
+      "anchor": [
+        40,
+        88
+      ],
+      "seat": [
+        40,
+        69
+      ],
+      "hand": [
+        55,
+        50
+      ],
+      "socket": [
+        63,
+        47
+      ],
+      "handleAngle": -0.14,
+      "preparation": {
+        "sourceCell": [
+          384,
+          0,
+          384,
+          512
+        ],
+        "axis": 529,
+        "base": 483,
+        "scale": 0.145,
+        "retainedSourcePixels": 60102
+      }
+    },
+    {
+      "id": "raise-chest",
+      "rect": [
+        192,
+        0,
+        96,
+        96
+      ],
+      "anchor": [
+        40,
+        88
+      ],
+      "seat": [
+        40,
+        69
+      ],
+      "hand": [
+        53,
+        46
+      ],
+      "socket": [
+        62,
+        42
+      ],
+      "handleAngle": -0.2,
+      "preparation": {
+        "sourceCell": [
+          768,
+          0,
+          384,
+          512
+        ],
+        "axis": 913,
+        "base": 483,
+        "scale": 0.145,
+        "retainedSourcePixels": 61265
+      }
+    },
+    {
+      "id": "raise-face",
+      "rect": [
+        288,
+        0,
+        96,
+        96
+      ],
+      "anchor": [
+        40,
+        88
+      ],
+      "seat": [
+        40,
+        69
+      ],
+      "hand": [
+        53,
+        40
+      ],
+      "socket": [
+        59,
+        35
+      ],
+      "handleAngle": -0.55,
+      "preparation": {
+        "sourceCell": [
+          1152,
+          0,
+          384,
+          512
+        ],
+        "axis": 1297,
+        "base": 483,
+        "scale": 0.145,
+        "retainedSourcePixels": 62053
+      }
+    },
+    {
+      "id": "backswing-high",
+      "rect": [
+        0,
+        96,
+        96,
+        96
+      ],
+      "anchor": [
+        40,
+        88
+      ],
+      "seat": [
+        40,
+        69
+      ],
+      "hand": [
+        35,
+        35
+      ],
+      "socket": [
+        33,
+        28
+      ],
+      "handleAngle": -2.05,
+      "preparation": {
+        "sourceCell": [
+          0,
+          512,
+          384,
+          512
+        ],
+        "axis": 145,
+        "base": 964,
+        "scale": 0.145,
+        "retainedSourcePixels": 59942
+      }
+    },
+    {
+      "id": "backswing-back",
+      "rect": [
+        96,
+        96,
+        96,
+        96
+      ],
+      "anchor": [
+        40,
+        88
+      ],
+      "seat": [
+        40,
+        69
+      ],
+      "hand": [
+        32,
+        37
+      ],
+      "socket": [
+        28,
+        37
+      ],
+      "handleAngle": -3.1,
+      "preparation": {
+        "sourceCell": [
+          384,
+          512,
+          384,
+          512
+        ],
+        "axis": 529,
+        "base": 964,
+        "scale": 0.145,
+        "retainedSourcePixels": 63572
+      }
+    },
+    {
+      "id": "release",
+      "rect": [
+        192,
+        96,
+        96,
+        96
+      ],
+      "anchor": [
+        40,
+        88
+      ],
+      "seat": [
+        40,
+        69
+      ],
+      "hand": [
+        63,
+        42
+      ],
+      "socket": [
+        73,
+        41
+      ],
+      "handleAngle": 0,
+      "preparation": {
+        "sourceCell": [
+          768,
+          512,
+          384,
+          512
+        ],
+        "axis": 913,
+        "base": 964,
+        "scale": 0.145,
+        "retainedSourcePixels": 65070
+      }
+    },
+    {
+      "id": "reel",
+      "rect": [
+        288,
+        96,
+        96,
+        96
+      ],
+      "anchor": [
+        40,
+        88
+      ],
+      "seat": [
+        40,
+        69
+      ],
+      "hand": [
+        55,
+        47
+      ],
+      "socket": [
+        63,
+        46
+      ],
+      "handleAngle": 0,
+      "preparation": {
+        "sourceCell": [
+          1152,
+          512,
+          384,
+          512
+        ],
+        "axis": 1297,
+        "base": 964,
+        "scale": 0.145,
+        "retainedSourcePixels": 60563
+      }
+    }
+  ],
+  "sha256": "a978792252828680030ddaa8097408977f3ab2adc68c087334ccadfa916bc3bc",
+  "source": {
+    "file": "work/overhaul/fishing-source/fishing-source.png",
+    "sha256": "a5bbd3a8374d99415c4e8ff4f85fc882da5dbc22f101a48a2296835aba875512",
+    "prompt": "work/overhaul/fishing-source/PROMPT.md",
+    "method": "Original eight-pose style-transfer source; exterior-connected neutral checker extraction; measured hips, boots and cork sockets; constant0.145 scale and shared traveller palette"
+  },
+  "license": "original-generated",
+  "status": "calibration"
+}

@@ -16,7 +16,7 @@ class Element {
  addEventListener(type,fn){(this.listeners[type]??=[]).push(fn);}dispatch(type,extra={}){const event={target:this,preventDefault(){},...extra};for(let el=this;el;el=el.parentElement)for(const f of el.listeners[type]||[])f(event);}
  focus(){this.ownerDocument.activeElement=this;}getBoundingClientRect(){return{left:0,top:0,width:960,height:540};}requestFullscreen(){this.ownerDocument.fullscreenElement=this;return Promise.resolve();}
  setPointerCapture(id){this.capture=id;}hasPointerCapture(id){return this.capture===id;}releasePointerCapture(id){if(this.capture===id)this.capture=null;}
- getContext(){return new Proxy({createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),measureText:t=>({width:t.length*8}),createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})},{get:(o,k)=>o[k]||(()=>{}),set:(o,k,v)=>(o[k]=v,true)});}
+ getContext(){return new Proxy({createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),getImageData:(x,y,w,h)=>({data:new Uint8ClampedArray(w*h*4)}),measureText:t=>({width:t.length*8}),createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})},{get:(o,k)=>o[k]||(()=>{}),set:(o,k,v)=>(o[k]=v,true)});}
 }
 function parse(html,parent){const stack=[parent];for(const token of html.match(/<!--[\s\S]*?-->|<[^>]+>|[^<]+/g)||[]){if(token.startsWith('<!--')||token.startsWith('<!'))continue;if(token.startsWith('</')){if(stack.length>1)stack.pop();continue;}if(token[0]==='<'){const m=token.match(/^<([\w-]+)/);if(!m)continue;const el=new Element(m[1],parent.ownerDocument);for(const a of token.slice(m[0].length).matchAll(/([\w-]+)(?:="([^"]*)"|='([^']*)'|=([^\s>]+))?/g))el.setAttribute(a[1],decode(a[2]??a[3]??a[4]??''));stack.at(-1).append(el);if(!['meta','link','br','hr','img','input'].includes(m[1])&&!token.endsWith('/>'))stack.push(el);}else stack.at(-1)._text+=decode(token);}}
 const doc=new Element('document',null);doc.ownerDocument=doc;doc.createElement=t=>new Element(t,doc);doc.getElementById=id=>doc.querySelector('#'+id);doc.hidden=false;doc.exitFullscreen=()=>Promise.resolve();parse(fs.readFileSync(path.join(dir,'index.html'),'utf8'),doc);
@@ -28,18 +28,27 @@ const windowEvents={},dispatchWindow=(type,event={})=>{for(const fn of windowEve
 const context={document:doc,Image:TestImage,console,performance,setTimeout:(fn,delay)=>(timers.set(++timerId,{fn,delay}),timerId),clearTimeout:id=>timers.delete(id),requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},addEventListener(type,fn){(windowEvents[type]??=[]).push(fn);},};context.window=context;context.globalThis=context;
 
 
-vm.createContext(context);for(const file of ['i18n.js','regions.js','cabin-interior.js','fishing.js','engine.js','item-icons.js','equipment.js','fire-effects.js','fishing-art.js','render.js','panels.js','storage-ui.js'])vm.runInContext(fs.readFileSync(path.join(dir,file),'utf8'),context,{filename:file});
+vm.createContext(context);for(const file of ['i18n.js','regions.js','cabin-interior.js','fishing.js','engine.js','item-icons.js','ui-icons.js','equipment.js','fire-effects.js','fishing-art.js','render.js','panels.js','storage-ui.js'])vm.runInContext(fs.readFileSync(path.join(dir,file),'utf8'),context,{filename:file});context.PEVisualManifest={enabled:false};
 let engine;const Base=context.PE.Engine;context.PE.Engine=class extends Base{constructor(...a){super(...a);if(!engine)engine=this;}};
 const sounds=[],mix={soundOn:true,musicOn:true,soundVolume:.7,musicVolume:.4};context.PEAudio={play(n){sounds.push(n);},start(){},toggle(){return false;},pause(){},update(){},settings:()=>({...mix}),configure:p=>Object.assign(mix,p)};
-let renderCount=0;const realDraw=context.PEArt.Renderer.prototype.draw;context.PEArt.Renderer.prototype.draw=function(e){renderCount++;return realDraw.call(this,e);};
+let renderCount=0,lastRenderer;const realDraw=context.PEArt.Renderer.prototype.draw;context.PEArt.Renderer.prototype.draw=function(e){lastRenderer=this;renderCount++;return realDraw.call(this,e);};
 vm.runInContext(fs.readFileSync(path.join(dir,'game.js'),'utf8'),context,{filename:'game.js'});
 raf(performance.now());assert.equal(renderCount,0,'partial image loads cannot populate permanent landscape caches');
 const $=id=>doc.getElementById(id),click=sel=>{const b=doc.querySelector(sel);assert.ok(b,'Element exists: '+sel);assert.equal(b.disabled,false);b.dispatch('click');};
 (async()=>{await Promise.all(imageLoads);await Promise.resolve();await Promise.resolve();
-assert.equal($('title-card').querySelector('.eyebrow'),null);assert.equal($('title-card').querySelector('.title-rule'),null);assert.equal($('title-card').querySelector('.title-foot'),null);assert.equal($('load-note').textContent,'');assert.equal($('title-card').querySelectorAll('.menu-scroll').length,2);
+assert.equal($('title-card').querySelector('.eyebrow'),null);assert.equal($('title-card').querySelector('.title-rule'),null);assert.equal($('title-card').querySelector('.title-foot'),null);assert.equal($('load-note').textContent,'');assert.equal($('title-card').querySelectorAll('.title-action').length,2);assert.equal($('title-card').querySelector('h1').textContent,'Timbertrail');
 const englishTasks=['Gather branches, stones, and fibre','Craft a flint knife','Craft a flint axe','Build a campfire','Build a lean-to','Drink fresh water','Meet Aarni','Trade with Aarni','Cook a warm meal'];assert.deepEqual(Array.from(context.PE.tasks,([,label])=>context.L.text(label)),englishTasks);context.L.set('fi');assert.equal(context.L.text('Craft a flint axe'),'Valmista piikivikirves');context.L.set('en');
 assert.equal(context.L.lang,'en');assert.equal($('start-button').disabled,false);
 click('#continue-button');assert.equal(engine.state.inventory.wood,40);assert.ok(storage.has('timbertrail-save-v3'));
+// Objectives retain order, show every remaining item on demand, and update only when needed.
+const remaining=()=>context.PE.tasks.filter(([id])=>!engine.state.completed[id]);
+const objectiveItems=()=>$('task-list').querySelectorAll('li');
+assert.equal(objectiveItems().length,1);assert.equal(objectiveItems()[0].textContent,context.L.text(remaining()[0][1]));
+const firstObjective=objectiveItems()[0];engine.emit('change');assert.equal(objectiveItems()[0],firstObjective,'unchanged objectives are not rebuilt');
+click('#task-toggle');assert.equal($('task-toggle').getAttribute('aria-expanded'),'true');assert.equal(objectiveItems().length,remaining().length);assert.deepEqual(objectiveItems().map(el=>el.textContent),Array.from(remaining(),([,label])=>context.L.text(label)));
+click('#task-toggle');assert.equal($('task-toggle').getAttribute('aria-expanded'),'false');
+const previousCompleted={...engine.state.completed},firstId=remaining()[0][0];engine.state.completed[firstId]=true;engine.emit('change');assert.equal(objectiveItems()[0].textContent,context.L.text(remaining()[0][1]),'the next unfinished objective takes its place');
+engine.state.completed=previousCompleted;engine.emit('change');
 click('#journal-button');assert.ok($('modal').classList.contains('is-opening'));assert.equal($('book-animation').src,'assets/book-opening-1.png');advance();assert.ok(!$('modal').classList.contains('is-opening'));assert.ok($('game-shell').classList.contains('journal-open'));
 assert.equal($('quick-tools').querySelectorAll('[data-slot="knife"]').length,1);assert.equal($('quick-tools').querySelectorAll('[data-slot="axe"]').length,1);
 assert.equal(engine.assignQuickSlot('knife','wood'),false);assert.equal(engine.assignQuickSlot('knife','knife'),true);assert.equal(engine.assignQuickSlot('food','berries'),true);assert.equal(engine.assignQuickSlot('axe','knife'),false);
@@ -171,4 +180,34 @@ raf(performance.now()+500);assert.equal($('runtime-status').hidden,false,'core f
 const pausedTime=engine.state.playSeconds;raf(performance.now()+550);assert.equal(engine.state.playSeconds,pausedTime,'failed renderer pauses gameplay');assert.equal(runtimeErrors.length,1,'no per-frame error flood');assert.equal(storage.get('timbertrail-save-v3'),savedBefore,'recovery never resets the saved journey');
 context.PEArt.Renderer.prototype.draw=realDraw;click('#runtime-retry');assert.equal($('runtime-status').hidden,true);engine.state.player.sitting=false;doc.dispatch('keydown',{code:'KeyD'});const resumedX=engine.state.player.x;raf(context.performance.now()+650);doc.dispatch('keyup',{code:'KeyD'});assert.ok(engine.state.player.x>resumedX,'input and frames resume without reloading/resetting');
 console.log('PASS load gate, explicit render-fault pause, retained save and retry/input recovery.');
+vm.runInContext(fs.readFileSync(path.join(dir,'visual-core.js'),'utf8'),context,{filename:'visual-core.js'});
+lastRenderer.visualV2=true;lastRenderer.setArtResolution(640);lastRenderer.outdoorZoom=1.2;lastRenderer.pondZoom=1.08;
+engine.transition=null;engine.enterRegion('forest',1800);engine.state.camera=1500;engine.state.equipped=null;engine.state.dog.x=2000;engine.nodes=[{id:'zoom-branch',type:'wood',x:1800}];
+for(const [width,height]of [[537,302.0625],[960,540],[1280,720],[1366,768],[1920,1080]]){
+ cv.getBoundingClientRect=()=>({left:40,top:80,width,height});
+ const p=lastRenderer.sceneToScreen(engine.state,{x:300,y:context.PE.ground(1800,'forest')-10});
+ const event={clientX:40+p.x/960*width,clientY:80+p.y/540*height,target:cv};
+ $('game-shell').dispatch('pointermove',event);assert.match($('world-tip').textContent,/Dry branch/);assert.ok(parseFloat($('world-tip').style.top)/100*height+64<=height,'tooltip fits below the top edge and above canvas bottom');
+ engine.action=null;cv.dispatch('pointerdown',{...event,button:0,pointerId:51});dispatchWindow('pointerup',{button:0,pointerId:51});cv.dispatch('click',event);assert.equal(engine.action?.target.id,'zoom-branch','zoomed pointer reaches the original world object');
+}
+delete cv.getBoundingClientRect;
+$('game-shell').dispatch('pointermove',{clientX:400,clientY:40,target:cv});assert.ok($('game-shell').classList.contains('show-top'),'top rail uses screen coordinates, not cropped world coordinates');
+engine.action=null;prepareFishing();
+const zoomCast=lastRenderer.sceneToScreen(engine.state,{x:184,y:370});
+cv.dispatch('pointerdown',{...castPoint,clientX:zoomCast.x,clientY:zoomCast.y});assert.equal(engine.fishing?.stage,'charge');dispatchWindow('blur');
+engine.transition=null;engine.enterRegion('pond',context.PERegions.cabin.x);engine.state.camera=5100;engine.state.cabinRepairs={roof:true,facade:true,yard:true};engine.state.player.x=context.PERegions.cabin.x;engine.state.player.sitting=false;engine.state.equipped=null;
+const door=engine.activeHotspots().find(o=>o.type==='cabinDoor');assert.ok(door);
+const dp=lastRenderer.sceneToScreen(engine.state,{x:door.x+door.box[0]+door.box[2]/2-engine.state.camera,y:context.PE.ground(door.x,'pond')+door.box[1]+door.box[3]/2});
+cv.dispatch('pointerdown',{clientX:dp.x,clientY:dp.y,button:0,pointerId:52});dispatchWindow('pointerup',{button:0,pointerId:52});cv.dispatch('click',{clientX:dp.x,clientY:dp.y});assert.equal(engine.transition?.room,true,'zoomed door starts the original room fade');for(let i=0;i<24;i++)engine.update(.05);assert.equal(engine.state.cabinHome.inside,true,'zoomed door hit opens the original interior');
+assert.equal(lastRenderer.cameraView(engine.state).zoom,1,'interior retains its separate camera');
+$('game-shell').dispatch('pointermove',{clientX:100,clientY:450,target:doc.querySelector('.vitals')});assert.equal(lastRenderer.hover,null,'vitals block world hover');assert.equal($('world-tip').hidden,true,'no collectible tooltip through vitals');
+console.log('PASS zoomed branch clicks/tooltip bounds across five canvas sizes, protected vitals hover, top rail, fishing press and cabin door/interior coordinates. DOM/event tests, not layout acceptance.');
+context.PEVisualManifest.enabled=true;click('[data-panel="inventory"]');assert.ok($('modal').classList.contains('pixel-journal'));assert.equal($('modal').dataset.bookMotion,'opening');assert.ok(doc.querySelector('.book-material'));assert.equal($('book-animation').hidden,true,'pixel book never flashes old picture frames');advance();assert.equal($('modal').dataset.bookMotion,undefined);assert.ok(!$('modal').classList.contains('is-opening'));
+engine.state.inventory.wood=2;engine.state.inventory.fiber=3;engine.state.inventory.knife=1;engine.emit('change');
+click('[data-select="knife"]');assert.ok(doc.querySelector('.item-summary').querySelector('.detail-art'),'item art stays in the scrolling summary');assert.ok(doc.querySelector('.item-actions').querySelector('[data-use="knife"]'),'use stays in the fixed action footer');assert.ok(doc.querySelector('.item-actions').children.some(el=>el.dataset.assignSlot==='knife'),'quick-slot alternative stays beside use');assert.equal(doc.querySelector('.item-summary').querySelector('button'),null,'description scrolling never hides action buttons');
+doc.querySelector('.inventory-grid').scrollTop=137;doc.querySelector('[data-select="wood"]').focus();click('[data-select="wood"]');assert.equal(doc.querySelector('.inventory-grid').scrollTop,137,'selecting an item keeps the list position');
+click('[data-panel="craft"]');assert.equal($('modal').dataset.bookMotion,undefined,'tab changes do not restart cover animation');doc.querySelector('.recipe-list').scrollTop=231;doc.querySelector('[data-recipe="cord"]').focus();click('[data-recipe="cord"]');assert.equal(doc.querySelector('.recipe-list').scrollTop,231,'selecting a recipe keeps the list position');assert.equal(doc.activeElement.dataset.recipe,'cord','recipe selection retains keyboard focus');
+click('[data-panel="journal"]');assert.match($('modal-content').textContent,/Forest dwellers/);assert.equal(context.L.text('Unknown wildlife entry'),'Unknown wildlife entry');context.L.set('fi');assert.equal(context.L.text('Unknown wildlife entry'),'Tuntematon eläinhavainto');context.L.set('en');
+click('#close-modal');assert.equal($('modal').dataset.bookMotion,'closing');advance();assert.equal($('modal-backdrop').hidden,true);assert.ok(!$('modal').classList.contains('pixel-journal'));
+context.matchMedia=()=>({matches:true});click('[data-panel="inventory"]');assert.equal($('modal').dataset.bookMotion,undefined,'reduced motion opens immediately');assert.ok(!$('modal').classList.contains('is-opening'));click('#close-modal');assert.equal($('modal-backdrop').hidden,true);assert.equal(doc.activeElement,cv,'closing restores game input focus');console.log('PASS pixel book opening/tab/closing lifecycle, no legacy frame flashes, reduced motion, focus and bilingual unknown entries. Not perceptual animation acceptance.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

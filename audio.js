@@ -5,11 +5,18 @@ const daylight=()=>.12+.88*Math.max(0,Math.sin((game.dayTime-.22)*Math.PI*2));
 const preferences={soundOn:true,musicOn:true,soundVolume:.7,musicVolume:.4};
 try{const saved=JSON.parse(localStorage.getItem('timbertrail-audio')||'{}');for(const key of ['soundOn','musicOn'])if(typeof saved[key]==='boolean')preferences[key]=saved[key];for(const key of ['soundVolume','musicVolume'])if(Number.isFinite(saved[key]))preferences[key]=clamp(saved[key],0,1);}catch{}
 soundOn=preferences.soundOn;
-const musicWindow=seconds=>{const phase=((seconds-18)%240+240)%240;return seconds>=18&&phase<42;};
+let worldMusic=null;
+function updateWorldMusic(){
+  if(!audioBus||!root.PEWorldMusic)return;
+  worldMusic||=new root.PEWorldMusic.Player(root.PEWorldMusic.cues);
+  if(!game.running){worldMusic.reset();return;}
+  // Media errors are optional-audio faults, never a reason to stop the game.
+  try{worldMusic.update(audio,audioBus.music,{seconds:game.playSeconds,active:!overlay,enabled:preferences.musicOn&&preferences.musicVolume>0,volume:1,role:root.PEWorldMusic.role(game)});}catch{worldMusic.reset();}
+}
 function updateTitle(retry=false){if(audioBus)root.PETitleMusic?.set(audio,audioBus.master,!game.running,preferences.musicOn?preferences.musicVolume:0,retry);}
 function applyMix(){if(!audioBus)return;if(!soundOn)root.PEAudioSamples?.stopLoops?.(audio);const t=audio.currentTime;audioBus.ambience.gain.setTargetAtTime(soundOn?preferences.soundVolume*.7:0,t,.12);audioBus.sfx.gain.setTargetAtTime(soundOn?preferences.soundVolume*.78:0,t,.12);audioBus.music.gain.setTargetAtTime(preferences.musicOn?preferences.musicVolume*.48:0,t,.5);}
 function configure(patch){for(const key of ['soundOn','musicOn'])if(typeof patch[key]==='boolean')preferences[key]=patch[key];for(const key of ['soundVolume','musicVolume'])if(Number.isFinite(patch[key]))preferences[key]=clamp(patch[key],0,1);soundOn=preferences.soundOn;ensureAudio();audio?.resume?.();applyMix();updateTitle(true);try{localStorage.setItem('timbertrail-audio',JSON.stringify(preferences));}catch{}return {...preferences};}
-const audioClock={nextMusic:0,musicStep:0,nextBird:0,nextAnimal:0,nextStep:0,nextFireCrackle:0,nextWater:0};
+const audioClock={nextBird:0,nextAnimal:0,nextStep:0,nextFireCrackle:0,nextWater:0};
 let stepState=null,stepStride=0,stepMoving=false,stepTime=-1,stepSide=1;
 function resetClocks(state){for(const key of ['nextBird','nextAnimal','nextStep','nextFireCrackle','nextWater','nextReel'])audioClock[key]=state.playSeconds||0;stepState=state;stepStride=state.player?.stride||0;stepMoving=false;stepTime=-1;}
 function footsteps(inside){
@@ -21,7 +28,8 @@ function footsteps(inside){
   // At most one contact per frame: never replay a backlog after pause/loading.
   if(!stepMoving||stride-stepStride>=Math.PI){
     stepSide=-stepSide;
-    playSfx(p.wading?'water':'step',p.wading?.18:p.crouching?.26:p.running?.72:.56,stepSide*.07);
+    const pier=root.PERegions?.pond,onPier=game.currentMap==='pond'&&pier&&p.x>=pier.pierEnd&&p.x<=pier.shore;
+    playSfx(p.wading?'water':onPier?'floorStep':'step',p.wading?.18:onPier?(p.running?.5:.35):p.crouching?.18:p.running?.58:.38,stepSide*.07);
     stepStride=stride;
   }
   stepMoving=true;stepTime=time;
@@ -56,7 +64,7 @@ function footsteps(inside){
       windLfo.frequency.value = .075; windDepth.gain.value = 0; windLfo.connect(windDepth).connect(windGain.gain); windLfo.start();
       audioBus = { master, ambience, music, sfx, compressor, buffer, foleyBuffer, windGain, rainGain };
       root.PEAudioSamples?.load(audio);
-      applyMix();audioClock.nextMusic = audio.currentTime + .15;
+      applyMix();
       audioClock.nextBird = game.playSeconds + 3;
     } catch { soundOn = false; audio = null; audioBus = null; }
   }
@@ -99,16 +107,6 @@ function footsteps(inside){
     filter.type = 'lowpass'; filter.frequency.value = Math.max(500, frequency * 3.5); filter.Q.value = .55;
     gain.gain.setValueAtTime(.0001, start); gain.gain.exponentialRampToValueAtTime(Math.max(.0002, volume), start + Math.min(.02, duration * .2)); gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
     oscillator.connect(filter).connect(gain); connectWithPan(gain, destination || audioBus.sfx, pan); oscillator.start(start); oscillator.stop(start + duration + .03);
-  }
-
-  function musicNote(frequency, when, duration, volume, pan = 0) {
-    if (!preferences.musicOn || !audioBus) return;
-    const oscillator = audio.createOscillator(), overtone = audio.createOscillator(), filter = audio.createBiquadFilter(), gain = audio.createGain();
-    oscillator.type = 'sine'; overtone.type = 'sine'; oscillator.frequency.value = frequency; overtone.frequency.value = frequency * 2;
-    filter.type = 'lowpass'; filter.frequency.value = 980; filter.Q.value = .7;
-    gain.gain.setValueAtTime(.0001, when); gain.gain.exponentialRampToValueAtTime(volume, when + Math.min(.75, duration * .25)); gain.gain.setValueAtTime(volume * .72, when + duration * .64); gain.gain.exponentialRampToValueAtTime(.0001, when + duration);
-    oscillator.connect(filter); const overtoneGain=audio.createGain();overtoneGain.gain.value=.09;overtone.connect(overtoneGain).connect(filter); filter.connect(gain); connectWithPan(gain, audioBus.music, pan);
-    oscillator.start(when); overtone.start(when); oscillator.stop(when + duration + .05); overtone.stop(when + duration + .05);
   }
 
   function playBird(when = null) {
@@ -184,10 +182,10 @@ function footsteps(inside){
 
   function updateAudio() {
     updateTitle();
+    updateWorldMusic();
     if (!audioBus || audio.state === 'suspended') return;
     if(!game.running){root.PEAudioSamples?.stopLoops?.(audio);audioBus.rainGain.gain.setTargetAtTime(0,audio.currentTime,.5);audioBus.windGain.gain.setTargetAtTime(0,audio.currentTime,.5);audioBus.music.gain.setTargetAtTime(0,audio.currentTime,.7);return;}
     const now = audio.currentTime;
-    if (audioClock.nextMusic < now - .2) audioClock.nextMusic = now + .08;
     const inside=!!game.cabinHome?.inside;const rain=game.weather==='rain'?(game.rainIntensity??.3):0;
     const sampleRain=root.PEAudioSamples?.setLoop?.('rain',audio,audioBus.ambience,soundOn&&!overlay?(rain>.8?.45:rain>.45?.24:rain>0?.1:0)*(inside?.18:1):0);
     audioBus.rainGain.gain.setTargetAtTime((sampleRain?0:1)*(rain>.8?.06:rain>.45?.023:rain>0?.008:0)*(inside?.18:1),now,3);
@@ -195,29 +193,19 @@ function footsteps(inside){
     const windPhase=game.playSeconds%73,gust=windPhase<11?Math.sin(windPhase/11*Math.PI)**2:0;
     const sampleWind=root.PEAudioSamples?.setLoop?.('wind',audio,audioBus.ambience,soundOn&&!overlay?gust*.18*(inside?.12:1):0);
     audioBus.windGain.gain.setTargetAtTime((sampleWind?0:1)*gust*(rain>.8?.035:.017)*(inside?.12:1),now,1.2);
-    const playingMusic=preferences.musicOn&&musicWindow(game.playSeconds)&&rain<.45;
-    audioBus.music.gain.setTargetAtTime(playingMusic?preferences.musicVolume*.48:0,now,1.8);
-    if(!playingMusic)audioClock.nextMusic=now+.15;
-    const melody=[293.66,369.99,440,369.99,329.63,293.66,246.94,329.63];
-    while(playingMusic&&audioClock.nextMusic<now+.5){
-      const step=audioClock.musicStep++,when=audioClock.nextMusic;
-      musicNote(melody[step%melody.length],when,3.6,.009,Math.sin(step)*.24);
-      if(step%4===2)musicNote(melody[(step+2)%melody.length]*.5,when+1.1,3.2,.003,-.15);
-      audioClock.nextMusic+=5.1;
-    }
+    audioBus.music.gain.setTargetAtTime(preferences.musicOn?preferences.musicVolume*.48:0,now,.5);
 
-    const nearWater = !inside&&waterSpots.find(w => distance(w.x, game.player.x) < 150);
-    const streamLevel=soundOn&&!overlay&&nearWater?.12*clamp(1-distance(nearWater.x,game.player.x)/180,.2,1):0;
+    const nearWater = !inside&&waterSpots.filter(w=>Number.isFinite(w.x)&&distance(w.x,game.player.x)<180&&!(game.currentMap==='pond'&&w.wide&&game.player.x>=w.x)).sort((a,b)=>distance(a.x,game.player.x)-distance(b.x,game.player.x))[0];
+    const waterDistance=nearWater?distance(nearWater.x,game.player.x):180,fade=clamp((180-waterDistance)/30),edge=fade*fade*(3-2*fade);
+    const pondFade=nearWater&&game.currentMap==='pond'&&nearWater.wide?clamp((nearWater.x-game.player.x)/60):1;
+    const waterLevel=nearWater?(1-waterDistance/180)*edge*(nearWater.wide?.3:1)*pondFade*pondFade*(3-2*pondFade):0;
+    const streamLevel=soundOn&&!overlay?.12*waterLevel:0;
     const sampleStream=root.PEAudioSamples?.setLoop?.('stream',audio,audioBus.ambience,streamLevel,nearWater?clamp((nearWater.x-game.player.x)/130,-.75,.75):0);
     footsteps(inside);
     if(overlay)return;
 
     if (!inside && daylight() > .42 && game.weather !== 'rain' && game.playSeconds >= audioClock.nextBird) {
-      playBird(); audioClock.nextBird = game.playSeconds + 9 + seeded(game.playSeconds + 77) * 9;
-    } else if (!inside && daylight() < .24 && game.weather !== 'rain' && game.playSeconds >= audioClock.nextBird) {
-      const pan = seeded(game.playSeconds + 91) * 1.4 - .7;
-      for (let i = 0; i < 3; i++) synthTone(2350 + i * 170, 2210 + i * 150, .035, .0028, 'sine', now + i * .11, pan, audioBus.ambience);
-      audioClock.nextBird = game.playSeconds + 2.8 + seeded(game.playSeconds + 33) * 4.5;
+      playBird(); audioClock.nextBird = game.playSeconds + 14 + seeded(game.playSeconds + 77) * 18;
     }
     const nearFire=inside?(game.cabinHome.fire.lit&&game.cabinHome.fire.fuel>0?{x:game.player.x}:null):game.structures.filter(s=>(s.type==='fire'||s.type==='oldfire')&&s.lit&&s.fuel>0&&distance(s.x,game.player.x)<150).sort((a,b)=>distance(a.x,game.player.x)-distance(b.x,game.player.x))[0];
     if(nearFire){
@@ -226,7 +214,7 @@ function footsteps(inside){
       if(game.playSeconds>=audioClock.nextFireCrackle){playSfx('fireCrackle',volume*(.6+seeded(game.playSeconds+9)*.4),pan);audioClock.nextFireCrackle=game.playSeconds+2.1+seeded(game.playSeconds+71)*4.2;}
     }else{audioClock.nextFireCrackle=game.playSeconds+.6;}
     if (!sampleStream && soundOn && nearWater && game.playSeconds >= audioClock.nextWater) {
-      noiseBurst(.7, .009 * clamp(1 - distance(nearWater.x, game.player.x) / 180, .2, 1), 2100, 300, now, clamp((nearWater.x - game.player.x) / 130, -.75, .75));
+      noiseBurst(.7, .009 * waterLevel, 2100, 300, now, clamp((nearWater.x - game.player.x) / 130, -.75, .75));
       audioClock.nextWater = game.playSeconds + 1.1 + seeded(game.playSeconds + 12) * .9;
     }
     const nearAnimal = !inside&&animals.find(a => a.alive && a.type !== 'bear' && distance(a.x, game.player.x) < 175 && Math.abs(a.vx) > 18);
@@ -241,11 +229,11 @@ function footsteps(inside){
 
 root.PEAudio={
   play:playSfx,
-  settings:()=>({...preferences}),configure,musicWindow,
-  start(state){game=state;resetClocks(state);ensureAudio();audio?.resume?.();updateTitle(true);},
+  settings:()=>({...preferences}),configure,
+  start(state){game=state;worldMusic?.reset();resetClocks(state);ensureAudio();audio?.resume?.();updateTitle(true);},
   title(state){game=state;ensureAudio();audio?.resume?.();updateTitle(true);},
   toggle(){configure({soundOn:!soundOn});return soundOn;},
-  pause(paused){if(paused&&audio)root.PEAudioSamples?.stopLoops?.(audio);if(audioBus)audioBus.master.gain.setTargetAtTime(paused?.0001:.62,audio.currentTime,.15);if(!paused&&audio)audioClock.nextMusic=audio.currentTime+.1;},
+  pause(paused){if(paused&&audio){root.PEAudioSamples?.stopLoops?.(audio);if(worldMusic?.media){worldMusic.media.pause();worldMusic.paused=true;}}if(audioBus)audioBus.master.gain.setTargetAtTime(paused?.0001:.62,audio.currentTime,.15);},
   update(state,engine,paused){game=state;keys=engine.keys;animals=state.animals;waterSpots=engine.water;overlay=paused;updateAudio();
     const f=engine.fishing,active=!paused&&state.running&&f?.kind==='spinning'&&['wet','fight'].includes(f.stage)&&(f.held||f.tension>.3);
     const loaded=active&&f.stage==='fight'&&(f.tension>.62||f.dragRate>12),level=clamp(((f?.tension||0)-.4)/.6,0,1);

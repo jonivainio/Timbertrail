@@ -1,0 +1,140 @@
+{
+  "id": "yard",
+  "file": "assets/art-v2/yard.png",
+  "nativeSize": [
+    384,
+    128
+  ],
+  "palette": [
+    "#262e29",
+    "#3b3e33",
+    "#50503e",
+    "#69604a",
+    "#807357",
+    "#94866a",
+    "#4d583c",
+    "#677047",
+    "#7e8150",
+    "#294846",
+    "#395c58",
+    "#597c72",
+    "#663e2f",
+    "#895039",
+    "#a76745"
+  ],
+  "frames": [
+    {
+      "id": "shed",
+      "rect": [
+        0,
+        0,
+        128,
+        128
+      ],
+      "subjectRect": [
+        5,
+        10,
+        118,
+        88
+      ],
+      "anchor": [
+        64,
+        97
+      ],
+      "state": "static with runtime water ripples for spring",
+      "source": {
+        "file": "work/overhaul/yard-source/shed-source.png",
+        "sha256": "0099d36e2ac56b785bf4eac01458cd01f18d78c8e8a1e3dc7cf82d9a111d9d72",
+        "prompt": "work/overhaul/yard-source/shed-PROMPT.md"
+      },
+      "preparation": {
+        "sourceCrop": [
+          204,
+          142,
+          1040,
+          781
+        ],
+        "removedBackgroundPixels": 989657,
+        "method": "Measured bright-neutral checker removal; largest connected silhouette; nearest native-grid resampling;15-color shared palette"
+      }
+    },
+    {
+      "id": "tractor",
+      "rect": [
+        128,
+        0,
+        128,
+        128
+      ],
+      "subjectRect": [
+        134,
+        24,
+        116,
+        76
+      ],
+      "anchor": [
+        64,
+        99
+      ],
+      "state": "static with runtime water ripples for spring",
+      "source": {
+        "file": "work/overhaul/yard-source/tractor-source.png",
+        "sha256": "ad0c4c528996209aaa825d400da85063b8d0d6cdcffe4b3d0118a1d6b7c5f5ea",
+        "prompt": "work/overhaul/yard-source/tractor-PROMPT.md"
+      },
+      "preparation": {
+        "sourceCrop": [
+          190,
+          101,
+          1235,
+          819
+        ],
+        "removedBackgroundPixels": 1028935,
+        "method": "Measured bright-neutral checker removal; largest connected silhouette; nearest native-grid resampling;15-color shared palette"
+      }
+    },
+    {
+      "id": "spring",
+      "rect": [
+        256,
+        0,
+        128,
+        128
+      ],
+      "subjectRect": [
+        260,
+        56,
+        120,
+        44
+      ],
+      "anchor": [
+        64,
+        99
+      ],
+      "state": "static with runtime water ripples for spring",
+      "source": {
+        "file": "work/overhaul/yard-source/spring-source.png",
+        "sha256": "108a9faa414fa986ecd48b6bd875606245f6548bb47d3ad1c8075c3adbea7143",
+        "prompt": "work/overhaul/yard-source/spring-PROMPT.md"
+      },
+      "preparation": {
+        "sourceCrop": [
+          224,
+          383,
+          1092,
+          399
+        ],
+        "removedBackgroundPixels": 1241026,
+        "method": "Measured bright-neutral checker removal; largest connected silhouette; nearest native-grid resampling;15-color shared palette"
+      }
+    }
+  ],
+  "sha256": "49129c202861d2661fff814b32a35d9408b104b64483cc7a59ac97f2754d1ca8",
+  "source": {
+    "file": "work/overhaul/yard-source/shed-source.png",
+    "sha256": "0099d36e2ac56b785bf4eac01458cd01f18d78c8e8a1e3dc7cf82d9a111d9d72",
+    "method": "Three original built-in imagegen calls; each frame records its source and prompt"
+  },
+  "license": "original-generated",
+  "status": "calibration"
+}

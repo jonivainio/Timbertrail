@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "status": "provisional_playtest",
+  "listeningReviewed": false,
+  "reviewedAt": null,
+  "preparation": "Closing 90 seconds retaining original ending; 3-second opening fade; static gain only, no EQ/compression/time stretch. Start-point musical phrasing NOT auditioned.",
+  "cues": [
+    {
+      "id": "permafrost-closing",
+      "title": "Permafrost",
+      "file": "assets/audio/world-permafrost-closing.mp3",
+      "duration": 90,
+      "roles": [
+        "forest_walk",
+        "quiet_shore_evening"
+      ],
+      "sha256": "c9efc74039ea29cbacce7606344348cbea6c1926d7482954f05704cb2c28dec1",
+      "bytes": 1801622,
+      "source": {
+        "title": "Permafrost",
+        "author": "Scott Buckley",
+        "page": "https://www.scottbuckley.com.au/library/permafrost/",
+        "download": "https://www.scottbuckley.com.au/library/wp-content/uploads/2022/08/Permafrost.mp3",
+        "sha256": "9585b9825339e7bd421db06368695bab7bc726e98611c7e15cd7d4dfc0c539ab",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "downloadedOn": "2026-09-11",
+        "instrumentation": "Strings, synth and solo violin (source description)"
+      },
+      "edit": {
+        "start": 358.367891,
+        "end": 448.367891,
+        "openingFade": 3,
+        "tailFade": 0.4,
+        "staticGainDb": -0.1200000000000001
+      },
+      "measurement": {
+        "tool": "FFmpeg 7.1 loudnorm input diagnostics",
+        "before": {
+          "input_i": "-16.00",
+          "input_tp": "-1.88",
+          "input_lra": "14.80",
+          "input_thresh": "-27.41",
+          "output_i": "-16.09",
+          "output_tp": "-2.00",
+          "output_lra": "11.90",
+          "output_thresh": "-26.88",
+          "normalization_type": "dynamic",
+          "target_offset": "0.09"
+        },
+        "after": {
+          "input_i": "-16.56",
+          "input_tp": "-2.40",
+          "input_lra": "14.80",
+          "input_thresh": "-27.97",
+          "output_i": "-16.08",
+          "output_tp": "-2.00",
+          "output_lra": "11.90",
+          "output_thresh": "-26.88",
+          "normalization_type": "dynamic",
+          "target_offset": "0.08"
+        }
+      },
+      "listeningReviewed": false,
+      "status": "provisional_playtest"
+    },
+    {
+      "id": "hiraeth-closing",
+      "title": "Hiraeth",
+      "file": "assets/audio/world-hiraeth-closing.mp3",
+      "duration": 90,
+      "roles": [
+        "quiet_shore_evening",
+        "cabin_rest"
+      ],
+      "sha256": "904bdeb2293695d1684e758193209c95312a4f16b701d2e0456e1aeaf510c70b",
+      "bytes": 1801619,
+      "source": {
+        "title": "Hiraeth",
+        "author": "Scott Buckley",
+        "page": "https://www.scottbuckley.com.au/library/hiraeth/",
+        "download": "https://www.scottbuckley.com.au/library/wp-content/uploads/2020/06/sb_hiraeth.mp3",
+        "sha256": "f790c7d53b8d802981ff7cdd8c59e22cdfe103ea66aba296c6cf1a65fe7fcf01",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "downloadedOn": "2026-09-11",
+        "instrumentation": "Strings, synth pads and solo cello (source description; not violin)"
+      },
+      "edit": {
+        "start": 256.198571,
+        "end": 346.198571,
+        "openingFade": 3,
+        "tailFade": 0.4,
+        "staticGainDb": -2.75
+      },
+      "measurement": {
+        "tool": "FFmpeg 7.1 loudnorm input diagnostics",
+        "before": {
+          "input_i": "-13.25",
+          "input_tp": "-1.02",
+          "input_lra": "12.80",
+          "input_thresh": "-24.20",
+          "output_i": "-16.29",
+          "output_tp": "-2.48",
+          "output_lra": "10.20",
+          "output_thresh": "-26.86",
+          "normalization_type": "dynamic",
+          "target_offset": "0.29"
+        },
+        "after": {
+          "input_i": "-16.45",
+          "input_tp": "-4.20",
+          "input_lra": "12.80",
+          "input_thresh": "-27.38",
+          "output_i": "-16.29",
+          "output_tp": "-2.46",
+          "output_lra": "10.20",
+          "output_thresh": "-26.85",
+          "normalization_type": "dynamic",
+          "target_offset": "0.29"
+        }
+      },
+      "listeningReviewed": false,
+      "status": "provisional_playtest"
+    },
+    {
+      "id": "solace-closing",
+      "title": "Solace",
+      "file": "assets/audio/world-solace-closing.mp3",
+      "duration": 90,
+      "roles": [
+        "cabin_rest"
+      ],
+      "sha256": "ec5f1a3c7595500378642425adb2845fbe5fc385bf582205138e221e6a93c9b8",
+      "bytes": 1801618,
+      "source": {
+        "title": "Solace",
+        "author": "Scott Buckley",
+        "page": "https://www.scottbuckley.com.au/library/solace/",
+        "download": "https://www.scottbuckley.com.au/library/wp-content/uploads/2020/05/sb_solace.mp3",
+        "sha256": "bb54696d9b49e60d8e9edc25d80c19a975d25b3c8d8ca32afe4d963372e1d1bf",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "downloadedOn": "2026-09-11",
+        "instrumentation": "Strings, synth, piano and glass marimba (source description)"
+      },
+      "edit": {
+        "start": 266.355873,
+        "end": 356.355873,
+        "openingFade": 3,
+        "tailFade": 0.4,
+        "staticGainDb": -1.3200000000000003
+      },
+      "measurement": {
+        "tool": "FFmpeg 7.1 loudnorm input diagnostics",
+        "before": {
+          "input_i": "-14.68",
+          "input_tp": "-1.06",
+          "input_lra": "12.40",
+          "input_thresh": "-25.33",
+          "output_i": "-16.96",
+          "output_tp": "-2.00",
+          "output_lra": "8.50",
+          "output_thresh": "-27.20",
+          "normalization_type": "dynamic",
+          "target_offset": "0.96"
+        },
+        "after": {
+          "input_i": "-16.44",
+          "input_tp": "-2.77",
+          "input_lra": "12.30",
+          "input_thresh": "-27.09",
+          "output_i": "-16.96",
+          "output_tp": "-2.00",
+          "output_lra": "8.50",
+          "output_thresh": "-27.20",
+          "normalization_type": "dynamic",
+          "target_offset": "0.96"
+        }
+      },
+      "listeningReviewed": false,
+      "status": "provisional_playtest"
+    }
+  ]
+}

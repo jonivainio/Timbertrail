@@ -1,0 +1,15 @@
+#hud .field-notes {
+  background:linear-gradient(135deg,#29342de8,#202821ef);
+  border:1px solid #a39167a0;
+  border-radius:0;
+  clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);
+}
+#hud .field-notes ul { max-height:min(40vh, 240px);overflow-y:auto; }
+#hud .field-notes li { color:#e7dcc0;font-family:'Pixelify','Segoe UI',sans-serif; }
+#hud .task-toggle {
+  display:block;padding:3px 0;border:0;background:transparent;color:#e1c995;
+  font:400 12px/1.3 'Pixelify','Segoe UI',sans-serif;text-align:left;cursor:pointer;
+}
+#hud .task-toggle[hidden] { display:none; }
+#hud .task-toggle:hover { color:#fff0c7; }
+#hud .task-toggle:focus-visible { outline:2px solid #e1c995;outline-offset:2px; }

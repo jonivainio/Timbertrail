@@ -253,7 +253,9 @@
     }
     interact(target){
       if(this.transition)return;
-      if(!target||this.action||this.attack)return;const s=this.state,p=s.player;
+      if(this.action||this.attack)return;
+      this.walkTarget=null;
+      if(!target)return;const s=this.state,p=s.player;
       if(!this.hotspotActive(target))return;
       if(target.type==='animal'){if(s.equipped!=='bow')this.notify(animalNames[target.species]+' — lähesty kyykyssä.');return;}
       if(['tree','log'].includes(target.type)&&!this.isAxe(s.equipped))return this.notify('Equip a flint axe or steel axe from the top belt or backpack.');
@@ -319,7 +321,7 @@
       const depletedBefore=['hunger','thirst','warmth','energy'].filter(k=>p[k]<=0);
       if(manual){fishing.cancel(this);this.walkTarget=null;this.action=null;p.sitting=false;}
       let dir=manual;
-      if(this.walkTarget&&!manual){const target=this.targets().find(t=>t.id===this.walkTarget.id);if(!target){this.walkTarget=null;}else if(Math.abs(target.x-p.x)<=this.walkTarget.reach-2){const command=this.walkTarget.command;this.walkTarget=null;this.interact({...target,command});}else dir=target.x<p.x?-1:1;}
+      if(this.walkTarget&&!manual){const target=this.targets().find(t=>t.id===this.walkTarget.id&&t.type===this.walkTarget.type);if(!target){this.walkTarget=null;this.notify('The target is no longer available.');}else if(Math.abs(target.x-p.x)<=this.walkTarget.reach-2){const command=this.walkTarget.command;this.walkTarget=null;this.interact({...target,command});}else dir=target.x<p.x?-1:1;}
       p.moving=!!dir&&!p.sitting&&!this.action&&!this.fishing&&!this.attack;p.running=!!(p.moving&&sprint);const wading=s.currentMap==='river'&&((p.x>3540&&p.x<3770)||(p.x>5080&&p.x<5320));p.wading=wading;const speed=(p.crouching?38:sprint?145:83)*(wading?.7:1);
       if(p.moving){p.facing=dir;p.x=clamp(p.x+dir*speed*dt,35,WORLD-35);p.stride+=dt*(p.crouching?5:sprint?13:8);if(sprint)p.energy=clamp(p.energy-dt*5,0,100);}
       if(p.energy<=0){this.sprintExhausted=true;p.running=false;}

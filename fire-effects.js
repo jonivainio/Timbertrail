@@ -17,7 +17,8 @@ function raster(data,t,seed=0,strength=1){
    }
    const heat=clamp(density*.82+(turbulence-.62)*1.25-y*.13),i=(py*W+px)*4;
    const alpha=clamp(density*8)*clamp((heat-.08)*3.5)*clamp((1-y)*10)*clamp((1-Math.abs(x)/1.08)*10);
-   data[i]=255;data[i+1]=Math.round(48+195*clamp(heat));data[i+2]=Math.round(5+136*Math.pow(heat,3));data[i+3]=Math.round(alpha*235);
+   const band=Math.round(clamp(heat)*6)/6;
+   data[i]=255;data[i+1]=Math.round(48+195*band);data[i+2]=Math.round(5+136*Math.pow(band,3));data[i+3]=alpha<.26?0:235;
   }
  }
  return data;
@@ -34,7 +35,7 @@ function draw(c,x,base,width,height,t,seed,strength,makeCanvas){
  const halo=c.createRadialGradient(x,base-2,1,x,base-2,width*.65);halo.addColorStop(0,'#eb6b252d');halo.addColorStop(1,'#e8641700');c.fillStyle=halo;c.fillRect(x-width,base-width,width*2,width*1.3);
  c.fillStyle='#241b17';c.beginPath();c.ellipse(x,base+1,width*.4,3,0,0,Math.PI*2);c.fill();
  for(let i=0;i<23;i++){const glow=.4+.6*noise(i+seed,t*1.9);c.fillStyle=`rgba(255,${Math.round(70+glow*90)},29,${glow*.85})`;c.fillRect(x+(hash(i+seed)-.5)*width*.73,base-2+hash(i+47)*4,1+hash(i+13)*2,1);}
- c.imageSmoothingEnabled=true;c.drawImage(tile.canvas,x-width/2,base-height,width,height);
+ c.imageSmoothingEnabled=false;c.drawImage(tile.canvas,x-width/2,base-height,width,height);
  // Charred front logs occlude the bases; fine orange fissures sell burning timber.
  c.lineCap='round';c.lineWidth=Math.max(2,width*.047);c.strokeStyle='#302018';c.beginPath();c.moveTo(x-width*.34,base+1);c.lineTo(x+width*.25,base-2);c.moveTo(x-width*.18,base-3);c.lineTo(x+width*.35,base+2);c.stroke();
  c.lineWidth=.65;c.strokeStyle='#d37436a0';c.beginPath();c.moveTo(x-width*.28,base);c.lineTo(x-width*.12,base-1);c.moveTo(x+width*.09,base);c.lineTo(x+width*.23,base+1);c.stroke();

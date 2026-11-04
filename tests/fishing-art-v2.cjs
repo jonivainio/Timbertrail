@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');global.PE=require('../engine.js');const F=global.PEFishing,art=require('../fishing-art.js'),meta=JSON.parse(fs.readFileSync(path.join(__dirname,'../assets/art-v2/traveller-fishing.json'),'utf8'));
+const calls=[],c=new Proxy({drawImage(...a){calls.push(a);}},{get:(o,k)=>o[k]||(()=>{})}),r={c,visualV2:true,artTravellerFishing:{id:'native'},fishingPoses:{id:'old'}};
+const e=new PE.Engine();e.start();e.enterRegion('pond',PERegions.pond.chair);e.state.player.sitting=true;e.state.equipped='rod';e.state.inventory.rod=1;
+for(let phase=0;phase<8;phase++)for(const load of [0,.4,1,1.35]){
+ e.fishing={kind:'spinning',stage:phase<6?'charge':phase===6?'flight':'fight',power:phase/5,age:0,tension:load};const p=F.pose(e),m=meta.frames[phase];assert.equal(p.phase,phase);assert.deepEqual(p.nativeFrame.slice(0,2),[m.anchor[0],m.anchor[1]+4]);assert.deepEqual(p.nativeFrame.slice(2,4),m.socket);assert.equal(p.angle,m.handleAngle);assert.equal(m.seat[1]-p.nativeFrame[1],-23,'hip stays on chair in every cel');
+ const before=JSON.stringify(e.state),fishBefore=JSON.stringify(e.fishing);calls.length=0;assert.equal(art.actor(r,e),true);assert.equal(JSON.stringify(e.state),before);assert.equal(JSON.stringify(e.fishing),fishBefore);const d=calls[0];assert.equal(d[0],r.artTravellerFishing);assert.deepEqual(d.slice(1,5),m.rect);
+ assert.equal(e.state.player.x-(d[5]+m.socket[0]),p.grip.x);assert.equal(PE.ground(e.state.player.x,'pond')+d[6]+m.socket[1],p.grip.y);assert.ok(Math.abs((p.c1.x-p.grip.x)*Math.sin(p.angle)+(p.c1.y-p.grip.y)*Math.cos(p.angle))<1e-8);
+ r.artTravellerFishing=null;calls.length=0;art.actor(r,e);assert.equal(calls[0][0],r.fishingPoses);assert.deepEqual(F.pose(e),p,'asset availability never changes line physics');r.artTravellerFishing={id:'native'};
+}
+r.fishingPoses=null;assert.equal(art.actor(r,e),true,'new art works without old atlas');r.artTravellerFishing=null;assert.equal(art.actor(r,e),false);r.artTravellerFishing={};e.state.player.sitting=false;assert.equal(art.actor(r,e),false);
+console.log('PASS native fishing8 phases ×4 loads, authored hand/socket/tangent, invariant chair seat, pure render, missing/late art physics continuity and legacy fallback.');

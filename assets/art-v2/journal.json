@@ -1,0 +1,72 @@
+{
+  "id": "journal",
+  "file": "assets/art-v2/journal.png",
+  "nativeSize": [
+    640,
+    400
+  ],
+  "palette": [
+    "#161d1b",
+    "#292b21",
+    "#3e3b2b",
+    "#584a35",
+    "#72553b",
+    "#896844",
+    "#a28152",
+    "#b49a6d",
+    "#c1ad80",
+    "#d0bd93",
+    "#ddcca4",
+    "#e8d9b3",
+    "#f3e5c6",
+    "#eadcbb",
+    "#f7eed7",
+    "#b58a51",
+    "#cc9e63",
+    "#dec08a",
+    "#efe0b4",
+    "#405039",
+    "#596446",
+    "#77815b",
+    "#939976",
+    "#a8a58a"
+  ],
+  "sha256": "c07c59547a24e17bebcc87a9f03f5e1d02d47a66cf3ac870e1ce6431e711e341",
+  "source": {
+    "file": "work/overhaul/journal-source/journal-source.png",
+    "sha256": "e93f221a178dbc71ed882bb9d83218a66127b9dd2820daa37b95d89eb44b437c",
+    "type": "original built-in image generation",
+    "license": "original-generated"
+  },
+  "frames": [
+    {
+      "id": "open-spread",
+      "rect": [
+        0,
+        0,
+        640,
+        400
+      ],
+      "anchor": [
+        0,
+        0
+      ]
+    }
+  ],
+  "preparation": "nearest native grid; 24-color shared leather/paper ramp; thresholded alpha; source retained",
+  "writingAreas": {
+    "left": [
+      0.12,
+      0.1,
+      0.47,
+      0.88
+    ],
+    "right": [
+      0.55,
+      0.1,
+      0.91,
+      0.88
+    ]
+  },
+  "status": "review"
+}

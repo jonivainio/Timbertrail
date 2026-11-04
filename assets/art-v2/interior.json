@@ -1,0 +1,69 @@
+{
+  "id": "interior",
+  "file": "assets/art-v2/interior.png",
+  "nativeSize": [
+    640,
+    360
+  ],
+  "palette": [
+    "#151b20",
+    "#222b2b",
+    "#30312c",
+    "#413b30",
+    "#554532",
+    "#6b5237",
+    "#846747",
+    "#a0845b",
+    "#bda57b",
+    "#dfcbaa",
+    "#283b34",
+    "#3c4b3a",
+    "#566247",
+    "#77815b",
+    "#a1a184",
+    "#30454b",
+    "#4c6064",
+    "#71868a",
+    "#9baeb0",
+    "#c8d2c7",
+    "#462f29",
+    "#654332",
+    "#895b3c",
+    "#ad7849",
+    "#b78c56",
+    "#5e655c",
+    "#858477",
+    "#aea58c"
+  ],
+  "sha256": "4c5697bc4a45bc31938a0d3ede805654e7d1fed1d581949ed3951a76498ee2b4",
+  "source": {
+    "file": "work/overhaul/interior-source/interior-source.png",
+    "sha256": "3d697465a7dc4e423159d2f2c1ff1bd02ee1ed0ff8f196f80025ad14d8ab3b64",
+    "type": "original-built-in-image-generation edit of project-original room",
+    "license": "original-generated"
+  },
+  "frames": [
+    {
+      "id": "unlit-room",
+      "rect": [
+        0,
+        0,
+        640,
+        360
+      ],
+      "anchor": [
+        0,
+        0
+      ],
+      "state": "unlit"
+    }
+  ],
+  "logicalSize": [
+    960,
+    540
+  ],
+  "anchors": "PECabin.fixtures room coordinates, unchanged; no avatar or painted dog",
+  "preparation": "nearest grid resampling and 28-color shared wood/linen/stone palette, original retained",
+  "lighting": "unlit base; window/curtain, hearth, lantern and receiver materials drawn in cabin-art.js",
+  "status": "review"
+}

@@ -1,11 +1,15 @@
 /* Authored seated poses plus continuously bent rod and physical line endpoints. */
 (function(root){'use strict';
 const stroke=(c,p,color,width=1)=>{c.strokeStyle=color;c.lineWidth=width;c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();};
-function actor(r,e){if(!root.PEFishing.ready(e)||!r.fishingPoses)return false;const c=r.c,p=e.state.player,pose=root.PEFishing.pose(e),i=pose.phase,col=i%4,row=Math.floor(i/4),y=root.PE.ground(p.x,'pond');
+function actor(r,e){const native=r.visualV2&&r.artTravellerFishing;if(!root.PEFishing.ready(e)||(!native&&!r.fishingPoses))return false;const c=r.c,p=e.state.player,pose=root.PEFishing.pose(e),i=pose.phase,col=i%4,row=Math.floor(i/4),y=root.PE.ground(p.x,'pond');
  c.save();c.translate(p.x,y);c.scale(-1,1);c.imageSmoothingEnabled=false;
  // Per-frame seating/boot anchors prevent the atlas rows from bouncing.
- const k=pose.scale,a=pose.frame;c.drawImage(r.fishingPoses,col*384,row*512,384,512,-a[0]*k,-a[1]*k,384*k,512*k);c.restore();
- const {grip:g,tip:t,c1,c2}=pose;c.save();c.strokeStyle='#242b26';c.lineWidth=1.65;c.lineCap='round';c.beginPath();c.moveTo(g.x,g.y);c.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,t.x,t.y);c.stroke();c.strokeStyle='#aaad97';c.lineWidth=.55;c.stroke();
+ if(native){const a=pose.nativeFrame;c.drawImage(r.artTravellerFishing,col*96,row*96,96,96,-a[0],-a[1],96,96);}
+ else{const k=pose.scale,a=pose.frame;const x=p.x-pose.grip.x-a[2]*k,dy=pose.grip.y-y-a[3]*k;c.drawImage(r.fishingPoses,col*384,row*512,384,512,x,dy,384*k,512*k);}c.restore();
+ const {grip:g,tip:t,c1,c2}=pose;c.save();c.lineCap='round';
+ const along=u=>{const v=1-u;return [v*v*v*g.x+3*v*v*u*c1.x+3*v*u*u*c2.x+u*u*u*t.x,v*v*v*g.y+3*v*v*u*c1.y+3*v*u*u*c2.y+u*u*u*t.y];};
+ // The cork joins a readable graphite butt, tapering toward the flexible tip.
+ for(const core of [false,true])for(let j=0;j<20;j++){const u=(j+.5)/20;stroke(c,[along(j/20),along((j+1)/20)],core?'#aaad97':'#222b28',core?1.05-u*.65:2.3-u*1.25);}
  for(let u=.2;u<1;u+=.18){const v=1-u,x=v*v*v*g.x+3*v*v*u*c1.x+3*v*u*u*c2.x+u*u*u*t.x,yy=v*v*v*g.y+3*v*v*u*c1.y+3*v*u*u*c2.y+u*u*u*t.y;c.strokeStyle='#aebfb5';c.lineWidth=.65;c.beginPath();c.arc(x,yy+.75,.8,0,Math.PI);c.stroke();}c.restore();return true;
 }
 const polygon=(c,points,color)=>{c.fillStyle=color;c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};

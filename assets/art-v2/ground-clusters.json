@@ -1,0 +1,220 @@
+{
+  "family": "nordic-ground-materials",
+  "status": "calibration",
+  "source": {
+    "method": "built-in imagegen; measured alpha bounds, nearest-neighbour native grid, per-frame eight-color palette",
+    "file": "work/overhaul/ground-source/ground-source.png",
+    "sha256": "4ac8b7350942b6835d23b2f1a9580a137ce942a741867d806775963b58e94eca",
+    "prompt": "work/overhaul/ground-source/PROMPT.md"
+  },
+  "license": {
+    "kind": "original-generated",
+    "note": "Generated for this project; no third-party game assets supplied or extracted."
+  },
+  "file": "assets/art-v2/ground-clusters.png",
+  "sha256": "2f233fdadb2ba23bfc1fb5d9c3965db42a4e69fea79b509ffc25187b9eff3db6",
+  "nativeSize": [
+    768,
+    288
+  ],
+  "palette": [
+    "#302c2a",
+    "#514437",
+    "#796347",
+    "#3a5140",
+    "#596a47",
+    "#7b8255",
+    "#aaa577",
+    "#82907a",
+    "#53665c",
+    "#a4895d"
+  ],
+  "frames": [
+    {
+      "id": "dry-moss",
+      "rect": [
+        0,
+        0,
+        256,
+        144
+      ],
+      "anchor": [
+        128,
+        132
+      ],
+      "state": "static",
+      "sourceRect": [
+        23,
+        309,
+        485,
+        133
+      ],
+      "palette": [
+        "#302c2a",
+        "#514437",
+        "#796347",
+        "#3a5140",
+        "#596a47",
+        "#7b8255",
+        "#aaa577",
+        "#82907a"
+      ]
+    },
+    {
+      "id": "moss-carpet",
+      "rect": [
+        256,
+        0,
+        256,
+        144
+      ],
+      "anchor": [
+        128,
+        132
+      ],
+      "state": "static",
+      "sourceRect": [
+        536,
+        314,
+        475,
+        129
+      ],
+      "palette": [
+        "#302c2a",
+        "#514437",
+        "#796347",
+        "#3a5140",
+        "#596a47",
+        "#7b8255",
+        "#aaa577",
+        "#82907a"
+      ]
+    },
+    {
+      "id": "grass-earth",
+      "rect": [
+        512,
+        0,
+        256,
+        144
+      ],
+      "anchor": [
+        128,
+        132
+      ],
+      "state": "static",
+      "sourceRect": [
+        1042,
+        297,
+        472,
+        150
+      ],
+      "palette": [
+        "#302c2a",
+        "#514437",
+        "#796347",
+        "#3a5140",
+        "#596a47",
+        "#7b8255",
+        "#aaa577",
+        "#82907a"
+      ]
+    },
+    {
+      "id": "granite",
+      "rect": [
+        0,
+        144,
+        256,
+        144
+      ],
+      "anchor": [
+        128,
+        132
+      ],
+      "state": "static",
+      "sourceRect": [
+        21,
+        685,
+        485,
+        126
+      ],
+      "palette": [
+        "#302c2a",
+        "#514437",
+        "#796347",
+        "#53665c",
+        "#82907a",
+        "#a4895d",
+        "#596a47",
+        "#7b8255"
+      ]
+    },
+    {
+      "id": "roots",
+      "rect": [
+        256,
+        144,
+        256,
+        144
+      ],
+      "anchor": [
+        128,
+        132
+      ],
+      "state": "static",
+      "sourceRect": [
+        536,
+        683,
+        466,
+        132
+      ],
+      "palette": [
+        "#302c2a",
+        "#514437",
+        "#796347",
+        "#3a5140",
+        "#596a47",
+        "#7b8255",
+        "#82907a",
+        "#a4895d"
+      ]
+    },
+    {
+      "id": "damp-bank",
+      "rect": [
+        512,
+        144,
+        256,
+        144
+      ],
+      "anchor": [
+        128,
+        132
+      ],
+      "state": "static",
+      "sourceRect": [
+        1045,
+        679,
+        470,
+        144
+      ],
+      "palette": [
+        "#302c2a",
+        "#514437",
+        "#796347",
+        "#53665c",
+        "#82907a",
+        "#a4895d",
+        "#596a47",
+        "#7b8255"
+      ]
+    }
+  ],
+  "alphaThreshold": 180,
+  "review": {
+    "alpha": "pending",
+    "day": "not_reviewed",
+    "night": "not_reviewed"
+  }
+}

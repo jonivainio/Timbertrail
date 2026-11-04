@@ -1,0 +1,545 @@
+{
+  "id": "kajo-cabin",
+  "file": "assets/art-v2/kajo-cabin.png",
+  "nativeSize": [
+    320,
+    320
+  ],
+  "palette": [
+    "#222a29",
+    "#3d4240",
+    "#59605b",
+    "#7d8178",
+    "#a7aa97",
+    "#d0ceb3",
+    "#eee1ba",
+    "#654c37",
+    "#986742",
+    "#be8d54",
+    "#6b392c",
+    "#bb775e"
+  ],
+  "frames": [
+    {
+      "id": "sit",
+      "rect": [
+        0,
+        0,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "sit",
+      "preparation": {
+        "sourceCell": [
+          0,
+          0,
+          336,
+          363
+        ],
+        "sourceBounds": [
+          50,
+          54,
+          271,
+          293
+        ],
+        "scale": 0.195,
+        "axis": 185,
+        "base": 347,
+        "retainedSourcePixels": 39402
+      }
+    },
+    {
+      "id": "pant",
+      "rect": [
+        80,
+        0,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "sit",
+      "preparation": {
+        "sourceCell": [
+          336,
+          0,
+          321,
+          363
+        ],
+        "sourceBounds": [
+          362,
+          54,
+          272,
+          292
+        ],
+        "scale": 0.195,
+        "axis": 497.5,
+        "base": 346,
+        "retainedSourcePixels": 39872
+      }
+    },
+    {
+      "id": "blink",
+      "rect": [
+        160,
+        0,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "sit",
+      "preparation": {
+        "sourceCell": [
+          657,
+          0,
+          316,
+          363
+        ],
+        "sourceBounds": [
+          674,
+          54,
+          272,
+          292
+        ],
+        "scale": 0.195,
+        "axis": 809.5,
+        "base": 346,
+        "retainedSourcePixels": 39621
+      }
+    },
+    {
+      "id": "look-up",
+      "rect": [
+        240,
+        0,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "sit",
+      "preparation": {
+        "sourceCell": [
+          973,
+          0,
+          281,
+          363
+        ],
+        "sourceBounds": [
+          997,
+          54,
+          257,
+          292
+        ],
+        "scale": 0.195,
+        "axis": 1125,
+        "base": 346,
+        "retainedSourcePixels": 39388
+      }
+    },
+    {
+      "id": "lower-start",
+      "rect": [
+        0,
+        80,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "transition",
+      "preparation": {
+        "sourceCell": [
+          0,
+          363,
+          325,
+          302
+        ],
+        "sourceBounds": [
+          18,
+          385,
+          300,
+          249
+        ],
+        "scale": 0.195,
+        "axis": 167.5,
+        "base": 634,
+        "retainedSourcePixels": 39302
+      }
+    },
+    {
+      "id": "lower-half",
+      "rect": [
+        80,
+        80,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "transition",
+      "preparation": {
+        "sourceCell": [
+          325,
+          363,
+          322,
+          302
+        ],
+        "sourceBounds": [
+          335,
+          416,
+          310,
+          214
+        ],
+        "scale": 0.195,
+        "axis": 489.5,
+        "base": 630,
+        "retainedSourcePixels": 36916
+      }
+    },
+    {
+      "id": "lie-alert",
+      "rect": [
+        160,
+        80,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "transition",
+      "preparation": {
+        "sourceCell": [
+          647,
+          363,
+          315,
+          302
+        ],
+        "sourceBounds": [
+          649,
+          426,
+          306,
+          210
+        ],
+        "scale": 0.195,
+        "axis": 801.5,
+        "base": 636,
+        "retainedSourcePixels": 37840
+      }
+    },
+    {
+      "id": "head-down",
+      "rect": [
+        240,
+        80,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "transition",
+      "preparation": {
+        "sourceCell": [
+          962,
+          363,
+          292,
+          302
+        ],
+        "sourceBounds": [
+          965,
+          487,
+          287,
+          151
+        ],
+        "scale": 0.195,
+        "axis": 1108,
+        "base": 638,
+        "retainedSourcePixels": 32776
+      }
+    },
+    {
+      "id": "curled",
+      "rect": [
+        0,
+        160,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "curled",
+      "preparation": {
+        "sourceCell": [
+          0,
+          665,
+          321,
+          264
+        ],
+        "sourceBounds": [
+          39,
+          740,
+          253,
+          169
+        ],
+        "scale": 0.195,
+        "axis": 165,
+        "base": 909,
+        "retainedSourcePixels": 33710
+      }
+    },
+    {
+      "id": "inhale",
+      "rect": [
+        80,
+        160,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "curled",
+      "preparation": {
+        "sourceCell": [
+          321,
+          665,
+          329,
+          264
+        ],
+        "sourceBounds": [
+          352,
+          739,
+          251,
+          169
+        ],
+        "scale": 0.195,
+        "axis": 477,
+        "base": 908,
+        "retainedSourcePixels": 33758
+      }
+    },
+    {
+      "id": "curled-blink",
+      "rect": [
+        160,
+        160,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "curled",
+      "preparation": {
+        "sourceCell": [
+          650,
+          665,
+          307,
+          264
+        ],
+        "sourceBounds": [
+          665,
+          739,
+          250,
+          169
+        ],
+        "scale": 0.195,
+        "axis": 789.5,
+        "base": 908,
+        "retainedSourcePixels": 33616
+      }
+    },
+    {
+      "id": "wake",
+      "rect": [
+        240,
+        160,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "curled",
+      "preparation": {
+        "sourceCell": [
+          957,
+          665,
+          297,
+          264
+        ],
+        "sourceBounds": [
+          963,
+          694,
+          263,
+          212
+        ],
+        "scale": 0.195,
+        "axis": 1094,
+        "base": 906,
+        "retainedSourcePixels": 40410
+      }
+    },
+    {
+      "id": "uncurl",
+      "rect": [
+        0,
+        240,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "transition",
+      "preparation": {
+        "sourceCell": [
+          0,
+          929,
+          345,
+          325
+        ],
+        "sourceBounds": [
+          18,
+          1013,
+          319,
+          217
+        ],
+        "scale": 0.195,
+        "axis": 177,
+        "base": 1230,
+        "retainedSourcePixels": 39037
+      }
+    },
+    {
+      "id": "push-up",
+      "rect": [
+        80,
+        240,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "transition",
+      "preparation": {
+        "sourceCell": [
+          345,
+          929,
+          336,
+          325
+        ],
+        "sourceBounds": [
+          359,
+          964,
+          294,
+          263
+        ],
+        "scale": 0.195,
+        "axis": 505.5,
+        "base": 1227,
+        "retainedSourcePixels": 41071
+      }
+    },
+    {
+      "id": "rise",
+      "rect": [
+        160,
+        240,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "transition",
+      "preparation": {
+        "sourceCell": [
+          681,
+          929,
+          293,
+          325
+        ],
+        "sourceBounds": [
+          681,
+          946,
+          274,
+          285
+        ],
+        "scale": 0.195,
+        "axis": 817.5,
+        "base": 1231,
+        "retainedSourcePixels": 39885
+      }
+    },
+    {
+      "id": "sit-return",
+      "rect": [
+        240,
+        240,
+        80,
+        80
+      ],
+      "anchor": [
+        40,
+        72
+      ],
+      "state": "sit",
+      "preparation": {
+        "sourceCell": [
+          0,
+          0,
+          336,
+          363
+        ],
+        "sourceBounds": [
+          50,
+          54,
+          271,
+          293
+        ],
+        "scale": 0.195,
+        "axis": 185,
+        "base": 347,
+        "retainedSourcePixels": 39402
+      }
+    }
+  ],
+  "sha256": "91a2cd4a06832a3a8e06176ce0cd106aa92d0888bff09760bed07e242321ffe4",
+  "source": {
+    "file": "work/overhaul/kajo-cabin-source/kajo-cabin-source.png",
+    "sha256": "7f4664f8bf19b3202b58a5aa79c665ddadb78ff7bd80b9b4930cf972c5053d0b",
+    "prompt": "work/overhaul/kajo-cabin-source/PROMPT.md",
+    "method": "Original16-pose source; measured uneven cells and basket bases; constant0.195 anatomy scale; exterior-connected neutral checker cleanup; shared12-color palette and binary alpha"
+  },
+  "license": "original-generated",
+  "status": "calibration"
+}

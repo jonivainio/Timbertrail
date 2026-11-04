@@ -6,6 +6,7 @@ function line(c,points,color,width=1){c.strokeStyle=color;c.lineWidth=width;c.be
 function poly(c,points,color){c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fillStyle=color;c.fill();}
 function moss(c,x,y,w,seed,amount=40){for(let i=0;i<amount;i++){const xx=x+random(seed+i)*w,yy=y+random(seed+i+140)*6;px(c,xx,yy,1+random(i)*4,1+random(i+82)*3,['#63703c','#849051','#344b2e','#a2a061'][i%4]);}}
 function cabinLayer(r,part,restored){
+ if(r.visualV2&&r.artCabin&&root.PECabinPixels&&['facade','roof'].includes(part))return root.PECabinPixels.layer(r,part,restored);
  r._cabinLayers||=new Map();const key=part+':'+restored;if(r._cabinLayers.has(key))return r._cabinLayers.get(key);
  const layer=r.makeCanvas(400,280),c=layer.getContext('2d');c.translate(200,240);c.imageSmoothingEnabled=false;
  if(r.cabinAtlas&&part!=='yard'){
@@ -81,11 +82,16 @@ const yardProps=[
  {id:'tools',box:[816,499,548,485],offset:116,height:43,wall:true}
 ];
 function yardPropPosition(prop){const x=root.PERegions.cabin.x+prop.offset,base=prop.wall?ground(root.PERegions.cabin.x)-root.PERegions.cabin.setback+7:(root.PETerrainSurface?.top(currentMap,x)??ground(x)-70)+prop.depth;return {x,base,width:prop.height*prop.box[2]/prop.box[3]};}
-function drawYardProps(r,s,wall){if(!r.yardProps)return;const c=r.c;
+const yardArtRects={shed:[5,10,118,88],tractor:[134,24,116,76],spring:[260,56,120,44]};
+function drawYardProps(r,s,wall){if(!r.yardProps&&!r.artYard)return;const c=r.c;
  for(const prop of yardProps.filter(p=>!!p.wall===wall)){const {x,base,width}=yardPropPosition(prop);if(x+width/2<s.camera||x-width/2>s.camera+W)continue;
   // Support the entire rigid footprint at its authored depth, not the walking line.
   root.PETerrainSurface?.socket(r,currentMap,x,base,width*.42,false);
-  c.save();c.fillStyle='#15201755';c.beginPath();c.ellipse(x,base,width*.42,2.4,0,0,Math.PI*2);c.fill();c.drawImage(r.yardProps,...prop.box,x-width/2,base-prop.height,width,prop.height);c.restore();
+  c.save();c.fillStyle='#15201755';c.beginPath();c.ellipse(x,base,width*.42,2.4,0,0,Math.PI*2);c.fill();
+  const source=r.visualV2&&r.artYard&&yardArtRects[prop.id];
+  if(source)c.drawImage(r.artYard,...source,x-width/2,base-prop.height,width,prop.height);
+  else if(r.yardProps)c.drawImage(r.yardProps,...prop.box,x-width/2,base-prop.height,width,prop.height);
+  c.restore();
   root.PETerrainSurface?.socket(r,currentMap,x,base+1,width*.42,true);
  }
 }
@@ -94,7 +100,8 @@ function drawCabin(r,s){const c=r.c,x=root.PERegions.cabin.x,y=ground(x),yard=ro
  const config=root.PERegions.cabin;cabinYard(r,s);root.PETerrainSurface?.socket(r,currentMap,x,y-config.setback+6,config.scale*155,false);
  c.save();c.translate(x,y-config.setback);c.scale(config.scale,config.scale);c.translate(-x,-y);
  c.fillStyle='#121e1655';c.beginPath();c.ellipse(x,y+8,160,4,0,0,Math.PI*2);c.fill();
- for(const part of ['facade','roof'])c.drawImage(cabinLayer(r,part,!!s.cabinRepairs[part]),x-200,y-240);
+ const facade=cc=>{for(const part of ['facade','roof'])cc.drawImage(cabinLayer(r,part,!!s.cabinRepairs[part]),x-200,y-240);};
+ if(r.receiver)r.receiver({x,width:330*config.scale},facade);else facade(c);
  // Ground contact is at the shifted foundation, never stretched from the walking line.
  c.fillStyle='#1c281aa0';c.fillRect(x-154,y+5,308,3);for(let i=0;i<90;i++){const xx=x-158+random(i+413)*316;px(c,xx,y+7+random(i)*4,2+random(i+6)*3,1,['#6f7451','#8b8862','#3f502f'][i%3]);}
  c.restore();drawYardProps(r,s,true);
@@ -144,13 +151,35 @@ function ford(r,s,start,end){const c=r.c,t=s.playSeconds,cam=s.camera;if(end<cam
 }
 function pondBed(x){return root.PERegions.pond.surface+170*(1-Math.exp(-Math.max(0,root.PERegions.pond.shore-x)/65))+Math.sin(x*.027)*2;}
 function jetty(r,s){const c=r.c,p=root.PERegions.pond,y=ground(p.chair),left=p.pierEnd,right=p.shore+14;
+ if(r.visualV2){root.PEVisualWorld.pier(r,s,false);return;}
  c.save();c.beginPath();c.moveTo(left-5,y-9);c.lineTo(right+4,y-9);c.lineTo(right+4,y+8);for(let x=p.shore;x>=left-5;x-=3)c.lineTo(x,pondBed(x));c.closePath();c.clip();
  if(r.pierImage){c.save();c.globalAlpha=.64;c.drawImage(r.pierImage,60,328,1695,280,left,y-5,right-left,174);c.restore();c.save();c.beginPath();c.rect(left-2,y-7,right-left+4,12);c.clip();c.drawImage(r.pierImage,60,328,1695,280,left,y-5,right-left,174);c.restore();}
  else for(let x=left;x<right;x+=17){px(c,x,y-1,16,6,'#897a56');px(c,x,y,14,1,'#c0aa7e');}
  c.restore();
  const x=p.chair;line(c,[[x-12,y],[x-8,y-23],[x+8,y-23],[x+13,y]],'#4e402e',4);line(c,[[x-11,y],[x-7,y-23]],'#b09a73',1);px(c,x-15,y-24,29,4,'#8c7650');px(c,x-15,y-25,29,1,'#cfb88d');line(c,[[x+10,y-23],[x+12,y-48]],'#695539',4);for(let i=0;i<4;i++){px(c,x+9,y-47+i*5,6,4,i%2?'#9b865e':'#b09b71');px(c,x+10,y-46+i*5,2,1,'#d0bb8c');}line(c,[[x-9,y-8],[x+11,y-8]],'#75603e',2);
 }
+function pixelSpring(r,s){
+ const c=r.c,x=root.PERegions.pond.spring,base=ground(x)+4,width=154,height=width*44/120,top=base-height;
+ root.PETerrainSurface?.socket(r,currentMap,x,base,66,false);
+ c.drawImage(r.artYard,...yardArtRects.spring,x-width/2,top,width,height);
+ // Only the quiet blue-green interior receives moving highlights. A cached
+ // color mask prevents a ripple from crossing stones, moss or transparent air.
+ if(r._springMaskSource!==r.artYard){const a=r.makeCanvas(120,44),ac=a.getContext('2d');ac.imageSmoothingEnabled=false;ac.drawImage(r.artYard,...yardArtRects.spring,0,0,120,44);const im=ac.getImageData(0,0,120,44),d=im.data;
+  for(let i=0;i<d.length;i+=4){const water=d[i]<d[i+1]&&d[i+2]>d[i];d[i]=d[i+1]=d[i+2]=255;d[i+3]=water&&d[i+3]?255:0;}ac.putImageData(im,0,0);r._springWaterMask=a;r._springMaskSource=r.artYard;
+ }
+ const a=r._springRipples||(r._springRipples=r.makeCanvas(120,44)),ac=a.getContext('2d'),t=root.matchMedia?.('(prefers-reduced-motion: reduce)').matches?0:s.playSeconds;
+ ac.clearRect(0,0,120,44);ac.fillStyle='#819a83';
+ // Slow asynchronous broken arcs, limited to a few pixels, not concentric
+ // circles pasted on top of the whole prop. Time never changes the silhouette.
+ for(let j=0;j<3;j++){const phase=(t*.19+j*.31)%1,radius=3+phase*24,cx=56+Math.sin(t*.23+j)*2,cy=27;
+  ac.globalAlpha=Math.sin(phase*Math.PI)*.38;
+  for(const angle of [.17,.37,.58,2.6,2.9,3.35,3.7,4.2,5.3]){const xx=Math.round(cx+Math.cos(angle)*radius),yy=Math.round(cy+Math.sin(angle)*radius*.2);ac.fillRect(xx,yy,angle<1?3:2,1);}
+ }
+ ac.globalAlpha=1;ac.globalCompositeOperation='destination-in';ac.drawImage(r._springWaterMask,0,0);ac.globalCompositeOperation='source-over';c.drawImage(a,x-width/2,top,width,height);
+ root.PETerrainSurface?.socket(r,currentMap,x,base,66,true);
+}
 function cabinSpring(r,s){
+ if(r.visualV2&&r.artYard){const x=root.PERegions.pond.spring;if(x>=s.camera-110&&x<=s.camera+W+110)pixelSpring(r,s);return;}
  const c=r.c,x=root.PERegions.pond.spring,y=ground(x)-18,t=s.playSeconds;if(x<s.camera-110||x>s.camera+W+110||!r.springImage)return;
  // Real alpha cutout: the surrounding ground remains the current area's soil.
  const width=154,height=width*r.springImage.height/r.springImage.width;
@@ -165,12 +194,12 @@ function cabinSpring(r,s){
 function draw(r,e){const s=e.state,c=r.c,cam=s.camera;currentMap=s.currentMap;if(s.currentMap==='forest')return;
  if(s.currentMap==='river'){
   // The river panorama supplies distant water; only crossings occupy the walking plane.
-  ford(r,s,3540,3770);ford(r,s,5080,5320);
+  if(!r.visualV2){ford(r,s,3540,3770);ford(r,s,5080,5320);}
   const trail=root.PERegions.trail,x=trail.x,y=ground(x);
   // Trail ground is already present under the sign and all nearby trees.
   const signX=x+53;line(c,[[signX,y+3],[signX+1,y-43]],'#483c2a',5);line(c,[[signX-1,y],[signX,y-42]],'#a3895b',1);poly(c,[[signX-24,y-47],[signX+21,y-47],[signX+30,y-40],[signX+21,y-33],[signX-24,y-33]],'#725c3c');line(c,[[signX-22,y-46],[signX+20,y-46]],'#b29a6b');c.fillStyle='#e2d4a4';c.font='7px Georgia';c.textAlign='center';c.fillText('SIENILAMPI',signX,y-37);
- }else{water(r,s,780,3940,true);drawCabin(r,s);root.PECabinArt?.smoke(r,s);jetty(r,s);cabinSpring(r,s);}
+ }else{if(!r.visualV2)water(r,s,780,3940,true);drawCabin(r,s);root.PECabinArt?.smoke(r,s);jetty(r,s);cabinSpring(r,s);}
 }
 function hover(r,e){const o=r.hover;if(!o?.box||!e.hotspotActive(o))return;const c=r.c,[dx,dy,w,h]=o.type==='exit'?root.PERegions.trailBox(e.state.camera):o.box,x=o.type==='exit'?dx:o.x+dx,y=o.type==='exit'?dy:ground(o.x)+dy;c.save();c.strokeStyle='#eee4c49c';c.fillStyle='#eee4c407';c.lineWidth=1;c.setLineDash([7,4,1,4]);c.lineDashOffset=-e.state.playSeconds*2;c.beginPath();c.roundRect(x,y,w,h,7);c.fill();c.stroke();c.restore();}
-root.PERegionArt={draw,hover,cabinLayer,clearingOpacity,yardPixelAlpha,yardProps,yardPropPosition};if(typeof module!=='undefined')module.exports=root.PERegionArt;
+root.PERegionArt={draw,hover,cabinLayer,clearingOpacity,yardPixelAlpha,yardProps,yardPropPosition,drawJetty:jetty};if(typeof module!=='undefined')module.exports=root.PERegionArt;
 })(typeof window==='undefined'?globalThis:window);

@@ -37,14 +37,17 @@ const poseFrames=[
  [165,484,307,230,0],[128,484,259,183,-.14],[128,484,249,138,-.2],[128,484,212,82,-.55],
  [147,462,78,48,-2.05],[135,462,44,90,-3.1],[128,462,321,121,0],[135,462,234,146,0]
 ],poseScale=.145;
+// Native art sockets are simulation geometry, not renderer/asset-load state.
+// [hip x, baseline including chair offset, exposed cork socket x/y, angle]
+const nativePoseFrames=Object.freeze([[40,92,66,55,0],[40,92,63,47,-.14],[40,92,62,42,-.2],[40,92,59,35,-.55],[40,92,33,28,-2.05],[40,92,28,37,-3.1],[40,92,73,41,0],[40,92,63,46,0]].map(Object.freeze));
 function pose(e){const f=e.fishing,p=e.state.player;let phase=0;
  if(f?.kind==='spinning'){if(f.stage==='charge')phase=Math.min(5,Math.floor(f.power*6));else if(f.stage==='flight'&&f.age<.32)phase=6;else if(f.stage==='fight')phase=7;}
- const frame=poseFrames[phase],angle=frame[4],grip={x:p.x-(frame[2]-frame[0])*poseScale,y:root.PE.ground(p.x,e.state.currentMap)+(frame[3]-frame[1])*poseScale};
+ const frame=poseFrames[phase],nativeFrame=nativePoseFrames[phase],angle=nativeFrame[4],grip={x:p.x-(nativeFrame[2]-nativeFrame[0]),y:root.PE.ground(p.x,e.state.currentMap)+nativeFrame[3]-nativeFrame[1]};
  const length=64,load=clamp(f?.tension||0,0,1.35),bend=load*25;
  // Cubic cantilever: the first tangent ALWAYS follows the painted cork handle.
  const vx=-Math.cos(angle),vy=Math.sin(angle),tip={x:grip.x+vx*length,y:grip.y+vy*length+bend};
  const c1={x:grip.x+vx*length*.4,y:grip.y+vy*length*.4},c2={x:grip.x+vx*length*.78,y:grip.y+vy*length*.78+bend*.35};
- return {phase,frame,scale:poseScale,grip,angle,tip,c1,c2,bend};
+ return {phase,frame,scale:poseScale,nativeFrame,grip,angle,tip,c1,c2,bend};
 }
 function shoal(e){if(e.pondFish)return e.pondFish;const random=rng(89731+e.state.day*997+e.state.fishery.caught*71),p=root.PERegions.pond;
  e.pondWater={ripples:[],spray:[],bubbles:[]};
@@ -157,5 +160,5 @@ function substep(e,f,dt){f.age+=dt;f.nibble=Math.max(0,(f.nibble||0)-dt);const w
 }
 function ambient(e,dt){if(e.state.currentMap!=='pond'||e.state.player.x>=root.PERegions.pond.shore+100||e.fishing)return;shoal(e);e.pondWater.accumulator=(e.pondWater.accumulator||0)+Math.min(.1,Math.max(0,dt));while(e.pondWater.accumulator+1e-10>=1/120){e.pondWater.accumulator=Math.max(0,e.pondWater.accumulator-1/120);updateFish(e,{stage:'idle',lure:null},1/120);updateEffects(e.pondWater,1/120);}}
 function update(e,dt){const f=e.fishing;if(f?.kind!=='spinning')return;if(!ready(e)){cancel(e);return;}f.accumulator+=Math.min(.1,Math.max(0,dt));while(e.fishing===f&&f.accumulator+1e-10>=1/120){f.accumulator=Math.max(0,f.accumulator-1/120);substep(e,f,1/120);}}
-root.PEFishing={species,rng,weight,trophyLimit,restore,ready,canCast,pose,poseFrames,shoal,press,release,cancel,update,ambient,strength,animateFish,bodyLength,waterBounds};if(typeof module!=='undefined')module.exports=root.PEFishing;
+root.PEFishing={species,rng,weight,trophyLimit,restore,ready,canCast,pose,poseFrames,nativePoseFrames,shoal,press,release,cancel,update,ambient,strength,animateFish,bodyLength,waterBounds};if(typeof module!=='undefined')module.exports=root.PEFishing;
 })(typeof window==='undefined'?globalThis:window);

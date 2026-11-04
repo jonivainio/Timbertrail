@@ -36,19 +36,22 @@
       fill(c,[[-7,-34],[1,-34],[3,-27],[-7,-27]],'#454b49');fill(c,[[-5,-33],[1,-33],[1,-29],[-6,-29]],'#7d8780');
       fill(c,[[0,-34],[7,-35],[12,-38],[14,-31],[12,-23],[6,-26],[0,-27]],'#3a4545');fill(c,[[1,-33],[7,-34],[11,-36],[12,-31],[11,-25],[6,-27],[1,-28]],'#85928d');fill(c,[[10,-36],[14,-35],[14,-26],[11,-25],[12,-31]],'#d1d5c6');path(c,[[13,-35],[13,-26]],'#f1e9ca',1);px(c,-2,-32,5,4,'#50564f');
     }else if(type==='bow'){
-      path(c,[[0,-19],[7,-14],[10,-7],[10,0],[9,7],[6,14],[0,19]],'#3d2a1d',5);path(c,[[0,-19],[6,-14],[8,-7],[8,0],[7,7],[4,14],[0,19]],'#b67a42',3);path(c,[[0,-19],[2,0],[0,19]],'#d9d2a4',1);path(c,[[6,-3],[9,3]],'#4d3925',3);
+      const profile=[[-4,-19],[0,-14],[1,-7],[0,0],[1,7],[0,14],[-4,19]];path(c,profile,'#3b3328',3);path(c,profile,'#bd9458',1.4);path(c,[[-4,-19],[-4,19]],'#d0ac73',.7);path(c,[[0,-3],[0,3]],'#594532',3);
     }else if(type==='rod'){
       path(c,[[-4,1],[8,-2],[18,-5],[27,-9],[34,-14]],'#3a291d',4);path(c,[[-3,-1],[8,-4],[18,-7],[27,-11],[34,-15]],'#b5854d',2);path(c,[[34,-15],[38,-8],[40,0]],'#d7cfaa',1);c.strokeStyle='#725039';c.lineWidth=2;c.beginPath();c.arc(4,3,4,0,TAU);c.stroke();px(c,2,1,3,3,'#b86f45');
     }
     c.restore();
   }
-  function drawBowAim(c,grip,angle,pull,drawHand,released){
+  function drawBowAim(c,grip,angle,pull,drawHand,released,time=0,rasterHands=false){
     c.save();c.translate(grip[0],grip[1]);c.rotate(angle);
-    const top=[1,-19],bottom=[1,19],back=-13*pull;
-    path(c,[top,[8,-13],[10,-6],[9,0],[9,6],[7,13],bottom],'#38281d',5);path(c,[top,[7,-13],[9,-6],[8,0],[8,6],[6,13],bottom],'#b87c43',3);
-    path(c,[top,[back,0],bottom],'#ddd3a2',1);
+    const tip=-4-4*pull,top=[tip,-19],bottom=[tip,19],back=-13*pull;
+    // The bow riser is the hand anchor, not eight pixels in front of the hand.
+    const profile=[top,[tip+4,-14],[1,-7],[0,0],[1,7],[tip+4,14],bottom];
+    path(c,profile,'#3b3328',3);path(c,profile,'#bd9458',1.4);path(c,[[0,-3],[0,3]],'#594532',3);
+    const releaseAge=Math.max(0,time-.32),stringX=released?tip+Math.sin(releaseAge*100)*3*Math.exp(-releaseAge*22):back;
+    path(c,[top,[stringX,0],bottom],'#d0ac73',.7);
     if(!released){path(c,[[back-3,0],[31,0]],'#c9a977',1);fill(c,[[31,0],[25,-3],[26,3]],'#c8cfbf');fill(c,[[back-3,0],[back+1,-3],[back+1,3]],'#d5c9a0');}
-    c.restore();hand(c,grip);hand(c,drawHand);
+    c.restore();if(!rasterHands){hand(c,grip);hand(c,drawHand);}
   }
   function arm(c,shoulder,elbow,wrist,front=true){const cloth=front?'#b18d5c':'#8e704d';path(c,[shoulder,elbow,wrist],'#3c3327',6);path(c,[[shoulder[0],shoulder[1]-1],[elbow[0],elbow[1]-1],[wrist[0],wrist[1]-1]],cloth,4);path(c,[[shoulder[0]-1,shoulder[1]-2],[elbow[0]-1,elbow[1]-2]],front?'#d6ad74':'#b79568',1);px(c,mix(shoulder[0],elbow[0],.45),mix(shoulder[1],elbow[1],.45)-1,2,1,'#765b3e');px(c,mix(elbow[0],wrist[0],.55),mix(elbow[1],wrist[1],.55),1,1,'#d0a46c');px(c,elbow[0]-2,elbow[1]-1,4,2,'#69533a');}
   function rigArm(c,shoulder,wrist,front=true,bend=1,link=14){const dx=wrist[0]-shoulder[0],dy=wrist[1]-shoulder[1],distance=Math.hypot(dx,dy)||1,half=Math.min(distance,link*2-.1)/2,rise=Math.sqrt(Math.max(0,link*link-half*half)),mx=(shoulder[0]+wrist[0])/2,my=(shoulder[1]+wrist[1])/2,elbow=[mx-dy/distance*rise*bend,my+dx/distance*rise*bend];arm(c,shoulder,elbow,wrist,front);}
@@ -71,6 +74,8 @@
     const anchors={0:[74,72],1:[78,70],2:[77,70],3:[81,80]},grip=(anchors[index]||anchors[0]).slice();grip[1]+=bob;if(crouch&&p.moving)grip[0]+=Math.sin(p.stride)*2;return{index,bob,grip};
   }
   function drawIdle(renderer,lc,p,type){
+    const nativePose=root.PETravellerArt?.drawBase(renderer,lc,p);
+    if(nativePose){if(type)drawHeld(lc,type,[67+nativePose.grip[0],101+nativePose.grip[1]],heldAngle(type)+(p.running&&['axe','flintaxe'].includes(type)?.3:0),heldScale(type));return;}
     if(p.running&&renderer.runPoses){
       const index=Math.floor(p.stride/(Math.PI/3))%6,boxes=[[74,128,354,467],[467,137,276,451],[759,112,277,456],[1080,133,351,464],[1519,158,226,435],[1800,128,294,455]],anchors=[274,619,889,1278,1622,1951],bases=[593,586,590,595,591,605],hands=[[351,300],[695,314],[971,287],[1337,304],[1705,332],[2052,290]],b=boxes[index],k=.134;
       lc.drawImage(renderer.runPoses,...b,67+(b[0]-anchors[index])*k,101+(b[1]-bases[index])*k,b[2]*k,b[3]*k);
@@ -123,9 +128,10 @@
     if(!a)return{localGrip,worldGrip,angle:0};const dx=(a.wx-worldGrip[0])*(p.facing||1),dy=a.wy-worldGrip[1];return{localGrip,worldGrip,angle:Math.atan2(dy,Math.max(1,dx))};
   }
   function bowAction(renderer,lc,engine){
+    if(root.PETravellerArt?.drawBow(renderer,lc,engine,bowAim(engine),drawBowAim))return;
     const p=engine.state.player,a=engine.attack,crouch=!!p.crouching;baseSprite(renderer,lc,crouch?3:0);eraseArm(lc,crouch);
     const aim=bowAim(engine),angle=aim.angle,grip=[67+aim.localGrip[0],101+aim.localGrip[1]],pull=a.time<.32?mix(.45,1,ease(a.time/.32)):mix(1,.12,ease((a.time-.32)/Math.max(.01,a.duration-.32))),drawHand=[grip[0]+Math.cos(angle)*(-13*pull),grip[1]+Math.sin(angle)*(-13*pull)];
-    arm(lc,crouch?[72,68]:[68,55],crouch?[78,69]:[78,57],grip,true);arm(lc,crouch?[69,67]:[64,56],crouch?[72,64]:[70,54],drawHand,false);drawBowAim(lc,grip,angle,pull,drawHand,a.time>=.32);
+    arm(lc,crouch?[72,68]:[68,55],crouch?[78,69]:[78,57],grip,true);arm(lc,crouch?[69,67]:[64,56],crouch?[72,64]:[70,54],drawHand,false);drawBowAim(lc,grip,angle,pull,drawHand,a.time>=.32,a.time);
   }
   function carcassAction(renderer,lc,engine){
     const type=engine.state.equipped==='knife'?'knife':'puukko';baseSprite(renderer,lc,3);const pulse=.5-.5*Math.cos(engine.action.time*9),grip=[81,80];drawHeld(lc,type,grip,.7+pulse*.35,heldScale(type));
@@ -148,8 +154,11 @@
     if(!renderer||!renderer.sprites)return false;
     if(root.PEFishingArt?.actor(renderer,engine))return true;
     const c=renderer.c,s=engine.state,p=s.player,y=root.PE?root.PE.ground(p.x,engine.state.currentMap):0,type=TOOLS.has(s.equipped)?s.equipped:null;
-    shadow(c,p.x,y,16);const [layer,lc]=makeLayer(renderer);
-    if(engine.action&&['tree','log'].includes(engine.action.target.type))axeAction(renderer,lc,engine);
+    const actionPlacement=renderer.visualV2&&renderer.artTravellerActions?root.PETravellerArt?.actionSample(engine,renderer):null;
+    const shadowX=p.x+(actionPlacement?.shadowX||0)*(p.facing||1);
+    shadow(c,shadowX,actionPlacement?root.PE.ground(shadowX,s.currentMap):y,16);const [layer,lc]=makeLayer(renderer);
+    if(root.PETravellerArt?.drawAction(renderer,lc,engine,drawHeld,images)){}
+    else if(engine.action&&['tree','log'].includes(engine.action.target.type))axeAction(renderer,lc,engine);
     else if(engine.action&&engine.action.target.type==='carcass')carcassAction(renderer,lc,engine);
     else if(engine.action&&engine.action.target.type==='pet')petAction(renderer,lc,engine);
     else if(engine.action&&renderer.poses)gatherAction(renderer,lc,engine);
@@ -168,6 +177,6 @@
   }
   function projectileOrigin(engine){const p=engine.state.player,aim=bowAim(engine);return{x:aim.worldGrip[0]+(p.facing||1)*Math.cos(aim.angle)*31,y:aim.worldGrip[1]+Math.sin(aim.angle)*31};}
   function fishingLineOrigin(engine){const p=engine.state.player,y=root.PE?root.PE.ground(p.x,engine.state.currentMap):0,{grip}=idleGrip(p),tip=rotatePoint([40,0],heldAngle('rod'),heldScale('rod')),local=[grip[0]-67+tip[0],grip[1]-101+tip[1]];return{x:p.x+(p.facing||1)*local[0],y:y+local[1]};}
-  const api={isTool:type=>TOOLS.has(type),drawIcon,drawActor,projectileOrigin,fishingLineOrigin,loadAssets,setAssets,_drawTool:tool};
+  const api={isTool:type=>TOOLS.has(type),drawIcon,drawActor,projectileOrigin,fishingLineOrigin,loadAssets,setAssets,_drawTool:tool,bowAim};
   root.PEEquipment=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

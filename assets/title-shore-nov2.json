@@ -1,0 +1,11 @@
+{
+  "id": "title-shore-nov2",
+  "created": "2026-11-02",
+  "kind": "original-generated",
+  "tool": "built-in image_gen",
+  "sha256": "7c4fdaee63ad8255a65f377b3198ea56856ca35f92680b74789943f9fb210728",
+  "sourceFile": "exec-6f7910af-22a1-4ecf-a679-6ac9222886d3.png",
+  "promptFile": "../work/title-shore-nov2-prompt.md",
+  "role": "Title screen only. Original Finnish lakeshore at blue hour; no extracted third-party game art.",
+  "review": "Composition and source image visually inspected. Integrated layout acceptance is separate."
+}

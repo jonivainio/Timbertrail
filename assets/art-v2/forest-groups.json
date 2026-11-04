@@ -1,0 +1,70 @@
+{
+  "family": "nordic-background-groups",
+  "status": "calibration",
+  "source": {
+    "method": "built-in imagegen; original alpha retained as a binary native-pixel silhouette; nearest-neighbour scale and four-color palette preparation",
+    "file": "work/overhaul/forest-source/forest-groups-source.png",
+    "sha256": "71e5e1df167622513d031b19f8d67ce62fe2f62aaf725e205e90180c654c5f8c",
+    "prompt": "work/overhaul/forest-source/PROMPT.md"
+  },
+  "file": "assets/art-v2/forest-groups.png",
+  "sha256": "0064d47ad9f9175b0b01a76d7b9796e9df6887311b85030d07408b4adc591523",
+  "nativeSize": [
+    768,
+    288
+  ],
+  "palette": [
+    "#3a514b",
+    "#536e70",
+    "#748c89",
+    "#819894"
+  ],
+  "frames": [
+    {
+      "id": "spruce-stand",
+      "rect": [
+        0,
+        0,
+        256,
+        288
+      ],
+      "anchor": [
+        128,
+        284
+      ]
+    },
+    {
+      "id": "pine-stand",
+      "rect": [
+        256,
+        0,
+        256,
+        288
+      ],
+      "anchor": [
+        128,
+        284
+      ]
+    },
+    {
+      "id": "birch-opening",
+      "rect": [
+        512,
+        0,
+        256,
+        288
+      ],
+      "anchor": [
+        128,
+        284
+      ]
+    }
+  ],
+  "alphaThreshold": 144,
+  "keptPixels": 68476,
+  "review": {
+    "alpha": "pending visual inspection",
+    "day": "not_reviewed",
+    "night": "not_reviewed"
+  }
+}

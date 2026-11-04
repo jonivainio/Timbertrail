@@ -1,0 +1,610 @@
+{
+  "id": "traveller",
+  "file": "assets/art-v2/traveller.png",
+  "nativeSize": [
+    256,
+    320
+  ],
+  "palette": [
+    "#222b28",
+    "#3b3328",
+    "#594532",
+    "#79563a",
+    "#9e723f",
+    "#bd9458",
+    "#d0ac73",
+    "#e1ba83",
+    "#a47654",
+    "#633925",
+    "#935133",
+    "#b66a3b",
+    "#253b3c",
+    "#3b5352",
+    "#5b7066",
+    "#9a9d83"
+  ],
+  "frames": [
+    {
+      "id": "walk-0",
+      "rect": [
+        0,
+        0,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        22,
+        53
+      ],
+      "state": "walk",
+      "events": [
+        "foot-contact"
+      ],
+      "preparation": {
+        "sourceCell": [
+          0,
+          0,
+          313,
+          349
+        ],
+        "pelvisX": 170,
+        "footY": 335,
+        "hand": [
+          121,
+          220
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 27822
+      }
+    },
+    {
+      "id": "walk-1",
+      "rect": [
+        64,
+        0,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        24,
+        53
+      ],
+      "state": "walk",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          313,
+          0,
+          313,
+          349
+        ],
+        "pelvisX": 478,
+        "footY": 335,
+        "hand": [
+          438,
+          220
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 26942
+      }
+    },
+    {
+      "id": "walk-2",
+      "rect": [
+        128,
+        0,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        23,
+        53
+      ],
+      "state": "walk",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          626,
+          0,
+          313,
+          349
+        ],
+        "pelvisX": 788,
+        "footY": 335,
+        "hand": [
+          743,
+          221
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 26344
+      }
+    },
+    {
+      "id": "walk-3",
+      "rect": [
+        192,
+        0,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        40,
+        50
+      ],
+      "state": "walk",
+      "events": [
+        "foot-contact"
+      ],
+      "preparation": {
+        "sourceCell": [
+          939,
+          0,
+          315,
+          349
+        ],
+        "pelvisX": 1111,
+        "footY": 335,
+        "hand": [
+          1149,
+          205
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 26542
+      }
+    },
+    {
+      "id": "walk-4",
+      "rect": [
+        0,
+        80,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        26,
+        54
+      ],
+      "state": "walk",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          0,
+          349,
+          313,
+          329
+        ],
+        "pelvisX": 156,
+        "footY": 661,
+        "hand": [
+          126,
+          550
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 26795
+      }
+    },
+    {
+      "id": "walk-5",
+      "rect": [
+        64,
+        80,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        43,
+        45
+      ],
+      "state": "walk",
+      "events": [],
+      "source": {
+        "file": "work/overhaul/traveller-source/passing-source.png",
+        "sha256": "2045fb5d0f6973a84d1650a399ac11ffe3bb2ed5f5036a256c83b43bf26ef9a7",
+        "prompt": "work/overhaul/traveller-source/PASSING_PROMPT.md"
+      },
+      "preparation": {
+        "sourceCell": [
+          313,
+          349,
+          313,
+          329
+        ],
+        "pelvisX": 452,
+        "footY": 666,
+        "hand": [
+          506,
+          511
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 23290
+      }
+    },
+    {
+      "id": "idle",
+      "rect": [
+        128,
+        80,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        29,
+        53
+      ],
+      "state": "idle",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          626,
+          349,
+          313,
+          329
+        ],
+        "pelvisX": 773,
+        "footY": 666,
+        "hand": [
+          757,
+          551
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 22834
+      }
+    },
+    {
+      "id": "crouch-idle",
+      "rect": [
+        192,
+        80,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        44,
+        60
+      ],
+      "state": "crouch",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          939,
+          349,
+          315,
+          329
+        ],
+        "pelvisX": 1100,
+        "footY": 666,
+        "hand": [
+          1158,
+          587
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 21645
+      }
+    },
+    {
+      "id": "run-0",
+      "rect": [
+        0,
+        160,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        47,
+        45
+      ],
+      "state": "run",
+      "events": [
+        "foot-contact"
+      ],
+      "preparation": {
+        "sourceCell": [
+          0,
+          678,
+          313,
+          289
+        ],
+        "pelvisX": 152,
+        "footY": 958,
+        "hand": [
+          226,
+          803
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 24967
+      }
+    },
+    {
+      "id": "run-1",
+      "rect": [
+        64,
+        160,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        48,
+        47
+      ],
+      "state": "run",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          313,
+          678,
+          313,
+          289
+        ],
+        "pelvisX": 462,
+        "footY": 958,
+        "hand": [
+          544,
+          812
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 21779
+      }
+    },
+    {
+      "id": "run-2",
+      "rect": [
+        128,
+        160,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        46,
+        44
+      ],
+      "state": "run",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          626,
+          678,
+          313,
+          289
+        ],
+        "pelvisX": 770,
+        "footY": 958,
+        "hand": [
+          840,
+          799
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 23400
+      }
+    },
+    {
+      "id": "run-3",
+      "rect": [
+        192,
+        160,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        46,
+        46
+      ],
+      "state": "run",
+      "events": [
+        "foot-contact"
+      ],
+      "preparation": {
+        "sourceCell": [
+          939,
+          678,
+          315,
+          289
+        ],
+        "pelvisX": 1096,
+        "footY": 958,
+        "hand": [
+          1168,
+          808
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 23913
+      }
+    },
+    {
+      "id": "run-4",
+      "rect": [
+        0,
+        240,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        48,
+        48
+      ],
+      "state": "run",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          0,
+          967,
+          313,
+          287
+        ],
+        "pelvisX": 157,
+        "footY": 1227,
+        "hand": [
+          237,
+          1086
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 22942
+      }
+    },
+    {
+      "id": "run-5",
+      "rect": [
+        64,
+        240,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        47,
+        46
+      ],
+      "state": "run",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          313,
+          967,
+          313,
+          287
+        ],
+        "pelvisX": 470,
+        "footY": 1227,
+        "hand": [
+          545,
+          1077
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 23186
+      }
+    },
+    {
+      "id": "crouch-0",
+      "rect": [
+        128,
+        240,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        47,
+        59
+      ],
+      "state": "crouch",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          626,
+          967,
+          313,
+          287
+        ],
+        "pelvisX": 788,
+        "footY": 1230,
+        "hand": [
+          864,
+          1144
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 21173
+      }
+    },
+    {
+      "id": "crouch-1",
+      "rect": [
+        192,
+        240,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        44,
+        58
+      ],
+      "state": "crouch",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          939,
+          967,
+          315,
+          287
+        ],
+        "pelvisX": 1113,
+        "footY": 1230,
+        "hand": [
+          1175,
+          1141
+        ],
+        "scale": 0.2,
+        "retainedSourcePixels": 20587
+      }
+    }
+  ],
+  "sha256": "b53c9e9a3984da2914836dd7bf3b34d20f841a468b78070513c93dce1deef58c",
+  "source": {
+    "file": "work/overhaul/traveller-source/traveller-source.png",
+    "sha256": "481f2170ff5c6625ec63462b5384f19f4825d9ddbd94c64efb3fe15a159f1702",
+    "prompt": "work/overhaul/traveller-source/PROMPT.md",
+    "method": "Exterior-connected neutral checker removal; measured nonuniform cell rows; constant 1:5 anatomy scale; shared16-color palette and measured grips"
+  },
+  "license": "original-generated",
+  "status": "calibration"
+}

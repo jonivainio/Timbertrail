@@ -1,0 +1,273 @@
+{
+  "id": "kajo",
+  "file": "assets/art-v2/kajo.png",
+  "nativeSize": [
+    256,
+    96
+  ],
+  "palette": [
+    "#222a29",
+    "#3d4240",
+    "#59605b",
+    "#7d8178",
+    "#a7aa97",
+    "#d0ceb3",
+    "#eee1ba",
+    "#654c37",
+    "#986742",
+    "#be8d54",
+    "#6b392c",
+    "#bb775e"
+  ],
+  "frames": [
+    {
+      "id": "walk-0",
+      "rect": [
+        0,
+        0,
+        64,
+        48
+      ],
+      "anchor": [
+        32,
+        44
+      ],
+      "mouth": [
+        49,
+        21
+      ],
+      "state": "walk",
+      "preparation": {
+        "sourceCell": [
+          0,
+          0,
+          384,
+          512
+        ],
+        "noseX": 354,
+        "footY": 407,
+        "scale": 0.125,
+        "retainedSourcePixels": 39563
+      }
+    },
+    {
+      "id": "walk-1",
+      "rect": [
+        64,
+        0,
+        64,
+        48
+      ],
+      "anchor": [
+        32,
+        44
+      ],
+      "mouth": [
+        49,
+        21
+      ],
+      "state": "walk",
+      "preparation": {
+        "sourceCell": [
+          384,
+          0,
+          384,
+          512
+        ],
+        "noseX": 742,
+        "footY": 407,
+        "scale": 0.125,
+        "retainedSourcePixels": 39281
+      }
+    },
+    {
+      "id": "walk-2",
+      "rect": [
+        128,
+        0,
+        64,
+        48
+      ],
+      "anchor": [
+        32,
+        44
+      ],
+      "mouth": [
+        49,
+        21
+      ],
+      "state": "walk",
+      "preparation": {
+        "sourceCell": [
+          768,
+          0,
+          384,
+          512
+        ],
+        "noseX": 1126,
+        "footY": 407,
+        "scale": 0.125,
+        "retainedSourcePixels": 42138
+      }
+    },
+    {
+      "id": "walk-3",
+      "rect": [
+        192,
+        0,
+        64,
+        48
+      ],
+      "anchor": [
+        32,
+        44
+      ],
+      "mouth": [
+        49,
+        21
+      ],
+      "state": "walk",
+      "preparation": {
+        "sourceCell": [
+          1152,
+          0,
+          384,
+          512
+        ],
+        "noseX": 1511,
+        "footY": 407,
+        "scale": 0.125,
+        "retainedSourcePixels": 40805
+      }
+    },
+    {
+      "id": "walk-4",
+      "rect": [
+        0,
+        48,
+        64,
+        48
+      ],
+      "anchor": [
+        32,
+        44
+      ],
+      "mouth": [
+        49,
+        21
+      ],
+      "state": "walk",
+      "preparation": {
+        "sourceCell": [
+          0,
+          512,
+          384,
+          512
+        ],
+        "noseX": 359,
+        "footY": 872,
+        "scale": 0.125,
+        "retainedSourcePixels": 38107
+      }
+    },
+    {
+      "id": "walk-5",
+      "rect": [
+        64,
+        48,
+        64,
+        48
+      ],
+      "anchor": [
+        32,
+        44
+      ],
+      "mouth": [
+        49,
+        21
+      ],
+      "state": "walk",
+      "preparation": {
+        "sourceCell": [
+          384,
+          512,
+          384,
+          512
+        ],
+        "noseX": 751,
+        "footY": 881,
+        "scale": 0.125,
+        "retainedSourcePixels": 42073
+      }
+    },
+    {
+      "id": "idle",
+      "rect": [
+        128,
+        48,
+        64,
+        48
+      ],
+      "anchor": [
+        32,
+        44
+      ],
+      "mouth": [
+        49,
+        21
+      ],
+      "state": "idle",
+      "preparation": {
+        "sourceCell": [
+          768,
+          512,
+          384,
+          512
+        ],
+        "noseX": 1146,
+        "footY": 888,
+        "scale": 0.125,
+        "retainedSourcePixels": 43263
+      }
+    },
+    {
+      "id": "sit",
+      "rect": [
+        192,
+        48,
+        64,
+        48
+      ],
+      "anchor": [
+        32,
+        44
+      ],
+      "mouth": [
+        49,
+        18
+      ],
+      "state": "sit",
+      "preparation": {
+        "sourceCell": [
+          1152,
+          512,
+          384,
+          512
+        ],
+        "noseX": 1487,
+        "footY": 888,
+        "scale": 0.125,
+        "retainedSourcePixels": 37184
+      }
+    }
+  ],
+  "sha256": "f6086f649de35f328bea49d94c067d6529f388747896d72a0f25751afdf1a318",
+  "source": {
+    "file": "work/overhaul/kajo-source/kajo-source.png",
+    "sha256": "e098e15fe8c297ab283295c9c253b635815ad2293c764b1262438815f34219a1",
+    "prompt": "work/overhaul/kajo-source/PROMPT.md",
+    "method": "Exterior-connected neutral checker removal, largest subject; constant 1:8 native resampling; shared 12-color palette"
+  },
+  "license": "original-generated",
+  "status": "calibration"
+}

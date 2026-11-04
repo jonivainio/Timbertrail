@@ -1,0 +1,130 @@
+{
+  "family": "nordic-trees-v2",
+  "status": "calibration",
+  "source": {
+    "method": "built-in image generation, user-authorized programmatic alpha cleanup and palette/atlas preparation",
+    "file": "work/overhaul/tree-source/trees-style-pass.png",
+    "sha256": "2f02b97c7872e146d7a78efd8fe22df464a70bb196b84a7abfb6a52b6582dea8",
+    "permission": "User approved programmatic tree background removal on 2026-09-10"
+  },
+  "file": "assets/art-v2/trees.png",
+  "sha256": "17ad2dd439c05532376353c113f0e5a8a2361ab1118ddd6764111cfc3472d0c2",
+  "nativeSize": [
+    384,
+    144
+  ],
+  "palette": [
+    "#1c2b30",
+    "#243731",
+    "#3a5140",
+    "#596a47",
+    "#7b8255",
+    "#302b29",
+    "#584435",
+    "#826248",
+    "#aa8558",
+    "#d2cfb1",
+    "#aaa577"
+  ],
+  "frames": [
+    {
+      "id": "spruce",
+      "crop": [
+        56,
+        7,
+        475,
+        873
+      ],
+      "anchorX": 303,
+      "palette": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "rect": [
+        0,
+        0,
+        128,
+        144
+      ],
+      "anchor": [
+        64,
+        142
+      ],
+      "nativeHeight": 128
+    },
+    {
+      "id": "pine",
+      "crop": [
+        544,
+        7,
+        704,
+        873
+      ],
+      "anchorX": 934,
+      "palette": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8
+      ],
+      "rect": [
+        128,
+        0,
+        128,
+        144
+      ],
+      "anchor": [
+        64,
+        142
+      ],
+      "nativeHeight": 128
+    },
+    {
+      "id": "birch",
+      "crop": [
+        1254,
+        7,
+        513,
+        873
+      ],
+      "anchorX": 1523,
+      "palette": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        9,
+        10
+      ],
+      "rect": [
+        256,
+        0,
+        128,
+        144
+      ],
+      "anchor": [
+        64,
+        142
+      ],
+      "nativeHeight": 128
+    }
+  ],
+  "removedBackgroundPixels": 962251,
+  "review": {
+    "alpha": "technical check pending",
+    "day": "not_reviewed",
+    "night": "not_reviewed"
+  }
+}

@@ -1,0 +1,603 @@
+{
+  "id": "traveller-actions",
+  "file": "assets/art-v2/traveller-actions.png",
+  "nativeSize": [
+    384,
+    448
+  ],
+  "palette": [
+    "#222b28",
+    "#3b3328",
+    "#594532",
+    "#79563a",
+    "#9e723f",
+    "#bd9458",
+    "#d0ac73",
+    "#e1ba83",
+    "#a47654",
+    "#633925",
+    "#935133",
+    "#b66a3b",
+    "#253b3c",
+    "#3b5352",
+    "#5b7066",
+    "#9a9d83"
+  ],
+  "frames": [
+    {
+      "id": "tree-0",
+      "rect": [
+        0,
+        0,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        37,
+        49
+      ],
+      "axeHead": [
+        22,
+        33,
+        10,
+        12
+      ],
+      "state": "tree",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          0,
+          0,
+          313,
+          338
+        ],
+        "axis": 160,
+        "base": 330,
+        "scale": 0.225,
+        "retainedSourcePixels": 26093
+      }
+    },
+    {
+      "id": "tree-1",
+      "rect": [
+        96,
+        0,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        52,
+        60
+      ],
+      "axeHead": [
+        64,
+        35,
+        13,
+        14
+      ],
+      "state": "tree",
+      "events": [],
+      "source": {
+        "file": "work/overhaul/actions-source/swing-source.png",
+        "sha256": "bf5ee2048c798d531ecb590e6ddba0ea48023316dce26c49173abcab8e242413",
+        "prompt": "work/overhaul/actions-source/SWING_PROMPT.md"
+      },
+      "preparation": {
+        "sourceCell": [
+          313,
+          0,
+          313,
+          338
+        ],
+        "axis": 445,
+        "base": 330,
+        "scale": 0.225,
+        "retainedSourcePixels": 28616
+      }
+    },
+    {
+      "id": "tree-2",
+      "rect": [
+        192,
+        0,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        58,
+        71
+      ],
+      "axeHead": [
+        66,
+        65,
+        8,
+        12
+      ],
+      "state": "tree",
+      "events": [
+        "axe-contact-at-0.45-of-0.9-seconds"
+      ],
+      "source": {
+        "file": "work/overhaul/actions-source/swing-source.png",
+        "sha256": "bf5ee2048c798d531ecb590e6ddba0ea48023316dce26c49173abcab8e242413",
+        "prompt": "work/overhaul/actions-source/SWING_PROMPT.md"
+      },
+      "preparation": {
+        "sourceCell": [
+          626,
+          0,
+          313,
+          338
+        ],
+        "axis": 735,
+        "base": 330,
+        "scale": 0.225,
+        "retainedSourcePixels": 27396
+      }
+    },
+    {
+      "id": "tree-3",
+      "rect": [
+        288,
+        0,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        55,
+        78
+      ],
+      "axeHead": [
+        64,
+        82,
+        10,
+        13
+      ],
+      "state": "tree",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          939,
+          0,
+          315,
+          338
+        ],
+        "axis": 1085,
+        "base": 330,
+        "scale": 0.225,
+        "retainedSourcePixels": 27059
+      }
+    },
+    {
+      "id": "log-0",
+      "rect": [
+        0,
+        112,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        36,
+        30
+      ],
+      "axeHead": [
+        18,
+        29,
+        8,
+        11
+      ],
+      "state": "log",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          0,
+          338,
+          313,
+          350
+        ],
+        "axis": 160,
+        "base": 670,
+        "scale": 0.225,
+        "retainedSourcePixels": 30584
+      }
+    },
+    {
+      "id": "log-1",
+      "rect": [
+        96,
+        112,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        52,
+        54
+      ],
+      "axeHead": [
+        34,
+        28,
+        13,
+        12
+      ],
+      "state": "log",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          313,
+          338,
+          313,
+          350
+        ],
+        "axis": 453,
+        "base": 670,
+        "scale": 0.225,
+        "retainedSourcePixels": 27102
+      }
+    },
+    {
+      "id": "log-2",
+      "rect": [
+        192,
+        112,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        56,
+        83
+      ],
+      "axeHead": [
+        70,
+        87,
+        11,
+        13
+      ],
+      "state": "log",
+      "events": [
+        "axe-contact-at-0.45-of-0.9-seconds"
+      ],
+      "preparation": {
+        "sourceCell": [
+          626,
+          338,
+          313,
+          350
+        ],
+        "axis": 750,
+        "base": 670,
+        "scale": 0.225,
+        "retainedSourcePixels": 26213
+      }
+    },
+    {
+      "id": "log-3",
+      "rect": [
+        288,
+        112,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        52,
+        64
+      ],
+      "axeHead": [
+        56,
+        38,
+        13,
+        13
+      ],
+      "state": "log",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          939,
+          338,
+          315,
+          350
+        ],
+        "axis": 1090,
+        "base": 670,
+        "scale": 0.225,
+        "retainedSourcePixels": 26255
+      }
+    },
+    {
+      "id": "gather-0",
+      "rect": [
+        0,
+        224,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        66,
+        95
+      ],
+      "state": "gather",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          0,
+          688,
+          313,
+          242
+        ],
+        "axis": 90,
+        "base": 915,
+        "scale": 0.225,
+        "retainedSourcePixels": 27440
+      }
+    },
+    {
+      "id": "gather-1",
+      "rect": [
+        96,
+        224,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        74,
+        75
+      ],
+      "state": "gather",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          313,
+          688,
+          313,
+          242
+        ],
+        "axis": 403,
+        "base": 915,
+        "scale": 0.225,
+        "retainedSourcePixels": 27183
+      }
+    },
+    {
+      "id": "pet-high",
+      "rect": [
+        192,
+        224,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        69,
+        74
+      ],
+      "state": "pet",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          626,
+          688,
+          313,
+          242
+        ],
+        "axis": 780,
+        "base": 921,
+        "scale": 0.225,
+        "retainedSourcePixels": 22737
+      }
+    },
+    {
+      "id": "pet-low",
+      "rect": [
+        288,
+        224,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        63,
+        80
+      ],
+      "state": "pet",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          939,
+          688,
+          315,
+          242
+        ],
+        "axis": 1094,
+        "base": 921,
+        "scale": 0.225,
+        "retainedSourcePixels": 21848
+      }
+    },
+    {
+      "id": "seated-idle",
+      "rect": [
+        0,
+        336,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        53,
+        74
+      ],
+      "seat": [
+        31,
+        81
+      ],
+      "state": "seated",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          0,
+          930,
+          313,
+          324
+        ],
+        "axis": 150,
+        "base": 1215,
+        "scale": 0.225,
+        "retainedSourcePixels": 24788
+      }
+    },
+    {
+      "id": "seated-rest",
+      "rect": [
+        96,
+        336,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        49,
+        73
+      ],
+      "seat": [
+        31,
+        81
+      ],
+      "state": "seated",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          313,
+          930,
+          313,
+          324
+        ],
+        "axis": 464,
+        "base": 1215,
+        "scale": 0.225,
+        "retainedSourcePixels": 24308
+      }
+    },
+    {
+      "id": "carve-0",
+      "rect": [
+        192,
+        336,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        62,
+        91
+      ],
+      "state": "carve",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          626,
+          930,
+          313,
+          324
+        ],
+        "axis": 720,
+        "base": 1207,
+        "scale": 0.225,
+        "retainedSourcePixels": 27361
+      }
+    },
+    {
+      "id": "carve-1",
+      "rect": [
+        288,
+        336,
+        96,
+        112
+      ],
+      "anchor": [
+        40,
+        100
+      ],
+      "hand": [
+        67,
+        83
+      ],
+      "state": "carve",
+      "events": [],
+      "preparation": {
+        "sourceCell": [
+          939,
+          930,
+          315,
+          324
+        ],
+        "axis": 1035,
+        "base": 1207,
+        "scale": 0.225,
+        "retainedSourcePixels": 27493
+      }
+    }
+  ],
+  "sha256": "0fd0a99566c6775f1e23f085ea19a7f6260b093ca6c324258a4dba888bf8b171",
+  "source": {
+    "file": "work/overhaul/actions-source/actions-source.png",
+    "sha256": "f1445d05900e3c9d1a2f73a52274578089c0217acc64580369fd45c1560fad91",
+    "prompt": "work/overhaul/actions-source/PROMPT.md",
+    "method": "Original source plus two corrected swing cells; exterior-connected checker removal; measured rows, constant0.225 anatomy scale; shared traveller palette"
+  },
+  "license": "original-generated",
+  "status": "calibration"
+}

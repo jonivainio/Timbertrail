@@ -1,0 +1,71 @@
+{
+  "id": "cabin",
+  "file": "assets/art-v2/cabin.png",
+  "source": {
+    "file": "work/overhaul/cabin-source/cabin-source.png",
+    "sha256": "89eaccd5a739ed367669845fd710f3f0c3cb7f22f036c44c148b9148ff80a773",
+    "type": "original-built-in-image-generation",
+    "license": "original-generated"
+  },
+  "license": "original-generated",
+  "nativeSize": [
+    256,
+    192
+  ],
+  "palette": [
+    "#202a28",
+    "#30332d",
+    "#403e32",
+    "#504936",
+    "#61543e",
+    "#705e43",
+    "#806b4d",
+    "#917b58",
+    "#a38e66",
+    "#4e5749",
+    "#636b58",
+    "#7b806a",
+    "#93947a",
+    "#294846",
+    "#395c58",
+    "#597c72"
+  ],
+  "frames": [
+    {
+      "id": "restored-base",
+      "rect": [
+        0,
+        0,
+        256,
+        192
+      ],
+      "anchor": [
+        128,
+        166
+      ],
+      "eave": [
+        128,
+        94
+      ],
+      "state": "restored"
+    }
+  ],
+  "sha256": "801c658534ac389184698abfcad9be2da384ed72a9d77b7881b82fc92d24064d",
+  "preparation": {
+    "sourceCrop": [
+      33,
+      98,
+      1436,
+      877
+    ],
+    "subjectRect": [
+      18,
+      8,
+      220,
+      159
+    ],
+    "method": "nearest resampling,16-color palette, preserve source alpha with180 cutoff; originals preserved"
+  },
+  "status": "calibration",
+  "states": "Roof/facade independently composited with deterministic damage overlays in cabin-pixels.js"
+}

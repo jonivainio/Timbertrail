@@ -25,15 +25,37 @@ async function main(){
   assert.equal(samples.setLoop('reelWind',context,node(),1),false,'one-shots are not silently looped');
   const loopContext={fetch:async url=>({ok:true,json:async()=>[{...imported,loop:true,loopRelease:1.2}, {...imported,event:'step',attack:.03,release:.08,regions:[{offset:.1,duration:.2},{offset:.4,duration:.25}]}],arrayBuffer:async()=>wav.buffer})};vm.createContext(loopContext);vm.runInContext(fs.readFileSync(path.join(__dirname,'../audio-samples.js'),'utf8'),loopContext);
   await loopContext.PEAudioSamples.load(context);
-  loopContext.PEAudioSamples.play('step',context,node(),1,0);assert.deepEqual(sources.at(-1).started,[2,.1,.2]);
-  loopContext.PEAudioSamples.play('step',context,node(),1,0);assert.deepEqual(sources.at(-1).started,[2,.4,.25]);
-  loopContext.PEAudioSamples.play('step',context,node(),1,0);assert.deepEqual(sources.at(-1).started,[2,.1,.2]);
+  const sequence=[];for(let i=0;i<12;i++){loopContext.PEAudioSamples.play('step',context,node(),1,0);sequence.push(sources.at(-1).started[1]);sources.at(-1).onended();}
+  assert.ok(sequence.every(x=>[.1,.4].includes(x)));for(let i=1;i<sequence.length;i++)assert.notEqual(sequence[i],sequence[i-1],'no immediate repeat across shuffle bags');
   const beforeLoop=sources.length;
   assert.equal(loopContext.PEAudioSamples.setLoop('reelWind',context,node(),.5,-.2),true);
   for(let i=0;i<30;i++)loopContext.PEAudioSamples.setLoop('reelWind',context,node(),.8,.2);
   assert.equal(sources.length,beforeLoop+1,'repeated updates reuse a single looping source');assert.equal(sources.at(-1).loop,true);
   assert.equal(sources.at(-1).loopEnd,.04);loopContext.PEAudioSamples.setLoop('reelWind',context,node(),0);assert.deepEqual(sources.at(-1).stopped,[3.2],'ambient release lasts the configured 1.2 seconds');
   loopContext.PEAudioSamples.setLoop('reelWind',context,node(),1);loopContext.PEAudioSamples.stopLoops(context);assert.equal(loopContext.PEAudioSamples.status().loops.length,0,'pause/mute can stop every loop');
+  sources.forEach(s=>s.onended?.());
+  const capped=loopContext.PEAudioSamples,shotStart=sources.length;
+  for(let i=0;i<80;i++)assert.equal(capped.play('step',context,node(),1,0),true);
+  assert.equal(sources.length-shotStart,24);assert.equal(capped.status().voices,24,'sample contact budget is bounded');
+  sources[shotStart].onended();capped.play('step',context,node(),1,0);assert.equal(sources.length-shotStart,25,'ended source frees one slot');
+  sources.forEach(s=>s.onended?.());
+  const loopStart=sources.length;for(let i=0;i<80;i++){capped.setLoop('reelWind',context,node(),1);capped.setLoop('reelWind',context,node(),0);}
+  assert.equal(sources.length-loopStart,6,'releasing loops also count against the six-source budget');
+  sources.forEach(s=>s.onended?.());assert.equal(capped.status().loopVoices,0);
+  // A late decode from a disposed audio context must not overwrite the new bank.
+  let finishOld;const oldContext={...context,decodeAudioData:()=>new Promise(resolve=>finishOld=resolve)};
+  const newContext={...context,decodeAudioData:async()=>({duration:1,tag:'new'})};
+  const staleCtx={fetch:async()=>({ok:true,json:async()=>[imported],arrayBuffer:async()=>wav.buffer})};vm.createContext(staleCtx);vm.runInContext(fs.readFileSync(path.join(__dirname,'../audio-samples.js'),'utf8'),staleCtx);
+  const oldLoad=staleCtx.PEAudioSamples.load(oldContext);await new Promise(resolve=>setImmediate(resolve));
+  await staleCtx.PEAudioSamples.load(newContext);finishOld({duration:1,tag:'old'});await oldLoad;
+  staleCtx.PEAudioSamples.play('reelWind',newContext,node(),1,0);assert.equal(sources.at(-1).buffer.tag,'new');
+  assert.equal(staleCtx.PEAudioSamples.play('reelWind',oldContext,node(),1,0),false,'old context cannot consume the new bank');
+  // Four takes each appear once per bag; refill never repeats the seam take.
+  const bagCtx={fetch:async()=>({ok:true,json:async()=>[{...imported,event:'step',regions:[0,.2,.4,.6].map(offset=>({offset,duration:.1}))}],arrayBuffer:async()=>wav.buffer})};vm.createContext(bagCtx);vm.runInContext(fs.readFileSync(path.join(__dirname,'../audio-samples.js'),'utf8'),bagCtx);await bagCtx.PEAudioSamples.load(context);
+  const takes=[];for(let i=0;i<80;i++){bagCtx.PEAudioSamples.play('step',context,node(),1,0);takes.push(sources.at(-1).started[1]);sources.at(-1).onended();}
+  for(let i=0;i<takes.length;i+=4)assert.equal(new Set(takes.slice(i,i+4)).size,4);
+  for(let i=1;i<takes.length;i++)assert.notEqual(takes[i],takes[i-1]);
+  console.log('PASS sample shuffle bags,24 contact/six active-or-releasing loop caps, slot recovery and stale-context decode isolation.');
   const fail={fetch:async()=>{throw Error('offline');}};vm.createContext(fail);vm.runInContext(fs.readFileSync(path.join(__dirname,'../audio-samples.js'),'utf8'),fail);await fail.PEAudioSamples.load(context);assert.equal(fail.PEAudioSamples.play('reelWind',context,node(),1,0),false);
   // Integration: sample dispatch must stay behind the game's sound switch.
   let played=0;const code=fs.readFileSync(path.join(__dirname,'../audio.js'),'utf8');
