@@ -69,3 +69,37 @@
 #game-shell #hud .onboarding { bottom:calc(clamp(16px,2.2cqw,30px) + clamp(46px,3.9cqw,58px) + 16px); left:50%; transform:translateX(-50%); font:13px/1.25 'Pixelify',monospace; color:var(--em-dim); }
 #game-shell #hud .toast { top:clamp(64px,7cqw,96px); bottom:auto; border:0; border-radius:0; padding:8px 14px; max-width:min(460px,60%); background:rgba(21,19,15,.78) !important; color:var(--em-paper); font:15px/1.4 'Pixelify',monospace; box-shadow:0 0 0 2px var(--em-ink),inset 0 0 0 1px rgba(239,227,196,.16) !important; text-shadow:none; }
 #game-shell #hud .world-tip { padding:6px 10px; border:0; border-radius:0; background:rgba(21,19,15,.82); color:var(--em-paper); font:15px/1.2 'Pixelify',monospace; box-shadow:0 0 0 2px var(--em-ink),inset 0 0 0 1px rgba(239,227,196,.16); }
+
+/* Pause: a word list over the darkened scene, Kingdom-style. */
+#game-shell #modal-backdrop:has(#modal[data-panel=pause]) { justify-content:flex-start; padding:0 0 0 clamp(40px,8cqw,120px); background:linear-gradient(90deg,rgba(14,12,9,.92) 0%,rgba(14,12,9,.78) 32%,rgba(14,12,9,.25) 62%,rgba(14,12,9,.12) 100%); backdrop-filter:none; }
+#game-shell #modal[data-panel=pause] { width:auto; max-width:none; height:auto; padding:0; background:none !important; border:0 !important; box-shadow:none !important; filter:none; zoom:1; font-family:'Pixelify',monospace; color:var(--em-paper); }
+#game-shell #modal[data-panel=pause]>:is(.book-backdrop,.book-animation,.book-material,.modal-header,.modal-footer,.journal-tabs) { display:none !important; }
+#game-shell #modal[data-panel=pause] #modal-content { padding:0; overflow:visible; background:none; }
+#game-shell #modal[data-panel=pause] .pause-view { display:flex; flex-direction:column; align-items:flex-start; gap:clamp(14px,1.5cqw,22px); padding:0; }
+#game-shell #modal[data-panel=pause] .pause-view:before { content:'Timbertrail'; display:block; margin-bottom:clamp(30px,3.6cqw,52px); padding-bottom:12px; font:600 clamp(34px,3.6cqw,52px)/1 'Pixelify',monospace; color:var(--em-paper); background:linear-gradient(var(--em-ember),var(--em-ember)) left bottom/64px 3px no-repeat; }
+#game-shell #modal[data-panel=pause] .pause-actions { display:flex; flex-direction:column; align-items:flex-start; gap:clamp(14px,1.5cqw,22px); margin:0; }
+#game-shell #modal[data-panel=pause] :is(.pause-view>button,.pause-actions button) { position:relative; display:flex; align-items:center; gap:16px; width:auto; min-height:0; margin:0; padding:0 0 0 28px; border:0 !important; border-radius:0; background:none !important; box-shadow:none !important; font:400 clamp(22px,2cqw,30px)/1.1 'Pixelify',monospace; color:var(--em-dim); text-shadow:var(--em-shadow); cursor:pointer; text-align:left; }
+#game-shell #modal[data-panel=pause] .pause-actions strong { font:inherit; color:inherit; }
+#game-shell #modal[data-panel=pause] :is(.pause-view>button,.pause-actions button):is(:hover,:focus-visible) { color:var(--em-paper); outline:none; }
+#game-shell #modal[data-panel=pause] :is(.pause-view>button,.pause-actions button):before { content:''; position:absolute; left:2px; top:50%; width:10px; height:10px; margin-top:-5px; background:var(--em-ember); transform:rotate(45deg) scale(0); transition:transform .12s steps(2); }
+#game-shell #modal[data-panel=pause] :is(.pause-view>button,.pause-actions button):is(:hover,:focus-visible):before { transform:rotate(45deg) scale(1); }
+#game-shell #modal[data-panel=pause] .pause-view>button.title-menu-action { margin-top:clamp(12px,1.4cqw,22px); font-size:clamp(18px,1.6cqw,24px); color:rgba(239,227,196,.45); }
+#game-shell #modal[data-panel=pause] .pause-view:not(:has(.pause-actions button:hover,.title-menu-action:hover))>.primary { color:var(--em-paper); font-size:clamp(26px,2.4cqw,36px); }
+#game-shell #modal[data-panel=pause] .pause-view:not(:has(.pause-actions button:hover,.title-menu-action:hover))>.primary:before { transform:rotate(45deg) scale(1); }
+
+/* Title: the shore illustration carries the screen; the menu is words on the lake. */
+#game-shell:not(.playing):after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(270deg,rgba(10,14,16,.72) 0%,rgba(10,14,16,.5) 30%,rgba(10,14,16,0) 55%); }
+#game-shell #title-card.title-card { z-index:2; left:auto; right:clamp(40px,8cqw,140px); top:50%; transform:translateY(-50%); width:auto; padding:0; background:none; border:0; box-shadow:none; color:var(--em-paper); font-family:'Pixelify',monospace; display:flex; flex-direction:column; align-items:flex-start; gap:clamp(30px,3.6cqw,52px); }
+#game-shell #title-card .title-brand { gap:12px; }
+#game-shell #title-card h1 { font:600 clamp(40px,4.6cqw,68px)/1 'Pixelify',monospace; color:var(--em-paper); text-shadow:0 3px 0 rgba(10,12,10,.65); }
+#game-shell #title-card .title-brand-rule { width:64px; height:3px; background:var(--em-ember); }
+#game-shell #title-card .title-actions { display:flex; flex-direction:column; align-items:flex-start; gap:clamp(14px,1.5cqw,22px); }
+#game-shell #title-card .title-action,#game-shell #title-card .title-action.secondary { position:relative; width:auto; min-height:0; padding:0 0 0 28px; border:0; border-radius:0; background:none; box-shadow:none; color:var(--em-dim); font:400 clamp(22px,2cqw,30px)/1.1 'Pixelify',monospace; text-shadow:var(--em-shadow); justify-content:flex-start; }
+#game-shell #title-card .title-action span { display:none; }
+#game-shell #title-card .title-action:is(:hover,:focus-visible):not(:disabled),#game-shell #title-card .title-actions:not(:hover) :is(#continue-button:not([hidden]),#continue-button[hidden]+#start-button) { color:var(--em-paper); background:none; outline:none; }
+#game-shell #title-card .title-action:before { content:''; position:absolute; left:2px; top:50%; width:10px; height:10px; margin-top:-5px; background:var(--em-ember); transform:rotate(45deg) scale(0); transition:transform .12s steps(2); }
+#game-shell #title-card .title-action:is(:hover,:focus-visible):not(:disabled):before,#game-shell #title-card .title-actions:not(:hover) :is(#continue-button:not([hidden]),#continue-button[hidden]+#start-button):before { transform:rotate(45deg) scale(1); }
+#game-shell #title-card .title-action:disabled { opacity:.5; }
+#game-shell #title-card .title-footer { margin:0; padding:0; border:0; }
+#game-shell #title-card .title-settings { padding:0 0 0 28px; background:none; border:0; color:rgba(239,227,196,.45); font:400 clamp(16px,1.4cqw,20px)/1 'Pixelify',monospace; text-shadow:var(--em-shadow); }
+#game-shell #title-card .title-settings:hover { color:var(--em-paper); }
