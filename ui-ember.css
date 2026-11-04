@@ -103,3 +103,18 @@
 #game-shell #title-card .title-footer { margin:0; padding:0; border:0; }
 #game-shell #title-card .title-settings { padding:0 0 0 28px; background:none; border:0; color:rgba(239,227,196,.45); font:400 clamp(16px,1.4cqw,20px)/1 'Pixelify',monospace; text-shadow:var(--em-shadow); }
 #game-shell #title-card .title-settings:hover { color:var(--em-paper); }
+
+/* Journal: the pixel book, leather bookmarks above it, no captions. */
+#game-shell #modal.journal-shell :is(.book-backdrop,.book-animation) { image-rendering:pixelated; }
+#game-shell #modal.journal-shell .modal-header .eyebrow { display:none; }
+#game-shell #modal.journal-shell .journal-tabs { position:absolute; left:14%; right:auto; top:auto; bottom:calc(100% - 7.5%); width:auto; flex-direction:row; align-items:flex-end; gap:14px; padding:0; border:0; z-index:0; }
+#game-shell #modal.journal-shell .journal-tabs button { position:relative; display:flex; justify-content:center; align-items:flex-start; width:clamp(46px,4.4cqw,64px); min-height:0; height:clamp(66px,6cqw,86px); padding:clamp(8px,.9cqw,12px) 0 0; border:0; border-radius:0; transform:none; background:var(--em-leather); box-shadow:0 0 0 3px var(--em-ink),inset 0 3px 0 rgba(255,240,200,.14); font-size:0; color:transparent; transition:height .12s steps(2); }
+#game-shell #modal.journal-shell .journal-tabs button:after { display:none; }
+#game-shell #modal.journal-shell .journal-tabs button span { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+#game-shell #modal.journal-shell .journal-tabs button canvas { width:clamp(32px,2.6cqw,40px); height:clamp(32px,2.6cqw,40px); image-rendering:pixelated; }
+#game-shell #modal.journal-shell .journal-tabs button:hover { height:clamp(72px,6.6cqw,94px); }
+#game-shell #modal.journal-shell .journal-tabs button.active { height:clamp(80px,7.2cqw,104px); background:var(--em-ember); box-shadow:0 0 0 3px var(--em-ink),inset 0 3px 0 rgba(255,240,200,.35); }
+#game-shell #modal.journal-shell .modal-header h2 { font-family:'Pixelify',monospace; }
+#game-shell #modal.journal-shell .item-detail .primary,#game-shell #modal.journal-shell .recipe-detail .primary { justify-content:center; border:0; border-radius:0; background:#3b2c1e; color:#f3e6c4; box-shadow:0 0 0 2px #1b1712,inset 0 -3px 0 rgba(0,0,0,.35); font-family:'Pixelify',monospace; }
+#game-shell #modal.journal-shell .item-detail .primary:hover:not(:disabled) { background:#55402a; }
+#game-shell #modal.pixel-journal .book-material:before,#game-shell #modal.pixel-journal .book-material:after { image-rendering:pixelated; }
