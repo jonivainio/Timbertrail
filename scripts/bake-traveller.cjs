@@ -43,11 +43,11 @@ function limb(c,pts,r,fill,shade,light){
 }
 function bootPts(ankle,angle){const ca=Math.cos(angle),sa=Math.sin(angle),pt=(u,v)=>[ankle[0]+u*ca+v*sa,ankle[1]-u*sa+v*ca];return {top:pt(0,-.5),heel:pt(-1,2.2),toe:pt(5,2.6)};}
 // Planted boots: lift the ankle so the lowest boot point rests on the ground row.
-function ground(f){if(!f.stance)return f;const b=bootPts([0,f.y],f.angle||0),low=Math.max(b.heel[1],b.toe[1])+1.6;return {...f,y:f.y+(SOLE-low)};}
+function ground(f){const b=bootPts([0,f.y],f.angle||0),low=Math.max(b.heel[1],b.toe[1])+BOOT_R;if(!f.stance)return low>SOLE?{...f,y:f.y+(SOLE-low)}:f;return {...f,y:f.y+(SOLE-low)};}
 function boot(c,ankle,angle,far){
   // Heel sits under the ankle, toe points forward; angle>0 lifts the toe.
   const {top,heel,toe}=bootPts(ankle,angle),pt=null;
-  limb(c,[top,heel,toe],1.6,far?C.bootDark:C.boot,far?C.ink:C.bootDark,far?null:C.bootLight);
+  limb(c,[top,heel,toe],BOOT_R,far?C.bootDark:C.boot,far?C.ink:C.bootDark,far?null:C.bootLight);
 }
 function hand(c,p,far){const a=far?C.skinShade:C.skin,b=C.skinShade;put(c,p[0],p[1],a);put(c,p[0]+1,p[1],a);put(c,p[0],p[1]+1,b);put(c,p[0]+1,p[1]+1,b);put(c,p[0]-1,p[1],C.ink);put(c,p[0]+2,p[1],C.ink);put(c,p[0],p[1]+2,C.ink);put(c,p[0]+1,p[1]+2,C.ink);}
 
@@ -56,7 +56,7 @@ function ik(root,target,a,b,bend){const dx=target[0]-root[0],dy=target[1]-root[1
   if(d>maxd){tx=root[0]+dx/d*maxd;ty=root[1]+dy/d*maxd;d=maxd;}
   const along=(a*a-b*b+d*d)/(2*d),rise=Math.sqrt(Math.max(0,a*a-along*along)),ux=(tx-root[0])/d,uy=(ty-root[1])/d;
   return {joint:[root[0]+ux*along-uy*rise*bend,root[1]+uy*along+ux*rise*bend],end:[tx,ty]};}
-const THIGH=12,SHIN=12,UPPER=8,FORE=8,ANKLE_Y=71,SOLE=75.45;
+const THIGH=12,SHIN=12,UPPER=8,FORE=8,ANKLE_Y=71,SOLE=75.45,BOOT_R=1.9;
 const smooth=q=>q*q*(3-2*q);
 
 // ---------- gaits ----------
@@ -86,11 +86,11 @@ function draw(g,spec,parts,ctx={}){
   const shoulder=[31+Math.round((49-34)*lean)+(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)+(g.shiftX||0),34+(spec.bob||0)+(spec.hipDy||0)+(g.crouch?g.hip-50:0)];
   const arm=(swing,far)=>{const a=Math.PI/2-swing,elbowBend=g.elbow+(spec.elbowAdd||0),el=[shoulder[0]+Math.cos(a)*UPPER,shoulder[1]+Math.sin(a)*UPPER],fa=a-elbowBend,wr=[el[0]+Math.cos(fa)*FORE,el[1]+Math.sin(fa)*FORE];
     const s=far?[shoulder[0]-2,shoulder[1]+1]:shoulder;return {pts:[s,[el[0]-(far?2:0),el[1]+(far?1:0)],[wr[0]-(far?2:0),wr[1]+(far?1:0)]]};};
-  const legPts=f=>{f=ground(f);const ankle=[hipX+f.x,f.y],k=ik(hip,ankle,THIGH,SHIN,-1);return {pts:[hip,k.joint,k.end],ankle:k.end};};
+  const legPts=f=>{f=ground(f);const ankle=[hipX+f.x,f.y],k=ik(hip,ankle,THIGH,SHIN,-1);const dx=k.joint[0]-k.end[0],dy=k.joint[1]-k.end[1],d=Math.hypot(dx,dy)||1,cuff=[k.end[0]+dx/d*1.8,k.end[1]+dy/d*1.8];return {pts:[hip,k.joint,cuff],ankle:k.end};};
   const farArm=arm(spec.farSwing,true),nearArm=arm(spec.nearSwing,false),farLeg=legPts(spec.far),nearLeg=legPts(spec.near);
   limb(c,farArm.pts,1.7,C.sleeveDark,C.sleeveDeep,null);hand(c,farArm.pts[2].map(Math.round),true);
-  limb(c,farLeg.pts,1.9,C.jeanDark,C.ink,null);boot(c,farLeg.ankle,spec.far.angle,true);
-  limb(c,nearLeg.pts,1.9,C.jean,C.jeanDark,C.jeanLight);boot(c,nearLeg.ankle,spec.near.angle,false);
+  limb(c,farLeg.pts,2.5,C.jeanDark,C.ink,null);boot(c,farLeg.ankle,spec.far.angle,true);
+  limb(c,nearLeg.pts,2.6,C.jean,C.jeanDark,C.jeanLight);boot(c,nearLeg.ankle,spec.near.angle,false);
   const dy=(spec.bob||0)+(spec.hipDy||0)+(g.crouch?g.hip-50:0),dx=(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)+(g.shiftX||0);
   const packLag=spec.packLag||0;
   blit(c,parts,64,dx,dy,lean,49,(x,y)=>x<=25?packLag:0);
