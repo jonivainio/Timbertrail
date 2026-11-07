@@ -3,7 +3,7 @@
   "file": "assets/art-v2/traveller.png",
   "nativeSize": [
     384,
-    480
+    880
   ],
   "palette": [
     "#222b28",
@@ -893,9 +893,580 @@
       ],
       "state": "turn",
       "events": []
+    },
+    {
+      "id": "chop-0",
+      "rect": [
+        256,
+        400,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        25,
+        33
+      ],
+      "state": "action",
+      "events": [],
+      "tool": -1.1
+    },
+    {
+      "id": "chop-1",
+      "rect": [
+        320,
+        400,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        21,
+        30
+      ],
+      "state": "action",
+      "events": [],
+      "tool": -1.65
+    },
+    {
+      "id": "chop-2",
+      "rect": [
+        0,
+        480,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        40,
+        37
+      ],
+      "state": "action",
+      "events": [],
+      "tool": 0.35
+    },
+    {
+      "id": "chop-3",
+      "rect": [
+        64,
+        480,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        49,
+        43
+      ],
+      "state": "action",
+      "events": [
+        "axe-contact"
+      ],
+      "tool": 1.4
+    },
+    {
+      "id": "chop-4",
+      "rect": [
+        128,
+        480,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        45,
+        47
+      ],
+      "state": "action",
+      "events": [],
+      "tool": 1
+    },
+    {
+      "id": "chop-5",
+      "rect": [
+        192,
+        480,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        41,
+        50
+      ],
+      "state": "action",
+      "events": [],
+      "tool": 0.4
+    },
+    {
+      "id": "split-0",
+      "rect": [
+        256,
+        480,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        30,
+        20
+      ],
+      "state": "action",
+      "events": [],
+      "tool": -0.6
+    },
+    {
+      "id": "split-1",
+      "rect": [
+        320,
+        480,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        27,
+        15
+      ],
+      "state": "action",
+      "events": [],
+      "tool": -1.05
+    },
+    {
+      "id": "split-2",
+      "rect": [
+        0,
+        560,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        41,
+        30
+      ],
+      "state": "action",
+      "events": [],
+      "tool": 0.8
+    },
+    {
+      "id": "split-3",
+      "rect": [
+        64,
+        560,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        46,
+        52
+      ],
+      "state": "action",
+      "events": [
+        "axe-contact"
+      ],
+      "tool": 2.1
+    },
+    {
+      "id": "split-4",
+      "rect": [
+        128,
+        560,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        44,
+        50
+      ],
+      "state": "action",
+      "events": [],
+      "tool": 1.6
+    },
+    {
+      "id": "split-5",
+      "rect": [
+        192,
+        560,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        41,
+        50
+      ],
+      "state": "action",
+      "events": [],
+      "tool": 0.6
+    },
+    {
+      "id": "gather-0",
+      "rect": [
+        256,
+        560,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        43,
+        57
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "gather-1",
+      "rect": [
+        320,
+        560,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        47,
+        63
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "gather-2",
+      "rect": [
+        0,
+        640,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        44,
+        61
+      ],
+      "state": "action",
+      "events": [
+        "pick"
+      ]
+    },
+    {
+      "id": "gather-3",
+      "rect": [
+        64,
+        640,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        41,
+        52
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "gather-4",
+      "rect": [
+        128,
+        640,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        37,
+        50
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "skin-down",
+      "rect": [
+        192,
+        640,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        42,
+        56
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "skin-0",
+      "rect": [
+        256,
+        640,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        47,
+        66
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "skin-1",
+      "rect": [
+        320,
+        640,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        49,
+        67
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "skin-2",
+      "rect": [
+        0,
+        720,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        47,
+        68
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "skin-3",
+      "rect": [
+        64,
+        720,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        45,
+        67
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "skin-up",
+      "rect": [
+        128,
+        720,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        41,
+        55
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "pet-0",
+      "rect": [
+        192,
+        720,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        49,
+        54
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "pet-1",
+      "rect": [
+        256,
+        720,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        45,
+        52
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "throw-0",
+      "rect": [
+        320,
+        720,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        22,
+        30
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "throw-1",
+      "rect": [
+        0,
+        800,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        38,
+        24
+      ],
+      "state": "action",
+      "events": [
+        "release"
+      ]
+    },
+    {
+      "id": "throw-2",
+      "rect": [
+        64,
+        800,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        48,
+        40
+      ],
+      "state": "action",
+      "events": []
+    },
+    {
+      "id": "throw-3",
+      "rect": [
+        128,
+        800,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        44,
+        48
+      ],
+      "state": "action",
+      "events": []
     }
   ],
-  "sha256": "59cb4ef1fdba793d77955eb8f3b6836837a683e3c349ad100b6c57b48ea6d5e8",
+  "sha256": "bce9dc3ced5ff0bae934358191b65704859d626daf5665dfecb6929e84145e4f",
   "source": {
     "file": "assets/art-v2/traveller-parts.png",
     "sha256": "ad5df121ce11d61a1d3fefe35f6ea8cc5c4b2f974c3dc4d696acd34b2a08e73f",

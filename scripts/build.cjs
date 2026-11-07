@@ -3,7 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const root=path.resolve(__dirname,'..'),dest=path.join(root,'dist');
 const files=['index.html','style.css','parchment.css','storage.css','fishing.css','i18n.js','regions.js','cabin-interior.js','fishing.js','engine.js','item-icons.js','equipment.js','terrain-surface.js','world-art.js','region-art.js','fire-effects.js','cabin-art.js','fishing-art.js','render.js','audio-samples.js','title-music.js','audio.js','panels.js','storage-ui.js','game.js'];
-files.push('visual-manifest.js','visual-core.js','visual-world.js','world-music.js','music-credits.html','cabin-pixels.js','kajo-art.js','traveller-art.js','visual-ui.css','visual-objectives.css','visual-title.css','ui-icons.js','ui-ember.css');
+files.push('visual-manifest.js','visual-core.js','visual-world.js','world-music.js','music-credits.html','cabin-pixels.js','kajo-art.js','traveller-art.js','motion-fx.js','visual-ui.css','visual-objectives.css','visual-title.css','ui-icons.js','ui-ember.css');
 const musicManifest=require('../assets/audio/world-music.json'),musicFiles=['assets/audio/world-music.json',...musicManifest.cues.map(c=>c.file)];
 for(const file of musicFiles)if(!/^assets\/audio\/(?:world-music\.json|world-[a-z0-9-]+\.mp3)$/.test(file))throw Error('Invalid recorded music asset path');
 const visual=require('../visual-manifest.js'),visualFiles=visual.assets.flatMap(([,name])=>{if(!/^art-v2\/[a-z0-9-]+$/.test(name))throw Error('Invalid visual asset path');return ['assets/'+name+'.png','assets/'+name+'.json'];});
