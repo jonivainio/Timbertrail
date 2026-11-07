@@ -179,17 +179,27 @@ function terrain(r){const v=state(r),scale=r.artScale||.5,key=v.map+':'+scale+':
   }
   c.restore();v.terrainKey=key;return a;
 }
+// Fixed sky, faint parallax; a few stars breathe. Drawn before every land layer
+// so trees and hills occlude them naturally.
+const STARS=Array.from({length:90},(_,i)=>[P.random(i*7.13+1)*W*1.2,(50+Math.pow(P.random(i*3.7+2),1.6)*230),P.random(i*5.9+3)]);
+function stars(c,cam,t,k){for(const [x,y,b]of STARS){const xx=Math.round(((x-cam*.015)%(W*1.2)+W*1.2)%(W*1.2)),yy=Math.round(y),tw=b>.82?.55+.45*Math.sin(t*1.7+x):1;
+    c.globalAlpha=k*(.35+.65*b)*tw;c.fillStyle=b>.9?'#fff1cf':'#dfe7ff';c.fillRect(xx,yy,b>.93?2:1,b>.93?2:1);}
+  const mx=Math.round(W*.7-cam*.004),my=122;c.globalAlpha=k;c.fillStyle='#f1ead2';c.beginPath();c.arc(mx,my,11,0,Math.PI*2);c.fill();c.fillStyle='#c9c6b8';c.fillRect(mx-4,my-3,3,3);c.fillRect(mx+3,my+2,4,3);c.fillRect(mx-2,my+5,2,2);
+  c.globalAlpha=k*.18;const halo=c.createRadialGradient(mx,my,10,mx,my,60);halo.addColorStop(0,'#dfe7ff');halo.addColorStop(1,'rgba(223,231,255,0)');c.fillStyle=halo;c.fillRect(mx-60,my-60,120,120);c.globalAlpha=1;
+}
 function landscape(r,cam){const c=r.c,map=state(r).map,pond=map==='pond',river=map==='river';
   const s=state(r).lightState,warm=s?Math.max(Math.exp(-Math.pow((s.dayTime-.29)/.085,2)),Math.exp(-Math.pow((s.dayTime-.73)/.09,2))):0;
-  const sky=c.createLinearGradient(0,0,0,400);sky.addColorStop(0,pond?'#708e99':'#6f8f92');sky.addColorStop(.62,'#aec0b2');sky.addColorStop(1,'#d3ccb0');c.fillStyle=sky;c.fillRect(0,0,W,H);
-  if(warm>.02){c.globalAlpha=warm*.35;rect(c,0,0,W,400,'#d5a277');c.globalAlpha=1;}
+  const n=s?P.clamp((1-ambient(s))/.88,0,1):0,mix=(a,b,k=n)=>{const h=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));const A=h(a),B=h(b);return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*k)).join(',')+')';};
+  const sky=c.createLinearGradient(0,0,0,400);sky.addColorStop(0,mix(pond?'#708e99':'#6f8f92','#3a4866'));sky.addColorStop(.62,mix('#aec0b2','#7b8ca4'));sky.addColorStop(1,mix('#d3ccb0','#b4b8b0'));c.fillStyle=sky;c.fillRect(0,0,W,H);
+  if(n>.15)stars(c,cam,s.playSeconds,(n-.15)/.85);
+  if(warm>.02){const glow=c.createLinearGradient(0,0,0,400);glow.addColorStop(0,'rgba(120,96,140,0)');glow.addColorStop(.55,`rgba(214,140,120,${warm*.4})`);glow.addColorStop(1,`rgba(236,170,106,${warm*.62})`);c.fillStyle=glow;c.fillRect(0,0,W,400);}
   // Broad distant landforms give the lake a horizon and the forest openings depth.
-  for(let layer=0;layer<2;layer++){const points=[[0,H]];for(let x=-8;x<=W+8;x+=8){const wx=x+cam*(.055+layer*.04);points.push([x,265+layer*48+Math.sin(wx*.004+layer)*24+Math.sin(wx*.011+.9)*10]);}points.push([W+8,H]);poly(c,points,layer?'#829d8c':'#9cb3a5');}
+  for(let layer=0;layer<2;layer++){const points=[[0,H]];for(let x=-8;x<=W+8;x+=8){const wx=x+cam*(.055+layer*.04);points.push([x,265+layer*48+Math.sin(wx*.004+layer)*24+Math.sin(wx*.011+.9)*10]);}points.push([W+8,H]);poly(c,points,layer?mix('#829d8c','#6a7c8c'):mix('#9cb3a5','#8090a2'));}
   // Large cloud banks; finite authored route, not mirrored photographs.
-  for(const [x,y,w]of [[220,43,240],[840,80,340],[1440,32,285]]){const xx=x-cam*.08;poly(c,[[xx,y+13],[xx+31,y+3],[xx+83,y+5],[xx+105,y],[xx+171,y+5],[xx+w,y+16],[xx+w-24,y+22],[xx+12,y+23]],'#bcc4b6');}
+  for(const [x,y,w]of [[220,43,240],[840,80,340],[1440,32,285]]){const xx=x-cam*.08;poly(c,[[xx,y+13],[xx+31,y+3],[xx+83,y+5],[xx+105,y],[xx+171,y+5],[xx+w,y+16],[xx+w-24,y+22],[xx+12,y+23]],mix('#bcc4b6','#727e98'));}
   const base=pond?315:river?365:395;
-  depthTrees(r,cam,.20,'#91aaa0',base-38,.63,0);
-  depthTrees(r,cam,.43,'#688778',base-13,pond?.95:1.02,135);
+  depthTrees(r,cam,.20,mix('#91aaa0','#9aacbc',n*.6),base-38,.63,0);
+  depthTrees(r,cam,.43,mix('#688778','#6f8796',n*.5),base-13,pond?.95:1.02,135);
   depthTrees(r,cam,.72,'#344f43',base+18,pond?1.16:1.48,220);
   if(river)distantCabin(r,cam);
   const sheet=terrain(r),q=r.artScale||.5;c.drawImage(sheet,Math.round(cam*q),0,W*q,H*q,0,0,W,H);
@@ -285,7 +295,7 @@ function sunGround(r,e,positions){const s=e.state,c=r.c,map=s.currentMap,sun=sun
   for(const [x,y,w,h]of buildings){if(x+w/2<left||x-w/2>right)continue;const dx=h*sun.side*.48,dy=h*sun.reach*.22;poly(c,[[x-w*.5,y],[x+w*.5,y],[x+w*.5+dx,y+dy],[x-w*.5+dx,y+dy]],'#182e29');}
   c.restore();
 }
-const FIRE_RADIUS=132;
+const FIRE_RADIUS=200;
 function fireStrength(s,fire){return P.clamp(fire.fuel/30,.25,1)*(.93+.025*Math.sin(s.playSeconds*3.1)+.016*Math.sin(s.playSeconds*4.7))*(.35+.65*(1-ambient(s)));}
 function lightSurface(r,key){const q=r.artScale||1,a=state(r).pool.get(key,W*q,H*q),c=a.getContext('2d');c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';c.imageSmoothingEnabled=false;return a;}
 function beginReceivers(r,e){const v=state(r),s=e.state;
@@ -308,7 +318,7 @@ function receiver(r,bounds,draw){const v=state(r),main=r.c,s=v.lightState;
   for(const fire of v.fires){if(Math.abs(fire.x-bounds.x)>=FIRE_RADIUS+bounds.width/2)continue;
     c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='source-over';c.clearRect(0,0,scratch.width,scratch.height);c.drawImage(shape,0,0);c.setTransform(q,0,0,q,0,0);
     const x=fire.x-s.camera,y=P.ground(fire.x,s.currentMap)-12,strength=fireStrength(s,fire),g=c.createRadialGradient(x,y,1,x,y,FIRE_RADIUS);
-    g.addColorStop(0,`rgba(242,163,83,${strength*.62})`);g.addColorStop(.45,`rgba(222,130,58,${strength*.36})`);g.addColorStop(1,'rgba(197,113,52,0)');
+    g.addColorStop(0,`rgba(246,170,88,${strength*.78})`);g.addColorStop(.45,`rgba(224,132,60,${strength*.42})`);g.addColorStop(1,'rgba(197,113,52,0)');
     c.globalCompositeOperation='source-in';c.fillStyle=g;c.fillRect(0,0,W,H);
     const half=Math.max(8,bounds.width/2),center=bounds.x-s.camera,side=P.clamp((fire.x-bounds.x)/half,-1,1),facing=c.createLinearGradient(center-half,0,center+half,0);
     facing.addColorStop(0,`rgba(0,0,0,${.58-side*.37})`);facing.addColorStop(1,`rgba(0,0,0,${.58+side*.37})`);
@@ -318,23 +328,42 @@ function receiver(r,bounds,draw){const v=state(r),main=r.c,s=v.lightState;
 }
 function receivedFireLight(r,e,fire,strength){const s=e.state,cam=s.camera,q=r.artScale||.5,x=fire.x-cam,y=P.ground(fire.x,s.currentMap),layer=state(r).pool.get('received-light',W*q,H*q),c=layer.getContext('2d');
   c.setTransform(q,0,0,q,0,0);c.globalCompositeOperation='source-over';c.clearRect(0,0,W,H);const ground=[];
-  for(let xx=Math.max(0,x-110);xx<=Math.min(W,x+110);xx+=2)ground.push([xx,root.PETerrainSurface.top(s.currentMap,xx+cam)]);ground.push([Math.min(W,x+110),H],[Math.max(0,x-110),H]);poly(c,ground,'#fff');
-  const nearby=e.nodes.filter(n=>n.type==='tree'&&Math.abs(n.x-fire.x)<100&&!(s.picked[n.id]>s.playSeconds));
+  for(let xx=Math.max(0,x-190);xx<=Math.min(W,x+190);xx+=2)ground.push([xx,root.PETerrainSurface.top(s.currentMap,xx+cam)]);ground.push([Math.min(W,x+190),H],[Math.max(0,x-190),H]);poly(c,ground,'#fff');
+  const nearby=e.nodes.filter(n=>n.type==='tree'&&Math.abs(n.x-fire.x)<170&&!(s.picked[n.id]>s.playSeconds));
   // Ground receives light, with a short widening shadow behind nearby trunks.
   c.globalCompositeOperation='destination-out';for(const n of nearby){const nx=n.x-cam,ny=P.ground(n.x,s.currentMap),side=Math.sign(n.x-fire.x)||1;poly(c,[[nx-4,ny],[nx+6,ny],[nx+side*77+12,ny+39],[nx+side*77-15,ny+28]],'#fff');}
   c.globalCompositeOperation='source-over';const main=r.c;
-  c.globalCompositeOperation='source-in';const received=c.createRadialGradient(x,y-4,1,x,y-4,108);received.addColorStop(0,`rgba(227,146,67,${strength*.48})`);received.addColorStop(.5,`rgba(197,113,52,${strength*.19})`);received.addColorStop(1,'rgba(197,113,52,0)');c.fillStyle=received;c.fillRect(0,0,W,H);c.globalCompositeOperation='source-over';
+  c.globalCompositeOperation='source-in';const received=c.createRadialGradient(x,y-4,1,x,y-4,185);received.addColorStop(0,`rgba(232,150,70,${strength*.55})`);received.addColorStop(.35,`rgba(210,122,55,${strength*.26})`);received.addColorStop(1,'rgba(197,113,52,0)');c.fillStyle=received;c.fillRect(0,0,W,H);c.globalCompositeOperation='source-over';
   // Opaque receivers replace the ground lighting below their exact silhouette.
   const mask=state(r).pool.surfaces.get('receiver-mask');if(mask){c.globalCompositeOperation='destination-out';c.drawImage(mask,0,0,W,H);c.globalCompositeOperation='source-over';}
   main.save();main.globalCompositeOperation='screen';main.drawImage(layer,0,0,W,H);main.restore();
 }
+// Night is a multiply grade, not a flat grey veil: colours keep their
+// relationships, ground falls darker than sky, and every light cuts a pool
+// of true colour out of the dark (fires, the walker's own small halo).
+function darkness(r,e,night){if(night<.02)return;const s=e.state,cam=s.camera,q=r.artScale||.5,v=state(r);
+  const a=v.pool.get('darkness',W*q,H*q),d=a.getContext('2d');d.setTransform(q,0,0,q,0,0);d.globalCompositeOperation='source-over';d.clearRect(0,0,W,H);
+  const n=P.clamp(night/.88,0,1)*(s.weather==='rain'?1:.97),g=d.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,`rgba(62,78,124,${n*.86})`);g.addColorStop(.6,`rgba(52,66,110,${n*.88})`);g.addColorStop(1,`rgba(34,42,76,${n*.92})`);d.fillStyle=g;d.fillRect(0,0,W,H);d.globalCompositeOperation='destination-out';
+  // Pools hug the ground: a flattened ellipse, so a fire lights the clearing
+  // rather than throwing a spotlight up into the far hills.
+  const hole=(x,y,radius,k,color)=>{d.save();d.translate(x,y);d.scale(1,.62);const h=d.createRadialGradient(0,0,1,0,0,radius);h.addColorStop(0,color?color(k):`rgba(0,0,0,${k})`);h.addColorStop(.45,color?color(k*.6):`rgba(0,0,0,${k*.62})`);h.addColorStop(1,color?color(0):'rgba(0,0,0,0)');d.fillStyle=h;d.fillRect(-radius,-radius,radius*2,radius*2);d.restore();};
+  for(const fire of v.fires||[]){const x=fire.x-cam,y=P.ground(fire.x,s.currentMap)-26;hole(x,y,FIRE_RADIUS*1.25,.92*P.clamp(fireStrength(s,fire)/.9,0,1));}
+  // Moon and the brightest stars shine through the grade as crisp pixels.
+  if(n>.15){const k=(n-.15)/.85,mx=Math.round(W*.7-cam*.004),my=122;d.fillStyle=`rgba(0,0,0,${.8*k})`;d.beginPath();d.arc(mx,my,11,0,Math.PI*2);d.fill();
+    for(const [x,y,b]of STARS){if(b<.55)continue;const xx=Math.round(((x-cam*.015)%(W*1.2)+W*1.2)%(W*1.2)),size=b>.93?2:1;d.fillStyle=`rgba(0,0,0,${k*.7*b})`;d.fillRect(xx,Math.round(y),size,size);}}
+  const p=s.player;if(p&&!s.cabinHome?.inside){const x=p.x-cam,y=P.ground(p.x,s.currentMap)-30;hole(x,y,95,.32);}
+  // Firelight is warm: what the hole reveals is tinted ember, not daylight.
+  d.globalCompositeOperation='destination-over';for(const fire of v.fires||[]){const x=fire.x-cam,y=P.ground(fire.x,s.currentMap)-26;hole(x,y,FIRE_RADIUS*1.25,n*.55*P.clamp(fireStrength(s,fire)/.9,0,1),k=>`rgba(255,168,96,${k})`);}
+  d.globalCompositeOperation='source-over';const c=r.c;c.save();c.globalCompositeOperation='multiply';c.drawImage(a,0,0,W,H);c.restore();
+}
 function light(r,e){const c=r.c,s=e.state,night=1-ambient(s),cam=s.camera,t=s.playSeconds;
   const warm=Math.max(Math.exp(-Math.pow((s.dayTime-.29)/.065,2)),Math.exp(-Math.pow((s.dayTime-.73)/.065,2)))*(s.weather==='rain'?.2:1);
   if(warm>.01){c.save();c.globalCompositeOperation='soft-light';rect(c,0,0,W,H,`rgba(225,164,94,${warm*.26})`);c.restore();}
-  rect(c,0,0,W,H,`rgba(16,22,34,${night*.71+(s.weather==='rain'?.05:0)})`);
+  darkness(r,e,night);
   for(const fire of state(r).fires||[]){const x=fire.x-cam,y=P.ground(fire.x,s.currentMap),strength=fireStrength(s,fire);
     receivedFireLight(r,e,fire,strength);
-    c.save();c.globalCompositeOperation='screen';const glow=c.createRadialGradient(x,y-17,2,x,y-17,53);glow.addColorStop(0,`rgba(241,204,128,${strength*.08})`);glow.addColorStop(.4,`rgba(189,98,62,${strength*.025})`);glow.addColorStop(1,'rgba(189,98,62,0)');c.fillStyle=glow;c.fillRect(x-53,y-70,106,106);c.restore();
+    c.save();c.globalCompositeOperation='screen';const glow=c.createRadialGradient(x,y-24,2,x,y-24,150);glow.addColorStop(0,`rgba(246,196,120,${strength*.16})`);glow.addColorStop(.3,`rgba(205,110,60,${strength*.06})`);glow.addColorStop(1,'rgba(189,98,62,0)');c.fillStyle=glow;c.fillRect(x-150,y-174,300,300);c.restore();
   }
   const received=state(r).pool.surfaces.get('receiver-light');if(received){c.save();c.globalCompositeOperation='screen';c.drawImage(received,0,0,W,H);c.restore();}
   root.PECabinPixels?.drawWindows(r,s);
@@ -346,11 +375,11 @@ function light(r,e){const c=r.c,s=e.state,night=1-ambient(s),cam=s.camera,t=s.pl
 function banks(start,end,surface,y){const d=y-surface,curve=Math.sin(d*.024)*8;return [start+curve-d*.13,end+curve+d*.11];}
 function bodyWater(r,e,start,end,surface,bed,stream=false){const s=e.state,c=r.c,q=r.artScale||.5,cam=s.camera,t=s.playSeconds,v=state(r),source=v.pool.get('reflection',W*q,H*q),left=Math.max(cam,start),right=Math.min(cam+W,end);if(right<=left)return;
   c.save();c.translate(-cam,0);c.beginPath();if(stream){for(let y=surface;y<=H;y+=2){const [a]=banks(start,end,surface,y);y===surface?c.moveTo(a,y):c.lineTo(a,y);}for(let y=H;y>=surface;y-=2)c.lineTo(banks(start,end,surface,y)[1],y);}else{c.moveTo(left,surface);c.lineTo(right,surface);for(let x=right;x>=left;x-=4)c.lineTo(x,bed(x));}c.closePath();c.clip();
-  const night=1-ambient(s),base=night>.5?'#203844':'#35535c';
-  const depthColor=c.createLinearGradient(0,surface,0,surface+170);depthColor.addColorStop(0,night>.5?'#354a51':'#6d9088');depthColor.addColorStop(.3,base);depthColor.addColorStop(1,night>.5?'#172e37':'#263f49');c.fillStyle=depthColor;c.fillRect(left,surface,right-left,H-surface);
+  const night=1-ambient(s),base=night>.5?'#13212c':'#35535c';
+  const depthColor=c.createLinearGradient(0,surface,0,surface+170);depthColor.addColorStop(0,night>.5?'#24323e':'#6d9088');depthColor.addColorStop(.3,base);depthColor.addColorStop(1,night>.5?'#0c161e':'#263f49');c.fillStyle=depthColor;c.fillRect(left,surface,right-left,H-surface);
   if(stream)rect(c,cam,surface,W,H-surface,base);
   for(let yy=surface;yy<H;yy+=2){const depth=yy-surface,sy=surface-depth;if(sy<0)break;const edges=stream?banks(start,end,surface,yy):[left,right],a=Math.max(cam,edges[0]-4),b=Math.min(cam+W,edges[1]+4);
-    c.globalAlpha=(stream?.45:.56)*Math.max(.06,1-depth/(stream?130:155));
+    c.globalAlpha=(stream?.45:.56)*(1-.3*P.clamp(night/.88,0,1))*Math.max(.06,1-depth/(stream?130:155));
     // One strip per depth row, anchored to this water body's fixed world extent.
     // This remains camera-invariant without thousands of small image draws.
     const offset=V.waterOffset((start+end)/2,depth,t,s.weather==='rain'?.8:.1)/q;
