@@ -49,7 +49,7 @@ function boot(c,ankle,angle,far){
   const {top,heel,toe}=bootPts(ankle,angle),pt=null;
   limb(c,[top,heel,toe],1.6,far?C.bootDark:C.boot,far?C.ink:C.bootDark,far?null:C.bootLight);
 }
-function hand(c,p,far){put(c,p[0],p[1],far?C.skinShade:C.skin);put(c,p[0]+1,p[1],far?C.skinShade:C.skinShade);put(c,p[0],p[1]+1,C.skinShade);}
+function hand(c,p,far){const a=far?C.skinShade:C.skin,b=C.skinShade;put(c,p[0],p[1],a);put(c,p[0]+1,p[1],a);put(c,p[0],p[1]+1,b);put(c,p[0]+1,p[1]+1,b);put(c,p[0]-1,p[1],C.ink);put(c,p[0]+2,p[1],C.ink);put(c,p[0],p[1]+2,C.ink);put(c,p[0]+1,p[1]+2,C.ink);}
 
 // ---------- IK ----------
 function ik(root,target,a,b,bend){const dx=target[0]-root[0],dy=target[1]-root[1];let d=Math.hypot(dx,dy);const maxd=a+b-.01;let tx=target[0],ty=target[1];
@@ -62,9 +62,9 @@ const smooth=q=>q*q*(3-2*q);
 // ---------- gaits ----------
 // cycle: px travelled per stride cycle (stride phase 0..2π). duty: stance share.
 const GAITS={
-  walk:{cels:8,cycle:52,duty:.5,lift:4,hip:50,bob:1,lean:.03,swing:.55,elbow:.3,pack:0},
+  walk:{cels:8,cycle:52,duty:.5,lift:4,hip:50,bob:1,lean:.03,swing:.8,elbow:.35,pack:0},
   run:{cels:8,cycle:84,duty:.36,lift:9,hip:51,bob:2,lean:.13,swing:.75,elbow:1.45,pack:1,kick:7},
-  crouch:{cels:6,cycle:30,duty:.6,lift:3,hip:60,bob:1,lean:.32,swing:.2,elbow:.7,pack:0,crouch:true}
+  crouch:{cels:6,cycle:30,duty:.6,lift:3,hip:60,bob:1,lean:.12,swing:.2,elbow:.9,pack:0,crouch:true,shiftX:3}
 };
 function footAt(g,u){ // u = this foot's phase 0..1, 0 = heel strike
   const half=g.cycle*g.duty/2;
@@ -83,19 +83,19 @@ function pose(g,phase){ // phase 0..1; near leg strikes at 0, far leg at .5
 function draw(g,spec,parts,ctx={}){
   const c=cel(),hipX=31+(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0),hipY=g.hip+(spec.bob||0)+(spec.hipDy||0),lean=spec.lean??g.lean,hip=[hipX,hipY];
   const sh=(y)=>(hipY-y)*lean;
-  const shoulder=[33+sh(34)+(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)-2,34+(spec.bob||0)+(spec.hipDy||0)];
+  const shoulder=[31+Math.round((49-34)*lean)+(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)+(g.shiftX||0),34+(spec.bob||0)+(spec.hipDy||0)+(g.crouch?g.hip-50:0)];
   const arm=(swing,far)=>{const a=Math.PI/2-swing,elbowBend=g.elbow+(spec.elbowAdd||0),el=[shoulder[0]+Math.cos(a)*UPPER,shoulder[1]+Math.sin(a)*UPPER],fa=a-elbowBend,wr=[el[0]+Math.cos(fa)*FORE,el[1]+Math.sin(fa)*FORE];
     const s=far?[shoulder[0]-2,shoulder[1]+1]:shoulder;return {pts:[s,[el[0]-(far?2:0),el[1]+(far?1:0)],[wr[0]-(far?2:0),wr[1]+(far?1:0)]]};};
   const legPts=f=>{f=ground(f);const ankle=[hipX+f.x,f.y],k=ik(hip,ankle,THIGH,SHIN,-1);return {pts:[hip,k.joint,k.end],ankle:k.end};};
   const farArm=arm(spec.farSwing,true),nearArm=arm(spec.nearSwing,false),farLeg=legPts(spec.far),nearLeg=legPts(spec.near);
-  limb(c,farArm.pts,1.4,C.sleeveDark,C.sleeveDeep,null);hand(c,farArm.pts[2].map(Math.round),true);
+  limb(c,farArm.pts,1.7,C.sleeveDark,C.sleeveDeep,null);hand(c,farArm.pts[2].map(Math.round),true);
   limb(c,farLeg.pts,1.9,C.jeanDark,C.ink,null);boot(c,farLeg.ankle,spec.far.angle,true);
   limb(c,nearLeg.pts,1.9,C.jean,C.jeanDark,C.jeanLight);boot(c,nearLeg.ankle,spec.near.angle,false);
-  const dy=(spec.bob||0)+(spec.hipDy||0)+(g.crouch?g.hip-50:0),dx=(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)-(g.crouch?3:0);
+  const dy=(spec.bob||0)+(spec.hipDy||0)+(g.crouch?g.hip-50:0),dx=(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)+(g.shiftX||0);
   const packLag=spec.packLag||0;
   blit(c,parts,64,dx,dy,lean,49,(x,y)=>x<=25?packLag:0);
   blit(c,parts,0,dx+(spec.headDx||0),dy+(spec.headDy||0),lean,49);
-  limb(c,nearArm.pts,1.4,C.sleeve,C.sleeveShade,null);const handPx=nearArm.pts[2].map(Math.round);hand(c,handPx,false);
+  limb(c,nearArm.pts,1.7,C.sleeve,C.sleeveShade,null);const handPx=nearArm.pts[2].map(Math.round);hand(c,handPx,false);
   return {cel:c,hand:handPx,nearAnkle:nearLeg.ankle,farAnkle:farLeg.ankle};
 }
 function gaitSpec(g,phase,prevBob){const p=pose(g,phase),swing=Math.sin(phase*TAU)*g.swing;
@@ -121,11 +121,10 @@ function bake(){
   add('stop-brake','stop',draw({...GAITS.run,lean:-.06,elbow:1.2},{near:{x:11,y:ANKLE_Y,angle:.3,stance:true},far:{x:-9,y:ANKLE_Y-1,angle:-.3},bob:2,nearSwing:.5,farSwing:-.4},parts));
   add('stop-0','stop',draw({...idleG,lean:-.04},stand({near:{...still,x:7},far:{...still,x:-6},bob:1,nearSwing:.25,farSwing:-.2}),parts));
   add('stop-1','stop',draw(idleG,stand({near:{...still,x:3},far:{...still,x:-3},bob:1,nearSwing:.1,farSwing:-.08}),parts));
-  // Turn: narrowed front-ish body, first still facing back, then forward.
-  const turnBase=draw(idleG,stand({near:{...still,x:0},far:{...still,x:0},nearSwing:0,farSwing:0}),parts);
-  const squash=(res,mirror)=>{const c=cel();for(let y=0;y<H;y++)for(let x=0;x<W;x++){const sx=Math.round(32+(x-32)/.7);if(sx<0||sx>=W)continue;const v=res.cel.data[y*W+(mirror?63-sx:sx)];if(v)c.data[y*W+x]=v;}
-    return {cel:c,hand:[Math.round(32+(res.hand[0]-32)*.7*(mirror?-1:1)),res.hand[1]]};};
-  add('turn-0','turn',squash(turnBase,true));add('turn-1','turn',squash(turnBase,false));
+  // Turn: plain flip (no scaling). turn-0 pivots on crossed feet with the weight
+  // still behind; turn-1 settles forward into the new direction.
+  add('turn-0','turn',draw({...idleG,lean:-.03},stand({near:{...still,x:-3},far:{...still,x:4},nearSwing:-.2,farSwing:.25,bob:1}),parts));
+  add('turn-1','turn',draw({...idleG,lean:.04},stand({near:{...still,x:4},far:{...still,x:-2},nearSwing:.15,farSwing:-.1}),parts));
   // Sheet
   const cols=6,rows=Math.ceil(out.length/cols),img=PNG.create(cols*W,rows*H);
   out.forEach((f,i)=>{const ox=i%cols*W,oy=Math.floor(i/cols)*H;f.rect=[ox,oy,W,H];for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=f.res.cel.data[y*W+x];if(!v)continue;img.data.set(v,((oy+y)*img.width+ox+x)*4);}});
