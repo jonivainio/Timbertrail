@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Traveller rig → baked pixel cels.
-//   node scripts/bake-traveller.cjs --extract   (one-off: cut parts from the legacy idle cel)
+//   node scripts/bake-traveller.cjs --extract <legacy-sheet.png>   (one-off: cut parts from the 0.8 idle cel)
 //   node scripts/bake-traveller.cjs             (bake assets/art-v2/traveller.png + .json, update traveller-art.js)
 // Parts: head and torso+pack are bitmaps cut from the original illustrated cel; limbs
 // and boots are rasterised from the rig with the sprite's own palette, so no rotated
@@ -14,11 +14,13 @@ const C={ink:hex('#222b28'),jean:hex('#3b5352'),jeanDark:hex('#253b3c'),jeanLigh
   skin:hex('#e1ba83'),skinShade:hex('#d0ac73'),boot:hex('#633925'),bootLight:hex('#935133'),bootDark:hex('#3b3328')};
 
 // ---------- parts ----------
-function extract(){
-  const src=PNG.decode(fs.readFileSync(path.join(ART,'traveller.png'))),parts=PNG.create(128,H),idle=[128,80];
+// Source: the legacy illustrated sheet (git show c8c8f07-era traveller.png), idle cel at [128,80].
+// Layers: x 0–63 head, 64–127 torso+pack, 128–191 jeans swatch (texture only).
+function extract(from){
+  const src=PNG.decode(fs.readFileSync(from)),parts=PNG.create(192,H),idle=[128,80];
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=((idle[1]+y)*src.width+idle[0]+x)*4;if(src.data[i+3]<128)continue;
-    let dx=-1;if(y<=28)dx=0;else if(y<=49||(y<=51&&x>=31&&x<=37))dx=64;if(dx<0)continue;
-    const o=(y*128+x+dx)*4;src.data.copy(parts.data,o,i,i+4);parts.data[o+3]=255;}
+    let dx=-1;if(y<=28)dx=0;else if(y<=49||(y<=51&&x>=31&&x<=37))dx=64;else if(y>=53&&y<=66&&x>=24&&x<=38)dx=128;if(dx<0)continue;
+    const o=(y*192+x+dx)*4;src.data.copy(parts.data,o,i,i+4);parts.data[o+3]=255;}
   fs.writeFileSync(path.join(ART,'traveller-parts.png'),PNG.encode(parts));console.log('wrote traveller-parts.png');
 }
 
@@ -54,6 +56,13 @@ function hand(c,p,far){const a=far?C.skinShade:C.skin,b=C.skinShade;put(c,p[0],p
 
 // Sleeve texture: jacket pixels from the torso layer, mapped along the arm so the
 // cloth pattern travels with it. Underside uses the next darker jacket tone.
+function clothTexture(parts,layer,box,ramps,fallback,far){
+  const key=c=>c.slice(0,3).join(','),darker={};for(const r of ramps)r.forEach((c,i)=>darker[key(c)]=r[Math.min(r.length-1,i+1)]);
+  const [x0,y0,x1,y1]=box,w=x1-x0+1,h=y1-y0+1,grid=new Map();
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=(y*parts.width+layer+x)*4;if(parts.data[i+3]<128)continue;const c=[parts.data[i],parts.data[i+1],parts.data[i+2],255];if(key(c)===key(C.ink))continue;grid.set((x-x0)+','+(y-y0),c);}
+  const pick=(u,v)=>{for(let k=0;k<w;k++){const g=grid.get(((u+k)%w)+','+v)||grid.get(((u+k)%w)+','+((v+1)%h));if(g)return g;}return fallback;};
+  return (along,across,under)=>{let c=pick(((Math.round(across+w/2))%w+w)%w,((Math.round(along))%h+h)%h);if(under)c=darker[key(c)]||c;if(far)c=darker[key(c)]||c;return c;};
+}
 function sleeveTexture(parts,far){
   const key=c=>c.slice(0,3).join(','),ink=new Set([key(C.ink),key(C.bootDark),'89,69,50']),darker={};
   const ramp=['#d0ac73','#bd9458','#9e723f','#79563a','#594532'].map(hex),warm=['#b66a3b','#935133','#633925'].map(hex);
@@ -73,7 +82,7 @@ const smooth=q=>q*q*(3-2*q);
 // ---------- gaits ----------
 // cycle: px travelled per stride cycle (stride phase 0..2π). duty: stance share.
 const GAITS={
-  walk:{cels:8,cycle:52,duty:.5,lift:4,hip:50,bob:1,lean:.03,swing:.8,elbow:.35,pack:0},
+  walk:{cels:8,cycle:52,duty:.5,lift:5,hip:50,bob:1,lean:.03,swing:.8,elbow:.35,pack:0},
   run:{cels:8,cycle:84,duty:.36,lift:9,hip:51,bob:2,lean:.13,swing:.75,elbow:1.45,pack:1,kick:7},
   crouch:{cels:6,cycle:30,duty:.6,lift:3,hip:60,bob:1,lean:.12,swing:.2,elbow:.9,pack:0,crouch:true,shiftX:3}
 };
@@ -93,17 +102,19 @@ function pose(g,phase){ // phase 0..1; near leg strikes at 0, far leg at .5
 }
 const SLEEVE={};
 function draw(g,spec,parts){
-  const ctx={sleeveNear:SLEEVE.near||(SLEEVE.near=sleeveTexture(parts,false)),sleeveFar:SLEEVE.far||(SLEEVE.far=sleeveTexture(parts,true))};
+  const jeans=[['#5b7066','#3b5352','#253b3c','#222b28'].map(hex)];
+  const ctx={sleeveNear:SLEEVE.near||(SLEEVE.near=sleeveTexture(parts,false)),sleeveFar:SLEEVE.far||(SLEEVE.far=sleeveTexture(parts,true)),
+    jeanNear:SLEEVE.jn||(SLEEVE.jn=clothTexture(parts,128,[26,54,36,66],jeans,C.jean,false)),jeanFar:SLEEVE.jf||(SLEEVE.jf=clothTexture(parts,128,[26,54,36,66],jeans,C.jeanDark,true))};
   const c=cel(),hipX=31+(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0),hipY=g.hip+(spec.bob||0)+(spec.hipDy||0),lean=spec.lean??g.lean,hip=[hipX,hipY];
   const sh=(y)=>(hipY-y)*lean;
   const shoulder=[31+Math.round((49-34)*lean)+(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)+(g.shiftX||0),34+(spec.bob||0)+(spec.hipDy||0)+(g.crouch?g.hip-50:0)];
-  const arm=(swing,far)=>{const a=Math.PI/2-swing,elbowBend=g.elbow+(spec.elbowAdd||0),el=[shoulder[0]+Math.cos(a)*UPPER,shoulder[1]+Math.sin(a)*UPPER],fa=a-elbowBend,wr=[el[0]+Math.cos(fa)*FORE,el[1]+Math.sin(fa)*FORE];
+  const arm=(swing,far)=>{const a=Math.PI/2-swing,elbowBend=g.elbow+(spec.elbowAdd||0)+Math.max(0,swing)*.55,el=[shoulder[0]+Math.cos(a)*UPPER,shoulder[1]+Math.sin(a)*UPPER],fa=a-elbowBend,wr=[el[0]+Math.cos(fa)*FORE,el[1]+Math.sin(fa)*FORE];
     const s=far?[shoulder[0]-2,shoulder[1]+1]:shoulder;return {pts:[s,[el[0]-(far?2:0),el[1]+(far?1:0)],[wr[0]-(far?2:0),wr[1]+(far?1:0)]]};};
   const legPts=f=>{f=ground(f);const ankle=[hipX+f.x,f.y],k=ik(hip,ankle,THIGH,SHIN,-1);const dx=k.joint[0]-k.end[0],dy=k.joint[1]-k.end[1],d=Math.hypot(dx,dy)||1,cuff=[k.end[0]+dx/d*1.8,k.end[1]+dy/d*1.8];return {pts:[hip,k.joint,cuff],ankle:k.end};};
   const farArm=arm(spec.farSwing,true),nearArm=arm(spec.nearSwing,false),farLeg=legPts(spec.far),nearLeg=legPts(spec.near);
   limb(c,farArm.pts,2.2,C.sleeveDark,C.sleeveDeep,null,ctx.sleeveFar);hand(c,farArm.pts[2].map(Math.round),true);
-  limb(c,farLeg.pts,2.5,C.jeanDark,C.ink,null);boot(c,farLeg.ankle,spec.far.angle,true);
-  limb(c,nearLeg.pts,2.6,C.jean,C.jeanDark,C.jeanLight);boot(c,nearLeg.ankle,spec.near.angle,false);
+  limb(c,farLeg.pts,2.5,C.jeanDark,C.ink,null,ctx.jeanFar);boot(c,farLeg.ankle,spec.far.angle,true);
+  limb(c,nearLeg.pts,2.6,C.jean,C.jeanDark,C.jeanLight,ctx.jeanNear);boot(c,nearLeg.ankle,spec.near.angle,false);
   const dy=(spec.bob||0)+(spec.hipDy||0)+(g.crouch?g.hip-50:0),dx=(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)+(g.shiftX||0);
   const packLag=spec.packLag||0;
   blit(c,parts,64,dx,dy,lean,49,(x,y)=>x<=25?packLag:0);
@@ -112,7 +123,9 @@ function draw(g,spec,parts){
   return {cel:c,hand:handPx,nearAnkle:nearLeg.ankle,farAnkle:farLeg.ankle};
 }
 function gaitSpec(g,phase,prevBob){const p=pose(g,phase),swing=Math.sin(phase*TAU)*g.swing;
-  return {near:p.near,far:p.far,bob:p.bob,nearSwing:-swing,farSwing:swing,packLag:g.pack?(prevBob-p.bob):0};}
+  // Follow-through: head and pack settle one cel after the body (±1 px).
+  const lag=Math.max(-1,Math.min(1,prevBob-p.bob));
+  return {near:p.near,far:p.far,bob:p.bob,nearSwing:-swing,farSwing:swing,packLag:g.pack||g.cels===8?lag:0,headDy:g.crouch?0:lag};}
 
 // ---------- bake ----------
 function bake(){
@@ -158,5 +171,5 @@ function bake(){
   fs.writeFileSync(js,next);
   console.log(`baked ${out.length} cels → traveller.png ${img.width}×${img.height} sha ${sha.slice(0,12)}`);
 }
-if(require.main===module){if(process.argv.includes('--extract'))extract();else bake();}
+if(require.main===module){const i=process.argv.indexOf('--extract');if(i>=0)extract(process.argv[i+1]);else bake();}
 module.exports={GAITS,footAt,pose,ANCHOR};

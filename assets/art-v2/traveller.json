@@ -141,7 +141,7 @@
       ],
       "farAnkle": [
         19.12,
-        69.35
+        69.09
       ]
     },
     {
@@ -169,7 +169,7 @@
       ],
       "farAnkle": [
         26.23,
-        67.3
+        66.38
       ]
     },
     {
@@ -197,7 +197,7 @@
       ],
       "farAnkle": [
         35.77,
-        67.3
+        66.38
       ]
     },
     {
@@ -225,7 +225,7 @@
       ],
       "farAnkle": [
         42.88,
-        69.47
+        69.09
       ]
     },
     {
@@ -241,8 +241,8 @@
         76
       ],
       "hand": [
-        38,
-        49
+        39,
+        48
       ],
       "state": "walk",
       "events": [
@@ -251,7 +251,7 @@
       "phase": 0.5625,
       "nearAnkle": [
         19.12,
-        69.35
+        69.09
       ],
       "farAnkle": [
         40.75,
@@ -271,15 +271,15 @@
         76
       ],
       "hand": [
-        43,
-        44
+        44,
+        41
       ],
       "state": "walk",
       "events": [],
       "phase": 0.6875,
       "nearAnkle": [
         26.23,
-        67.3
+        66.38
       ],
       "farAnkle": [
         34.25,
@@ -299,15 +299,15 @@
         76
       ],
       "hand": [
-        43,
-        44
+        44,
+        41
       ],
       "state": "walk",
       "events": [],
       "phase": 0.8125,
       "nearAnkle": [
         35.77,
-        67.3
+        66.38
       ],
       "farAnkle": [
         27.75,
@@ -327,15 +327,15 @@
         76
       ],
       "hand": [
-        38,
-        49
+        39,
+        48
       ],
       "state": "walk",
       "events": [],
       "phase": 0.9375,
       "nearAnkle": [
         42.88,
-        69.47
+        69.09
       ],
       "farAnkle": [
         21.25,
@@ -470,7 +470,7 @@
       ],
       "hand": [
         44,
-        38
+        37
       ],
       "state": "run",
       "events": [
@@ -499,8 +499,8 @@
         76
       ],
       "hand": [
-        46,
-        35
+        44,
+        33
       ],
       "state": "run",
       "events": [],
@@ -527,8 +527,8 @@
         76
       ],
       "hand": [
-        46,
-        34
+        44,
+        32
       ],
       "state": "run",
       "events": [],
@@ -556,7 +556,7 @@
       ],
       "hand": [
         44,
-        39
+        38
       ],
       "state": "run",
       "events": [],
@@ -584,7 +584,7 @@
       ],
       "hand": [
         45,
-        56
+        55
       ],
       "state": "crouch",
       "events": []
@@ -603,7 +603,7 @@
       ],
       "hand": [
         44,
-        58
+        57
       ],
       "state": "crouch",
       "events": [
@@ -661,7 +661,7 @@
       ],
       "hand": [
         44,
-        58
+        57
       ],
       "state": "crouch",
       "events": [],
@@ -688,8 +688,8 @@
         76
       ],
       "hand": [
-        46,
-        55
+        47,
+        54
       ],
       "state": "crouch",
       "events": [
@@ -718,8 +718,8 @@
         76
       ],
       "hand": [
-        47,
-        54
+        48,
+        53
       ],
       "state": "crouch",
       "events": [],
@@ -746,8 +746,8 @@
         76
       ],
       "hand": [
-        46,
-        55
+        47,
+        54
       ],
       "state": "crouch",
       "events": [],
@@ -812,8 +812,8 @@
         76
       ],
       "hand": [
-        42,
-        42
+        41,
+        40
       ],
       "state": "stop",
       "events": []
@@ -831,8 +831,8 @@
         76
       ],
       "hand": [
-        35,
-        50
+        36,
+        49
       ],
       "state": "stop",
       "events": []
@@ -850,8 +850,8 @@
         76
       ],
       "hand": [
-        34,
-        51
+        35,
+        50
       ],
       "state": "stop",
       "events": []
@@ -888,17 +888,17 @@
         76
       ],
       "hand": [
-        36,
+        37,
         49
       ],
       "state": "turn",
       "events": []
     }
   ],
-  "sha256": "967df0a17ba241a39245a07dfddf8b67d0b458182060022f99493c99e26e42b0",
+  "sha256": "4fd30a9f078b14f95992bc4db4c3073cdfbffb06fe31a1c19dd4754fabac3449",
   "source": {
     "file": "assets/art-v2/traveller-parts.png",
-    "sha256": "72cd3dd3723414609eb61cd521f896fc4c085a0a1af2d410f48ad311bfe2f9cb",
+    "sha256": "ad5df121ce11d61a1d3fefe35f6ea8cc5c4b2f974c3dc4d696acd34b2a08e73f",
     "script": "scripts/bake-traveller.cjs",
     "method": "Head and torso+pack cut from the 0.8 illustrated idle cel; limbs and boots rasterised from a two-bone rig in the sprite palette; integer shear for lean, no resampling"
   },
