@@ -154,7 +154,7 @@
     if(!renderer||!renderer.sprites)return false;
     if(root.PEFishingArt?.actor(renderer,engine))return true;
     const c=renderer.c,s=engine.state,p=s.player,y=root.PE?root.PE.ground(p.x,engine.state.currentMap):0,type=TOOLS.has(s.equipped)?s.equipped:null;
-    const actionPlacement=renderer.visualV2&&renderer.artTravellerActions?root.PETravellerArt?.actionSample(engine,renderer):null;
+    const actionPlacement=renderer.visualV2&&(renderer.artTraveller||renderer.artTravellerActions)?root.PETravellerArt?.actionSample(engine,renderer):null;
     const shadowX=p.x+(actionPlacement?.shadowX||0)*(p.facing||1);
     shadow(c,shadowX,actionPlacement?root.PE.ground(shadowX,s.currentMap):y,16);const [layer,lc]=makeLayer(renderer);
     if(root.PETravellerArt?.drawAction(renderer,lc,engine,drawHeld,images)){}

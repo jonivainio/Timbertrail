@@ -152,9 +152,10 @@
       const width=kind==='cabin'?height*.53:kind==='shelter'?height*.57:kind==='tree'?height*.085:height*.65;
       root.PETerrainSurface?.socket(this,currentMap,x,y,width,false);this.prop(kind,x,y,height,angle);root.PETerrainSurface?.socket(this,currentMap,x,y,width,true);
     }
-    harvestTree(x,angle=0){
+    harvestTree(x,angle=0,sway=0){
       const c=this.c,variant=Math.floor(random(x+24)*3),height=[180,193,157][variant]+random(x)*20,y=ground(x)+4;
-      if(this.visualV2&&this.artTrees){if(!angle)root.PEVisualWorld.socket(this,currentMap,x,y,22,false);root.PEVisualWorld.tree(this,x,y,height,variant,angle);if(!angle)root.PEVisualWorld.socket(this,currentMap,x,y,22,true);return;}
+      // sway: crown offset in px after an axe hit (render-only), applied as a tiny lean about the base.
+      if(this.visualV2&&this.artTrees){if(!angle)root.PEVisualWorld.socket(this,currentMap,x,y,22,false);root.PEVisualWorld.tree(this,x,y,height,variant,angle||(sway?sway/height:0));if(!angle)root.PEVisualWorld.socket(this,currentMap,x,y,22,true);return;}
       if(!angle){root.PETerrainSurface?.socket(this,currentMap,x,y,23,false);if(root.PEWorldArt)root.PEWorldArt.contact(c,x,22,false);}
       if(this.treeVariants){const boxes=[[0,8,541,1006],[542,12,540,1002],[1082,219,454,795]],anchors=[265,792,1286],b=boxes[variant],k=height/b[3];c.save();c.translate(Math.round(x),Math.round(y));c.rotate(angle);c.drawImage(this.treeVariants,...b,Math.round((b[0]-anchors[variant])*k),-Math.round(height),Math.round(b[2]*k),Math.round(height));c.restore();}
       else this.prop('tree',x,y,height,angle);
@@ -195,7 +196,7 @@
         fern(c,water.x+38,y,24,t);fern(c,water.x-38,y+12,19,t);
       }
       root.PERegionArt?.draw(this,engine);
-      for(const n of engine.nodes){if(n.x<cam-105||n.x>cam+W+105||s.picked[n.id]>s.playSeconds)continue;const y=ground(n.x);if(n.type==='tree'&&(this.props||this.treeVariants||(this.visualV2&&this.artTrees)))this.receiver({x:n.x,width:56},()=>this.harvestTree(n.x));else{if(['stone','wood'].includes(n.type))root.PETerrainSurface?.socket(this,currentMap,n.x,y+2,n.type==='stone'?11:14,false);c.save();if(['stone','wood'].includes(n.type)){c.translate(n.x,y+1);c.rotate(Math.atan2(ground(n.x+14)-ground(n.x-14),28));c.translate(-n.x,-y);}worldNode(c,n,y,t);c.restore();}}
+      for(const n of engine.nodes){if(n.x<cam-105||n.x>cam+W+105||s.picked[n.id]>s.playSeconds)continue;const y=ground(n.x);if(n.type==='tree'&&(this.props||this.treeVariants||(this.visualV2&&this.artTrees)))this.receiver({x:n.x,width:56},()=>this.harvestTree(n.x,0,root.PEMotionFx?.treeSway(engine,n)||0));else{if(['stone','wood'].includes(n.type))root.PETerrainSurface?.socket(this,currentMap,n.x,y+2,n.type==='stone'?11:14,false);c.save();if(['stone','wood'].includes(n.type)){c.translate(n.x,y+1);c.rotate(Math.atan2(ground(n.x+14)-ground(n.x-14),28));c.translate(-n.x,-y);}worldNode(c,n,y,t);c.restore();}}
       for(const f of s.falling||[]){const u=clamp(f.time/1.8,0,1);this.harvestTree(f.x,f.direction*u*u*Math.PI/2);}
       for(const d of [...(s.drops||[])].sort((a,b)=>(a.depth||0)-(b.depth||0))){if(d.carriedBy||d.x<cam-70||d.x>cam+W+70)continue;const y=ground(d.x)+(d.depth||0);
         if(['log','firewood'].includes(d.type))woodDrop(c,d,y);
@@ -209,7 +210,7 @@
         const p=s.player,d=s.dog,pframe=p.crouching?3:p.moving?1+Math.floor(p.stride/Math.PI)%2:0,dframe=d.moving?5+Math.floor(d.stride/Math.PI)%2:['sit','wait'].includes(d.mode)?7:4;
         shadow(c,d.x,ground(d.x),20);this.receiver({x:d.x,width:58},()=>{if(!root.PEKajoArt?.draw(this,d,ground))this.sprite(dframe,d.x,ground(d.x),d.facing,.132);});
         this.receiver({x:p.x,width:46},c=>{
-        if(root.PEEquipment&&root.PEEquipment.drawActor(this,engine)){}
+        if(root.PEEquipment&&root.PEEquipment.drawActor(this,engine)){root.PEMotionFx?.draw(this,engine);}
         else{shadow(c,p.x,ground(p.x),16);let poseFrame=null;
           if(this.poses){if(engine.action){const a=engine.action,u=a.time/a.duration;poseFrame=['tree','log'].includes(a.target.type)?(a.time%.9<.42?6:a.time%.9<.66?7:8):u<.58?4:5;}else if(engine.attack)poseFrame=engine.attack.time<.32?10:11;else if(p.moving&&!p.crouching)poseFrame=Math.floor(p.stride/(Math.PI*.5))%4;else if(s.equipped==='bow'&&!p.crouching)poseFrame=9;}
           if(poseFrame!==null)this.pose(poseFrame,p.x,ground(p.x),p.facing);else this.sprite(pframe,p.x,ground(p.x)+(p.moving&&p.crouching?Math.sin(p.stride)*.6:0),p.facing,.12);

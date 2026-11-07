@@ -111,15 +111,17 @@ function draw(g,spec,parts){
   const arm=(swing,far)=>{const a=Math.PI/2-swing,elbowBend=g.elbow+(spec.elbowAdd||0)+Math.max(0,swing)*.55,el=[shoulder[0]+Math.cos(a)*UPPER,shoulder[1]+Math.sin(a)*UPPER],fa=a-elbowBend,wr=[el[0]+Math.cos(fa)*FORE,el[1]+Math.sin(fa)*FORE];
     const s=far?[shoulder[0]-2,shoulder[1]+1]:shoulder;return {pts:[s,[el[0]-(far?2:0),el[1]+(far?1:0)],[wr[0]-(far?2:0),wr[1]+(far?1:0)]]};};
   const legPts=f=>{f=ground(f);const ankle=[hipX+f.x,f.y],k=ik(hip,ankle,THIGH,SHIN,-1);const dx=k.joint[0]-k.end[0],dy=k.joint[1]-k.end[1],d=Math.hypot(dx,dy)||1,cuff=[k.end[0]+dx/d*1.8,k.end[1]+dy/d*1.8];return {pts:[hip,k.joint,cuff],ankle:k.end};};
-  const farArm=arm(spec.farSwing,true),nearArm=arm(spec.nearSwing,false),farLeg=legPts(spec.far),nearLeg=legPts(spec.near);
-  limb(c,farArm.pts,2.2,C.sleeveDark,C.sleeveDeep,null,ctx.sleeveFar,Math.round(shoulder[1])+2);hand(c,farArm.pts[2].map(Math.round),true);
+  // Reaching arms: two-bone IK to a hand target, elbow hanging below the line.
+  const reach=(target,far)=>{const s0=far?[shoulder[0]-2,shoulder[1]+1]:shoulder,k=ik(s0,target,UPPER,FORE,target[0]>=s0[0]?1:-1);return {pts:[s0,k.joint,k.end]};};
+  const farArm=spec.farHand?reach(spec.farHand,true):arm(spec.farSwing,true),nearArm=spec.nearHand?reach(spec.nearHand,false):arm(spec.nearSwing,false),farLeg=legPts(spec.far),nearLeg=legPts(spec.near);
+  limb(c,farArm.pts,2.2,C.sleeveDark,C.sleeveDeep,null,ctx.sleeveFar,spec.noClip?-1e9:Math.round(shoulder[1])+2);hand(c,farArm.pts[2].map(Math.round),true);
   limb(c,farLeg.pts,2.5,C.jeanDark,C.ink,null,ctx.jeanFar);boot(c,farLeg.ankle,spec.far.angle,true);
   limb(c,nearLeg.pts,2.6,C.jean,C.jeanDark,C.jeanLight,ctx.jeanNear);boot(c,nearLeg.ankle,spec.near.angle,false);
   const dy=(spec.bob||0)+(spec.hipDy||0)+(g.crouch?g.hip-50:0),dx=(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)+(g.shiftX||0);
   const packLag=spec.packLag||0;
   blit(c,parts,64,dx,dy,lean,49,(x,y)=>x<=25?packLag:0);
   blit(c,parts,0,dx+(spec.headDx||0),dy+(spec.headDy||0),lean,49);
-  limb(c,nearArm.pts,2.4,C.sleeve,C.sleeveShade,null,ctx.sleeveNear,Math.round(shoulder[1])+2);const handPx=nearArm.pts[2].map(Math.round);hand(c,handPx,false);
+  limb(c,nearArm.pts,2.4,C.sleeve,C.sleeveShade,null,ctx.sleeveNear,spec.noClip?-1e9:Math.round(shoulder[1])+2);const handPx=nearArm.pts[2].map(Math.round);if(!spec.noNearHand)hand(c,handPx,false);
   return {cel:c,hand:handPx,nearAnkle:nearLeg.ankle,farAnkle:farLeg.ankle};
 }
 function gaitSpec(g,phase,prevBob){const p=pose(g,phase),swing=Math.sin(phase*TAU)*g.swing;
@@ -151,6 +153,49 @@ function bake(){
   // still behind; turn-1 settles forward into the new direction.
   add('turn-0','turn',draw({...idleG,lean:-.03},stand({near:{...still,x:-3},far:{...still,x:4},nearSwing:-.2,farSwing:.25,bob:1}),parts));
   add('turn-1','turn',draw({...idleG,lean:.04},stand({near:{...still,x:4},far:{...still,x:-2},nearSwing:.15,farSwing:-.1}),parts));
+  // ---------- actions (phase 2) ----------
+  // Tool cels hold the body only; the runtime draws the tool at `hand` with `tool`
+  // (radians, equipment.js convention: 0 = haft up, head/bit forward).
+  const dir=a=>[Math.sin(a),-Math.cos(a)];
+  const act=(id,o)=>{const g={...GAITS.walk,hip:o.hip??50,lean:o.lean??0,elbow:.3,crouch:true,shiftX:o.shiftX||0};
+    const grip=o.grip,two=o.tool!=null&&o.twoHands!==false,d=dir(o.tool??0);
+    const spec={noClip:true,near:{...still,x:6,...(o.near||{})},far:{...still,x:-5,...(o.far||{})},bob:0,nearSwing:.1,farSwing:-.1,
+      nearHand:grip&&two?[grip[0]+d[0]*3,grip[1]+d[1]*3]:grip,farHand:o.farHand||(grip&&two?grip:null)};
+    const res=draw(g,spec,parts);res.hand=grip?grip.map(Math.round):res.hand;add(id,'action',res,o.events||[],{tool:o.tool??null});};
+  const wide={near:{x:8},far:{x:-7}};
+  // Axe into a standing tree: horizontal swing. Windup → top/hold → smear → impact → recover ×2.
+  act('chop-0',{...wide,lean:-.04,grip:[25,33],tool:-1.1});
+  act('chop-1',{...wide,lean:-.07,grip:[21,30],tool:-1.65,hip:51});
+  act('chop-2',{...wide,lean:.06,grip:[40,37],tool:.35});
+  act('chop-3',{...wide,lean:.1,grip:[49,43],tool:1.4,hip:51,events:['axe-contact']});
+  act('chop-4',{...wide,lean:.05,grip:[45,47],tool:1.0});
+  act('chop-5',{...wide,lean:0,grip:[41,50],tool:.4});
+  // Axe into a log on the ground: overhead vertical split, knees give at impact.
+  act('split-0',{...wide,lean:-.05,grip:[30,20],tool:-.6});
+  act('split-1',{...wide,lean:-.09,grip:[27,15],tool:-1.05,hip:49});
+  act('split-2',{...wide,lean:.08,grip:[41,30],tool:.8});
+  act('split-3',{...wide,lean:.16,grip:[46,52],tool:2.1,hip:53,events:['axe-contact']});
+  act('split-4',{...wide,lean:.1,grip:[44,50],tool:1.6,hip:52});
+  act('split-5',{...wide,lean:.03,grip:[41,50],tool:.6});
+  // Gather: one whole motion – bend, pick, rise.
+  act('gather-0',{hip:55,lean:.08,shiftX:1,grip:[43,57],near:{x:7},far:{x:-6}});
+  act('gather-1',{hip:60,lean:.12,shiftX:3,grip:[47,63],farHand:[42,63],near:{x:12},far:{x:-8,angle:-.5}});
+  act('gather-2',{hip:60,lean:.12,shiftX:3,grip:[44,61],farHand:[46,63],near:{x:12},far:{x:-8,angle:-.5},events:['pick']});
+  act('gather-3',{hip:58,lean:.09,shiftX:2,grip:[41,52],farHand:[39,54],near:{x:8},far:{x:-7}});
+  act('gather-4',{hip:52,lean:.03,grip:[37,50],near:{x:5},far:{x:-4}});
+  // Skinning: kneel down, 4-cel knife loop, rise. Knife rides the near hand.
+  const kneel={hip:61,lean:.1,shiftX:2,near:{x:9},far:{x:-9,angle:-.6}};
+  act('skin-down',{hip:56,lean:.06,shiftX:1,grip:[42,56],near:{x:8},far:{x:-7}});
+  for(const [i,[x,y]] of [[47,66],[49,67],[47,68],[45,67]].entries())act('skin-'+i,{...kneel,grip:[x,y],farHand:[43,68]});
+  act('skin-up',{hip:56,lean:.05,shiftX:1,grip:[41,55],near:{x:8},far:{x:-7}});
+  // Petting Kajo: kneeling, palm strokes over the head.
+  act('pet-0',{hip:58,lean:.06,shiftX:1,grip:[49,54],near:{x:8},far:{x:-8,angle:-.5}});
+  act('pet-1',{hip:58,lean:.07,shiftX:1,grip:[45,52],near:{x:8},far:{x:-8,angle:-.5}});
+  // Throwing a stick for Kajo: back → throw → follow-through (stick leaves on cel 1).
+  act('throw-0',{lean:-.06,grip:[22,30],near:{x:7},far:{x:-6}});
+  act('throw-1',{lean:.06,grip:[38,24],near:{x:8},far:{x:-6},events:['release']});
+  act('throw-2',{lean:.1,grip:[48,40],near:{x:8},far:{x:-6,y:ANKLE_Y-1,angle:-.4}});
+  act('throw-3',{lean:.04,grip:[44,48],near:{x:6},far:{x:-5}});
   // Sheet
   const cols=6,rows=Math.ceil(out.length/cols),img=PNG.create(cols*W,rows*H);
   out.forEach((f,i)=>{const ox=i%cols*W,oy=Math.floor(i/cols)*H;f.rect=[ox,oy,W,H];for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=f.res.cel.data[y*W+x];if(!v)continue;img.data.set(v,((oy+y)*img.width+ox+x)*4);}});
@@ -160,13 +205,13 @@ function bake(){
   const partsBytes=fs.readFileSync(path.join(ART,'traveller-parts.png'));
   const meta={id:'traveller',file:'assets/art-v2/traveller.png',nativeSize:[img.width,img.height],palette:Object.values(C).map(c=>'#'+c.slice(0,3).map(v=>v.toString(16).padStart(2,'0')).join('')),
     gaits:Object.fromEntries(Object.entries(GAITS).map(([k,g])=>[k,{cels:g.cels,cyclePx:g.cycle,duty:g.duty}])),
-    frames:out.map(f=>({id:f.id,rect:f.rect,anchor:ANCHOR,hand:f.res.hand,state:f.state,events:f.events,...(f.phase!=null?{phase:+f.phase.toFixed(4),nearAnkle:f.res.nearAnkle.map(v=>+v.toFixed(2)),farAnkle:f.res.farAnkle.map(v=>+v.toFixed(2))}:{})})),
+    frames:out.map(f=>({id:f.id,rect:f.rect,anchor:ANCHOR,hand:f.res.hand,state:f.state,events:f.events,...(f.tool!=null?{tool:f.tool}:{}),...(f.phase!=null?{phase:+f.phase.toFixed(4),nearAnkle:f.res.nearAnkle.map(v=>+v.toFixed(2)),farAnkle:f.res.farAnkle.map(v=>+v.toFixed(2))}:{})})),
     sha256:sha,source:{file:'assets/art-v2/traveller-parts.png',sha256:crypto.createHash('sha256').update(partsBytes).digest('hex'),script:'scripts/bake-traveller.cjs',
       method:'Head and torso+pack cut from the 0.8 illustrated idle cel; limbs and boots rasterised from a two-bone rig in the sprite palette; integer shear for lean, no resampling'},
     license:'original',status:'rig-v1'};
   fs.writeFileSync(path.join(ART,'traveller.json'),JSON.stringify(meta,null,2)+'\n');
   // Inline frame table into traveller-art.js between markers.
-  const js=path.join(ROOT,'traveller-art.js'),text=fs.readFileSync(js,'utf8'),table=JSON.stringify(out.map(f=>[f.id,f.rect,f.res.hand]));
+  const js=path.join(ROOT,'traveller-art.js'),text=fs.readFileSync(js,'utf8'),table=JSON.stringify(out.map(f=>f.tool!=null?[f.id,f.rect,f.res.hand,f.tool]:[f.id,f.rect,f.res.hand]));
   const next=text.replace(/\/\*BAKED\*\/.*?\/\*END\*\//s,'/*BAKED*/'+table+'/*END*/');if(next===text&&!text.includes('/*BAKED*/'+table))throw Error('traveller-art.js markers missing');
   fs.writeFileSync(js,next);
   console.log(`baked ${out.length} cels → traveller.png ${img.width}×${img.height} sha ${sha.slice(0,12)}`);

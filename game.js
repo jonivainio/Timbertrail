@@ -170,6 +170,7 @@
     if(b.dataset.resume){closePanel();return;}
     if(b.dataset.titleMenu){returnToTitle();return;}
     if(b.dataset.audio){toggleSound();renderPanel();return;}
+    if(b.dataset.reduceMotion){window.PEMotionFx?.setReduced(!window.PEMotionFx.isReduced());renderPanel();return;}
     if(b.dataset.audioChannel){const key=b.dataset.audioChannel;PEAudio.configure({[key]:!PEAudio.settings()[key]});renderPanel();return;}
     if(b.dataset.region){b.focus();return;}
     if(b.dataset.fullscreen){toggleFullscreen();return;}
