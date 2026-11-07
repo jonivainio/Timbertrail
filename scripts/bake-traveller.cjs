@@ -33,15 +33,15 @@ function blit(c,layer,off,dx,dy,shear=0,pivotY=0,lagRows=null){
 }
 function distSeg(px,py,a,b){const vx=b[0]-a[0],vy=b[1]-a[1],l=vx*vx+vy*vy||1e-9;let t=((px-a[0])*vx+(py-a[1])*vy)/l;t=Math.max(0,Math.min(1,t));const qx=a[0]+vx*t-px,qy=a[1]+vy*t-py;return {d:Math.hypot(qx,qy),side:(vx*(py-a[1])-vy*(px-a[0]))/Math.sqrt(l),t};}
 // A limb: chain of points, fill radius r, 1px ink outline, shade on the underside.
-function limb(c,pts,r,fill,shade,light,tex=null){
+function limb(c,pts,r,fill,shade,light,tex=null,clipY=-1e9){
   const lens=pts.slice(1).map((p,k)=>Math.hypot(p[0]-pts[k][0],p[1]-pts[k][1])),cum=lens.reduce((a,l)=>(a.push(a[a.length-1]+l),a),[0]);
   const fillPx=new Set(),xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),x0=Math.floor(Math.min(...xs)-r-2),x1=Math.ceil(Math.max(...xs)+r+2),y0=Math.floor(Math.min(...ys)-r-2),y1=Math.ceil(Math.max(...ys)+r+2);
   const info=new Map();
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){let best={d:1e9};for(let k=0;k+1<pts.length;k++){const s=distSeg(x+.5,y+.5,pts[k],pts[k+1]);if(s.d<best.d)best={...s,along:cum[k]+s.t*lens[k]};}
     if(best.d<=r)fillPx.add(x+','+y),info.set(x+','+y,best);}
   for(const key of fillPx){const [x,y]=key.split(',').map(Number),edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>!fillPx.has((x+a)+','+(y+b)));
-    for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]])if(!fillPx.has((x+a)+','+(y+b)))put(c,x+a,y+b,C.ink);}
-  for(const key of fillPx){const [x,y]=key.split(',').map(Number),s=info.get(key);const under=!fillPx.has(x+','+(y+1))||!fillPx.has((x-1)+','+y);
+    const nearRoot=info.get(key).along<UPPER*.75;for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]])if(!fillPx.has((x+a)+','+(y+b))&&(y+b>=clipY||!nearRoot))put(c,x+a,y+b,C.ink);}
+  for(const key of fillPx){const [x,y]=key.split(',').map(Number),s=info.get(key);if(y<clipY&&s.along<UPPER*.75)continue;const under=!fillPx.has(x+','+(y+1))||!fillPx.has((x-1)+','+y);
     put(c,x,y,tex?tex(s.along,s.side,under):under?shade:(light&&!fillPx.has(x+','+(y-1))?light:fill));}
 }
 function bootPts(ankle,angle){const ca=Math.cos(angle),sa=Math.sin(angle),pt=(u,v)=>[ankle[0]+u*ca+v*sa,ankle[1]-u*sa+v*ca];return {top:pt(0,-.5),heel:pt(-1,2.2),toe:pt(5,2.6)};}
@@ -112,20 +112,20 @@ function draw(g,spec,parts){
     const s=far?[shoulder[0]-2,shoulder[1]+1]:shoulder;return {pts:[s,[el[0]-(far?2:0),el[1]+(far?1:0)],[wr[0]-(far?2:0),wr[1]+(far?1:0)]]};};
   const legPts=f=>{f=ground(f);const ankle=[hipX+f.x,f.y],k=ik(hip,ankle,THIGH,SHIN,-1);const dx=k.joint[0]-k.end[0],dy=k.joint[1]-k.end[1],d=Math.hypot(dx,dy)||1,cuff=[k.end[0]+dx/d*1.8,k.end[1]+dy/d*1.8];return {pts:[hip,k.joint,cuff],ankle:k.end};};
   const farArm=arm(spec.farSwing,true),nearArm=arm(spec.nearSwing,false),farLeg=legPts(spec.far),nearLeg=legPts(spec.near);
-  limb(c,farArm.pts,2.2,C.sleeveDark,C.sleeveDeep,null,ctx.sleeveFar);hand(c,farArm.pts[2].map(Math.round),true);
+  limb(c,farArm.pts,2.2,C.sleeveDark,C.sleeveDeep,null,ctx.sleeveFar,Math.round(shoulder[1])+2);hand(c,farArm.pts[2].map(Math.round),true);
   limb(c,farLeg.pts,2.5,C.jeanDark,C.ink,null,ctx.jeanFar);boot(c,farLeg.ankle,spec.far.angle,true);
   limb(c,nearLeg.pts,2.6,C.jean,C.jeanDark,C.jeanLight,ctx.jeanNear);boot(c,nearLeg.ankle,spec.near.angle,false);
   const dy=(spec.bob||0)+(spec.hipDy||0)+(g.crouch?g.hip-50:0),dx=(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)+(g.shiftX||0);
   const packLag=spec.packLag||0;
   blit(c,parts,64,dx,dy,lean,49,(x,y)=>x<=25?packLag:0);
   blit(c,parts,0,dx+(spec.headDx||0),dy+(spec.headDy||0),lean,49);
-  limb(c,nearArm.pts,2.4,C.sleeve,C.sleeveShade,null,ctx.sleeveNear);const handPx=nearArm.pts[2].map(Math.round);hand(c,handPx,false);
+  limb(c,nearArm.pts,2.4,C.sleeve,C.sleeveShade,null,ctx.sleeveNear,Math.round(shoulder[1])+2);const handPx=nearArm.pts[2].map(Math.round);hand(c,handPx,false);
   return {cel:c,hand:handPx,nearAnkle:nearLeg.ankle,farAnkle:farLeg.ankle};
 }
 function gaitSpec(g,phase,prevBob){const p=pose(g,phase),swing=Math.sin(phase*TAU)*g.swing;
   // Follow-through: head and pack settle one cel after the body (±1 px).
   const lag=Math.max(-1,Math.min(1,prevBob-p.bob));
-  return {near:p.near,far:p.far,bob:p.bob,nearSwing:-swing,farSwing:swing,packLag:g.pack||g.cels===8?lag:0,headDy:g.crouch?0:Math.max(0,lag)};} // head only sinks into the collar, never lifts off it
+  return {near:p.near,far:p.far,bob:p.bob,nearSwing:-swing,farSwing:swing,packLag:g.pack||g.cels===8?lag:0,headDy:g.crouch||g.kick?0:Math.max(0,lag)};} // head only sinks into the collar, never lifts off it
 
 // ---------- bake ----------
 function bake(){
