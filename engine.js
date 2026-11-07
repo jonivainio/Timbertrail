@@ -323,7 +323,7 @@
       let dir=manual;
       if(this.walkTarget&&!manual){const target=this.targets().find(t=>t.id===this.walkTarget.id&&t.type===this.walkTarget.type);if(!target){this.walkTarget=null;this.notify('The target is no longer available.');}else if(Math.abs(target.x-p.x)<=this.walkTarget.reach-2){const command=this.walkTarget.command;this.walkTarget=null;this.interact({...target,command});}else dir=target.x<p.x?-1:1;}
       p.moving=!!dir&&!p.sitting&&!this.action&&!this.fishing&&!this.attack;p.running=!!(p.moving&&sprint);const wading=s.currentMap==='river'&&((p.x>3540&&p.x<3770)||(p.x>5080&&p.x<5320));p.wading=wading;const speed=(p.crouching?38:sprint?145:83)*(wading?.7:1);
-      if(p.moving){p.facing=dir;p.x=clamp(p.x+dir*speed*dt,35,WORLD-35);p.stride+=dt*(p.crouching?5:sprint?13:8);if(sprint)p.energy=clamp(p.energy-dt*5,0,100);}
+      if(p.moving){p.facing=dir;p.x=clamp(p.x+dir*speed*dt,35,WORLD-35);p.stride+=dt*speed*Math.PI*2/(p.crouching?30:sprint?84:52);if(sprint)p.energy=clamp(p.energy-dt*5,0,100);}
       if(p.energy<=0){this.sprintExhausted=true;p.running=false;}
       if(s.currentMap==='pond'&&p.x<regions.pond.walkMin){p.x=regions.pond.walkMin;p.moving=false;p.running=false;this.walkTarget=null;}
       if((p.x>=WORLD-38&&dir>0)||(p.x<=38&&dir<0)){const exit=regions.maps[s.currentMap].exits[dir>0?'right':'left'];if(exit){this.requestTravel(exit.map,exit.x);return;}if(!this.endOfTrailShown){this.endOfTrailShown=true;this.notify(s.currentMap==='pond'?'The reeds thicken here. Follow the bank back to the cabin.':'The trail beyond is not open yet.');}}

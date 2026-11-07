@@ -1,16 +1,43 @@
 /* Native original locomotion cels. Tool grip and cel share one pose sample. */
 (function(root){'use strict';
  const TAU=Math.PI*2,anchor=Object.freeze([32,76]);
- const hands=[[22,53],[24,53],[23,53],[40,50],[26,54],[43,45],[29,53],[44,60],[47,45],[48,47],[46,44],[46,46],[48,48],[47,46],[47,59],[44,58]];
- const frames=Object.freeze(hands.map((hand,i)=>Object.freeze({index:i,rect:Object.freeze([i%4*64,Math.floor(i/4)*80,64,80]),hand:Object.freeze(hand),grip:Object.freeze([hand[0]-anchor[0],hand[1]-anchor[1]])})));
- function frame(p){const stride=Number.isFinite(p.stride)?p.stride:0,phase=((stride%TAU+TAU)%TAU)/TAU;
-  if(p.crouching)return p.moving?(phase<.5?14:15):7;
-  return p.moving?(p.running?8:0)+Math.floor(phase*6):6;
+ // Baked by scripts/bake-traveller.cjs: [id, rect, near-hand] per 64×80 cel.
+ const baked=/*BAKED*/[["idle-0",[0,0,64,80],[34,50]],["idle-1",[64,0,64,80],[34,49]],["idle-2",[128,0,64,80],[34,49]],["idle-3",[192,0,64,80],[34,50]],["walk-0",[256,0,64,80],[29,51]],["walk-1",[320,0,64,80],[23,47]],["walk-2",[0,80,64,80],[23,47]],["walk-3",[64,80,64,80],[29,51]],["walk-4",[128,80,64,80],[39,48]],["walk-5",[192,80,64,80],[44,41]],["walk-6",[256,80,64,80],[44,41]],["walk-7",[320,80,64,80],[39,48]],["run-0",[0,160,64,80],[39,43]],["run-1",[64,160,64,80],[34,45]],["run-2",[128,160,64,80],[34,44]],["run-3",[192,160,64,80],[39,44]],["run-4",[256,160,64,80],[44,37]],["run-5",[320,160,64,80],[44,33]],["run-6",[0,240,64,80],[44,32]],["run-7",[64,240,64,80],[44,38]],["crouch-idle",[128,240,64,80],[45,55]],["crouch-0",[192,240,64,80],[44,57]],["crouch-1",[256,240,64,80],[43,57]],["crouch-2",[320,240,64,80],[44,57]],["crouch-3",[0,320,64,80],[47,54]],["crouch-4",[64,320,64,80],[48,53]],["crouch-5",[128,320,64,80],[47,54]],["start-0",[192,320,64,80],[31,50]],["start-1",[256,320,64,80],[31,51]],["stop-brake",[320,320,64,80],[41,40]],["stop-0",[0,400,64,80],[36,49]],["stop-1",[64,400,64,80],[35,50]],["turn-0",[128,400,64,80],[29,51]],["turn-1",[192,400,64,80],[37,49]]]/*END*/;
+ const frames=Object.freeze(baked.map(([id,rect,hand],i)=>Object.freeze({index:i,id,rect:Object.freeze(rect),hand:Object.freeze(hand),grip:Object.freeze([hand[0]-anchor[0],hand[1]-anchor[1]])})));
+ const byId=Object.fromEntries(frames.map(f=>[f.id,f.index])),at=(id,fallback='idle-0')=>byId[id]??byId[fallback]??0;
+ const CYCLE=Object.freeze({walk:8,run:8,crouch:6}),IDLE_LOOP=2.4;
+ // Transition lengths (s): weight shift before the first step, planting stop, quick turn.
+ const TRANSITION=Object.freeze({start:.12,stop:.15,stopRun:.2,turn:.1});
+ function phaseOf(p){const stride=Number.isFinite(p.stride)?p.stride:0;return ((stride%TAU+TAU)%TAU)/TAU;}
+ // Pure locomotion cel. The optional motion memo belongs to the renderer and only
+ // remembers what was drawn last; simulation state is never written.
+ function frame(p,memo=null,now=0){
+  const phase=phaseOf(p),t=Number.isFinite(now)?now:0;
+  if(memo){
+   const facing=p.facing||1,was=memo.seen?memo:null;
+   if(was){
+    if(facing!==was.facing)memo.kind='turn',memo.t0=t;
+    else if(p.moving&&!was.moving&&!p.crouching)memo.kind='start',memo.t0=t;
+    else if(!p.moving&&was.moving&&!p.crouching)memo.kind=was.running?'stopRun':'stop',memo.t0=t;
+   }
+   Object.assign(memo,{seen:true,facing,moving:!!p.moving,running:!!p.running});
+   const k=memo.kind,age=t-(memo.t0||0);
+   if(k&&age>=0&&age<TRANSITION[k]&&!p.crouching){const u=age/TRANSITION[k];
+    if(k==='turn')return at(u<.5?'turn-0':'turn-1');
+    if(k==='start'&&p.moving)return at(u<.5?'start-0':'start-1');
+    if(k==='stop'&&!p.moving)return at(u<.5?'stop-0':'stop-1');
+    if(k==='stopRun'&&!p.moving)return at(u<1/3?'stop-brake':u<2/3?'stop-0':'stop-1');
+   }else memo.kind=null;
+  }
+  if(p.crouching)return p.moving?at('crouch-'+Math.min(CYCLE.crouch-1,Math.floor(phase*CYCLE.crouch))):at('crouch-idle');
+  if(p.moving){const gait=p.running?'run':'walk';return at(gait+'-'+Math.min(CYCLE[gait]-1,Math.floor(phase*CYCLE[gait])));}
+  return at('idle-'+Math.floor(((t%IDLE_LOOP)+IDLE_LOOP)%IDLE_LOOP/IDLE_LOOP*4));
  }
- function sample(p){return frames[frame(p)];}
+ function sample(p,memo,now){return frames[frame(p,memo,now)];}
+ const clock=()=>(root.performance?.now?.()??Date.now())/1000;
  function drawBase(r,c,p,x=67,y=101){
   if(!r.visualV2||!r.artTraveller)return null;
-  const pose=sample(p);c.imageSmoothingEnabled=false;c.drawImage(r.artTraveller,...pose.rect,x-anchor[0],y-anchor[1],64,80);return pose;
+  const pose=sample(p,r._travellerMotion||(r._travellerMotion={}),clock());c.imageSmoothingEnabled=false;c.drawImage(r.artTraveller,...pose.rect,x-anchor[0],y-anchor[1],64,80);return pose;
  }
  const actionAnchor=Object.freeze([40,100]);
  const actionHands=[[37,49],[52,60],[58,71],[55,78],[36,30],[52,54],[56,83],[52,64],[66,95],[74,75],[69,74],[63,80],[53,74],[49,73],[62,91],[67,83]];
@@ -77,5 +104,5 @@
   segment(40,p.back.elbow,p.back.wrist,true);segment(40,p.front.elbow,p.front.wrist,true);
   c.restore();return true;
  }
- const api=Object.freeze({frame,sample,drawBase,frames,anchor,actionFrames,actionAnchor,actionSample,drawAction,bowFrames,bowSample,solveArm,drawBow});root.PETravellerArt=api;if(typeof module!=='undefined')module.exports=api;
+ const api=Object.freeze({frame,sample,phaseOf,CYCLE,TRANSITION,drawBase,frames,anchor,actionFrames,actionAnchor,actionSample,drawAction,bowFrames,bowSample,solveArm,drawBow});root.PETravellerArt=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
