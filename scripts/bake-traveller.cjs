@@ -125,7 +125,7 @@ function draw(g,spec,parts){
 function gaitSpec(g,phase,prevBob){const p=pose(g,phase),swing=Math.sin(phase*TAU)*g.swing;
   // Follow-through: head and pack settle one cel after the body (±1 px).
   const lag=Math.max(-1,Math.min(1,prevBob-p.bob));
-  return {near:p.near,far:p.far,bob:p.bob,nearSwing:-swing,farSwing:swing,packLag:g.pack||g.cels===8?lag:0,headDy:g.crouch?0:lag};}
+  return {near:p.near,far:p.far,bob:p.bob,nearSwing:-swing,farSwing:swing,packLag:g.pack||g.cels===8?lag:0,headDy:g.crouch?0:Math.max(0,lag)};} // head only sinks into the collar, never lifts off it
 
 // ---------- bake ----------
 function bake(){

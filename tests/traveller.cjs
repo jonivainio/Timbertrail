@@ -15,6 +15,7 @@ const idleTop=bounds(meta.frames[0]).top;
 for(const f of meta.frames){const b=bounds(f);assert.ok(b.bottom<=75,f.id+' stays above ground');
   if(!/^run-[37]$/.test(f.id))assert.equal(b.bottom,75,f.id+' boots on the ground');
   if(/^(idle|walk|start|stop-[01]|turn)/.test(f.id))assert.ok(Math.abs(b.top-idleTop)<=1,f.id+' height ±1 px');
+  for(let y=b.top+2;y<=b.top+20;y++){let n=0;for(let x=0;x<64;x++)if(sheet.data[((f.rect[1]+y)*sheet.width+f.rect[0]+x)*4+3])n++;assert.ok(n>=5,`${f.id} has no gap between head and torso (row ${y}: ${n} px)`);}
   if(/^run/.test(f.id))assert.ok(Math.abs(b.top-idleTop)<=2,f.id+' running lean keeps height');}
 
 // Feet do not slide: a stance foot's world x (body travel + cel ankle) is constant to ±1 px across its stance cels.
