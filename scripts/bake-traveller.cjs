@@ -40,8 +40,8 @@ function limb(c,pts,r,fill,shade,light,tex=null,clipY=-1e9){
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){let best={d:1e9};for(let k=0;k+1<pts.length;k++){const s=distSeg(x+.5,y+.5,pts[k],pts[k+1]);if(s.d<best.d)best={...s,along:cum[k]+s.t*lens[k]};}
     if(best.d<=r)fillPx.add(x+','+y),info.set(x+','+y,best);}
   for(const key of fillPx){const [x,y]=key.split(',').map(Number),edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>!fillPx.has((x+a)+','+(y+b)));
-    for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]])if(!fillPx.has((x+a)+','+(y+b))&&y+b>=clipY)put(c,x+a,y+b,C.ink);}
-  for(const key of fillPx){const [x,y]=key.split(',').map(Number),s=info.get(key);if(y<clipY)continue;const under=!fillPx.has(x+','+(y+1))||!fillPx.has((x-1)+','+y);
+    const nearRoot=info.get(key).along<UPPER*.75;for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]])if(!fillPx.has((x+a)+','+(y+b))&&(y+b>=clipY||!nearRoot))put(c,x+a,y+b,C.ink);}
+  for(const key of fillPx){const [x,y]=key.split(',').map(Number),s=info.get(key);if(y<clipY&&s.along<UPPER*.75)continue;const under=!fillPx.has(x+','+(y+1))||!fillPx.has((x-1)+','+y);
     put(c,x,y,tex?tex(s.along,s.side,under):under?shade:(light&&!fillPx.has(x+','+(y-1))?light:fill));}
 }
 function bootPts(ankle,angle){const ca=Math.cos(angle),sa=Math.sin(angle),pt=(u,v)=>[ankle[0]+u*ca+v*sa,ankle[1]-u*sa+v*ca];return {top:pt(0,-.5),heel:pt(-1,2.2),toe:pt(5,2.6)};}
