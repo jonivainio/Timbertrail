@@ -2,8 +2,8 @@
   "id": "journal",
   "file": "assets/art-v2/journal.png",
   "nativeSize": [
-    640,
-    400
+    384,
+    240
   ],
   "palette": [
     "#161d1b",
@@ -31,7 +31,7 @@
     "#939976",
     "#a8a58a"
   ],
-  "sha256": "c07c59547a24e17bebcc87a9f03f5e1d02d47a66cf3ac870e1ce6431e711e341",
+  "sha256": "d23dd4fb83dc1d7de926f1d415a7415355fc0167904e3b2bbe8bd23bc828edc8",
   "source": {
     "file": "work/overhaul/journal-source/journal-source.png",
     "sha256": "e93f221a178dbc71ed882bb9d83218a66127b9dd2820daa37b95d89eb44b437c",
@@ -44,8 +44,8 @@
       "rect": [
         0,
         0,
-        640,
-        400
+        384,
+        240
       ],
       "anchor": [
         0,

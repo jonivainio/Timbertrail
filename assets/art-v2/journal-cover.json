@@ -2,8 +2,8 @@
   "id": "journal-cover",
   "file": "assets/art-v2/journal-cover.png",
   "nativeSize": [
-    320,
-    400
+    192,
+    240
   ],
   "palette": [
     "#161d1b",
@@ -31,7 +31,7 @@
     "#939976",
     "#a8a58a"
   ],
-  "sha256": "f153c150ded2a3669a01561e09bbad6023dc98ddc9dca5cc497751d1b87eaa7d",
+  "sha256": "569ed7348cc887b365ad8084a3a18e3ccf952b6efcc7983386f6de7fb6491135",
   "source": {
     "file": "work/overhaul/journal-source/journal-cover-source.png",
     "sha256": "7e6c6a28d70be026820a22d8f9d79bce58a845c0d70cb8b012a00c2d4488cd8b",
@@ -44,8 +44,8 @@
       "rect": [
         0,
         0,
-        320,
-        400
+        192,
+        240
       ],
       "anchor": [
         0,
