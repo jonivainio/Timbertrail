@@ -2,30 +2,44 @@
   "id": "traveller",
   "file": "assets/art-v2/traveller.png",
   "nativeSize": [
-    256,
-    320
+    384,
+    480
   ],
   "palette": [
     "#222b28",
-    "#3b3328",
-    "#594532",
-    "#79563a",
-    "#9e723f",
+    "#3b5352",
+    "#253b3c",
+    "#5b7066",
     "#bd9458",
-    "#d0ac73",
+    "#9e723f",
+    "#79563a",
+    "#594532",
     "#e1ba83",
-    "#a47654",
+    "#d0ac73",
     "#633925",
     "#935133",
-    "#b66a3b",
-    "#253b3c",
-    "#3b5352",
-    "#5b7066",
-    "#9a9d83"
+    "#3b3328"
   ],
+  "gaits": {
+    "walk": {
+      "cels": 8,
+      "cyclePx": 52,
+      "duty": 0.5
+    },
+    "run": {
+      "cels": 8,
+      "cyclePx": 84,
+      "duty": 0.36
+    },
+    "crouch": {
+      "cels": 6,
+      "cyclePx": 30,
+      "duty": 0.6
+    }
+  },
   "frames": [
     {
-      "id": "walk-0",
+      "id": "idle-0",
       "rect": [
         0,
         0,
@@ -37,32 +51,14 @@
         76
       ],
       "hand": [
-        22,
-        53
+        34,
+        50
       ],
-      "state": "walk",
-      "events": [
-        "foot-contact"
-      ],
-      "preparation": {
-        "sourceCell": [
-          0,
-          0,
-          313,
-          349
-        ],
-        "pelvisX": 170,
-        "footY": 335,
-        "hand": [
-          121,
-          220
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 27822
-      }
+      "state": "idle",
+      "events": []
     },
     {
-      "id": "walk-1",
+      "id": "idle-1",
       "rect": [
         64,
         0,
@@ -74,30 +70,14 @@
         76
       ],
       "hand": [
-        24,
-        53
+        34,
+        49
       ],
-      "state": "walk",
-      "events": [],
-      "preparation": {
-        "sourceCell": [
-          313,
-          0,
-          313,
-          349
-        ],
-        "pelvisX": 478,
-        "footY": 335,
-        "hand": [
-          438,
-          220
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 26942
-      }
+      "state": "idle",
+      "events": []
     },
     {
-      "id": "walk-2",
+      "id": "idle-2",
       "rect": [
         128,
         0,
@@ -109,30 +89,14 @@
         76
       ],
       "hand": [
-        23,
-        53
+        34,
+        49
       ],
-      "state": "walk",
-      "events": [],
-      "preparation": {
-        "sourceCell": [
-          626,
-          0,
-          313,
-          349
-        ],
-        "pelvisX": 788,
-        "footY": 335,
-        "hand": [
-          743,
-          221
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 26344
-      }
+      "state": "idle",
+      "events": []
     },
     {
-      "id": "walk-3",
+      "id": "idle-3",
       "rect": [
         192,
         0,
@@ -144,32 +108,72 @@
         76
       ],
       "hand": [
-        40,
+        34,
         50
+      ],
+      "state": "idle",
+      "events": []
+    },
+    {
+      "id": "walk-0",
+      "rect": [
+        256,
+        0,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        31,
+        51
       ],
       "state": "walk",
       "events": [
         "foot-contact"
       ],
-      "preparation": {
-        "sourceCell": [
-          939,
-          0,
-          315,
-          349
-        ],
-        "pelvisX": 1111,
-        "footY": 335,
-        "hand": [
-          1149,
-          205
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 26542
-      }
+      "phase": 0.0625,
+      "nearAnkle": [
+        40.75,
+        71.46
+      ],
+      "farAnkle": [
+        19.12,
+        69.47
+      ]
     },
     {
-      "id": "walk-4",
+      "id": "walk-1",
+      "rect": [
+        320,
+        0,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        26,
+        49
+      ],
+      "state": "walk",
+      "events": [],
+      "phase": 0.1875,
+      "nearAnkle": [
+        34.25,
+        71.25
+      ],
+      "farAnkle": [
+        26.23,
+        67.3
+      ]
+    },
+    {
+      "id": "walk-2",
       "rect": [
         0,
         80,
@@ -182,29 +186,22 @@
       ],
       "hand": [
         26,
-        54
+        49
       ],
       "state": "walk",
       "events": [],
-      "preparation": {
-        "sourceCell": [
-          0,
-          349,
-          313,
-          329
-        ],
-        "pelvisX": 156,
-        "footY": 661,
-        "hand": [
-          126,
-          550
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 26795
-      }
+      "phase": 0.3125,
+      "nearAnkle": [
+        27.75,
+        71.25
+      ],
+      "farAnkle": [
+        35.77,
+        67.3
+      ]
     },
     {
-      "id": "walk-5",
+      "id": "walk-3",
       "rect": [
         64,
         80,
@@ -216,35 +213,23 @@
         76
       ],
       "hand": [
-        43,
-        45
+        31,
+        51
       ],
       "state": "walk",
       "events": [],
-      "source": {
-        "file": "work/overhaul/traveller-source/passing-source.png",
-        "sha256": "2045fb5d0f6973a84d1650a399ac11ffe3bb2ed5f5036a256c83b43bf26ef9a7",
-        "prompt": "work/overhaul/traveller-source/PASSING_PROMPT.md"
-      },
-      "preparation": {
-        "sourceCell": [
-          313,
-          349,
-          313,
-          329
-        ],
-        "pelvisX": 452,
-        "footY": 666,
-        "hand": [
-          506,
-          511
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 23290
-      }
+      "phase": 0.4375,
+      "nearAnkle": [
+        21.25,
+        70.62
+      ],
+      "farAnkle": [
+        42.88,
+        69.47
+      ]
     },
     {
-      "id": "idle",
+      "id": "walk-4",
       "rect": [
         128,
         80,
@@ -256,30 +241,25 @@
         76
       ],
       "hand": [
-        29,
-        53
+        37,
+        50
       ],
-      "state": "idle",
-      "events": [],
-      "preparation": {
-        "sourceCell": [
-          626,
-          349,
-          313,
-          329
-        ],
-        "pelvisX": 773,
-        "footY": 666,
-        "hand": [
-          757,
-          551
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 22834
-      }
+      "state": "walk",
+      "events": [
+        "foot-contact"
+      ],
+      "phase": 0.5625,
+      "nearAnkle": [
+        19.12,
+        69.47
+      ],
+      "farAnkle": [
+        40.75,
+        71.46
+      ]
     },
     {
-      "id": "crouch-idle",
+      "id": "walk-5",
       "rect": [
         192,
         80,
@@ -291,27 +271,76 @@
         76
       ],
       "hand": [
-        44,
-        60
+        41,
+        47
       ],
-      "state": "crouch",
+      "state": "walk",
       "events": [],
-      "preparation": {
-        "sourceCell": [
-          939,
-          349,
-          315,
-          329
-        ],
-        "pelvisX": 1100,
-        "footY": 666,
-        "hand": [
-          1158,
-          587
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 21645
-      }
+      "phase": 0.6875,
+      "nearAnkle": [
+        26.23,
+        67.3
+      ],
+      "farAnkle": [
+        34.25,
+        71.25
+      ]
+    },
+    {
+      "id": "walk-6",
+      "rect": [
+        256,
+        80,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        41,
+        47
+      ],
+      "state": "walk",
+      "events": [],
+      "phase": 0.8125,
+      "nearAnkle": [
+        35.77,
+        67.3
+      ],
+      "farAnkle": [
+        27.75,
+        71.25
+      ]
+    },
+    {
+      "id": "walk-7",
+      "rect": [
+        320,
+        80,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        37,
+        50
+      ],
+      "state": "walk",
+      "events": [],
+      "phase": 0.9375,
+      "nearAnkle": [
+        42.88,
+        69.47
+      ],
+      "farAnkle": [
+        21.25,
+        70.62
+      ]
     },
     {
       "id": "run-0",
@@ -326,29 +355,22 @@
         76
       ],
       "hand": [
-        47,
-        45
+        39,
+        43
       ],
       "state": "run",
       "events": [
         "foot-contact"
       ],
-      "preparation": {
-        "sourceCell": [
-          0,
-          678,
-          313,
-          289
-        ],
-        "pelvisX": 152,
-        "footY": 958,
-        "hand": [
-          226,
-          803
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 24967
-      }
+      "phase": 0.0625,
+      "nearAnkle": [
+        41.73,
+        70.93
+      ],
+      "farAnkle": [
+        24.05,
+        56.46
+      ]
     },
     {
       "id": "run-1",
@@ -363,27 +385,20 @@
         76
       ],
       "hand": [
-        48,
-        47
+        34,
+        45
       ],
       "state": "run",
       "events": [],
-      "preparation": {
-        "sourceCell": [
-          313,
-          678,
-          313,
-          289
-        ],
-        "pelvisX": 462,
-        "footY": 958,
-        "hand": [
-          544,
-          812
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 21779
-      }
+      "phase": 0.1875,
+      "nearAnkle": [
+        31.37,
+        71.25
+      ],
+      "farAnkle": [
+        32.53,
+        58.23
+      ]
     },
     {
       "id": "run-2",
@@ -398,27 +413,20 @@
         76
       ],
       "hand": [
-        46,
+        34,
         44
       ],
       "state": "run",
       "events": [],
-      "preparation": {
-        "sourceCell": [
-          626,
-          678,
-          313,
-          289
-        ],
-        "pelvisX": 770,
-        "footY": 958,
-        "hand": [
-          840,
-          799
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 23400
-      }
+      "phase": 0.3125,
+      "nearAnkle": [
+        21.04,
+        70.34
+      ],
+      "farAnkle": [
+        40.85,
+        63.84
+      ]
     },
     {
       "id": "run-3",
@@ -433,32 +441,81 @@
         76
       ],
       "hand": [
-        46,
-        46
+        39,
+        44
+      ],
+      "state": "run",
+      "events": [],
+      "phase": 0.4375,
+      "nearAnkle": [
+        18.1,
+        63.66
+      ],
+      "farAnkle": [
+        46.31,
+        68.28
+      ]
+    },
+    {
+      "id": "run-4",
+      "rect": [
+        256,
+        160,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        44,
+        38
       ],
       "state": "run",
       "events": [
         "foot-contact"
       ],
-      "preparation": {
-        "sourceCell": [
-          939,
-          678,
-          315,
-          289
-        ],
-        "pelvisX": 1096,
-        "footY": 958,
-        "hand": [
-          1168,
-          808
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 23913
-      }
+      "phase": 0.5625,
+      "nearAnkle": [
+        24.05,
+        56.46
+      ],
+      "farAnkle": [
+        41.73,
+        70.93
+      ]
     },
     {
-      "id": "run-4",
+      "id": "run-5",
+      "rect": [
+        320,
+        160,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        46,
+        35
+      ],
+      "state": "run",
+      "events": [],
+      "phase": 0.6875,
+      "nearAnkle": [
+        32.53,
+        58.23
+      ],
+      "farAnkle": [
+        31.37,
+        71.25
+      ]
+    },
+    {
+      "id": "run-6",
       "rect": [
         0,
         240,
@@ -470,30 +527,23 @@
         76
       ],
       "hand": [
-        48,
-        48
+        46,
+        34
       ],
       "state": "run",
       "events": [],
-      "preparation": {
-        "sourceCell": [
-          0,
-          967,
-          313,
-          287
-        ],
-        "pelvisX": 157,
-        "footY": 1227,
-        "hand": [
-          237,
-          1086
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 22942
-      }
+      "phase": 0.8125,
+      "nearAnkle": [
+        40.85,
+        63.84
+      ],
+      "farAnkle": [
+        21.04,
+        70.34
+      ]
     },
     {
-      "id": "run-5",
+      "id": "run-7",
       "rect": [
         64,
         240,
@@ -505,30 +555,23 @@
         76
       ],
       "hand": [
-        47,
-        46
+        44,
+        39
       ],
       "state": "run",
       "events": [],
-      "preparation": {
-        "sourceCell": [
-          313,
-          967,
-          313,
-          287
-        ],
-        "pelvisX": 470,
-        "footY": 1227,
-        "hand": [
-          545,
-          1077
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 23186
-      }
+      "phase": 0.9375,
+      "nearAnkle": [
+        46.31,
+        68.28
+      ],
+      "farAnkle": [
+        18.1,
+        63.66
+      ]
     },
     {
-      "id": "crouch-0",
+      "id": "crouch-idle",
       "rect": [
         128,
         240,
@@ -540,30 +583,14 @@
         76
       ],
       "hand": [
-        47,
-        59
+        49,
+        47
       ],
       "state": "crouch",
-      "events": [],
-      "preparation": {
-        "sourceCell": [
-          626,
-          967,
-          313,
-          287
-        ],
-        "pelvisX": 788,
-        "footY": 1230,
-        "hand": [
-          864,
-          1144
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 21173
-      }
+      "events": []
     },
     {
-      "id": "crouch-1",
+      "id": "crouch-0",
       "rect": [
         192,
         240,
@@ -575,36 +602,306 @@
         76
       ],
       "hand": [
-        44,
-        58
+        47,
+        49
+      ],
+      "state": "crouch",
+      "events": [
+        "foot-contact"
+      ],
+      "phase": 0.0833,
+      "nearAnkle": [
+        39.5,
+        71.34
+      ],
+      "farAnkle": [
+        24.5,
+        69.88
+      ]
+    },
+    {
+      "id": "crouch-1",
+      "rect": [
+        256,
+        240,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        46,
+        48
       ],
       "state": "crouch",
       "events": [],
-      "preparation": {
-        "sourceCell": [
-          939,
-          967,
-          315,
-          287
-        ],
-        "pelvisX": 1113,
-        "footY": 1230,
-        "hand": [
-          1175,
-          1141
-        ],
-        "scale": 0.2,
-        "retainedSourcePixels": 20587
-      }
+      "phase": 0.25,
+      "nearAnkle": [
+        34.5,
+        71.25
+      ],
+      "farAnkle": [
+        29.7,
+        68.23
+      ]
+    },
+    {
+      "id": "crouch-2",
+      "rect": [
+        320,
+        240,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        47,
+        49
+      ],
+      "state": "crouch",
+      "events": [],
+      "phase": 0.4167,
+      "nearAnkle": [
+        29.5,
+        71.25
+      ],
+      "farAnkle": [
+        39.98,
+        69.17
+      ]
+    },
+    {
+      "id": "crouch-3",
+      "rect": [
+        0,
+        320,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        50,
+        46
+      ],
+      "state": "crouch",
+      "events": [
+        "foot-contact"
+      ],
+      "phase": 0.5833,
+      "nearAnkle": [
+        24.5,
+        69.88
+      ],
+      "farAnkle": [
+        39.5,
+        71.34
+      ]
+    },
+    {
+      "id": "crouch-4",
+      "rect": [
+        64,
+        320,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        51,
+        45
+      ],
+      "state": "crouch",
+      "events": [],
+      "phase": 0.75,
+      "nearAnkle": [
+        29.7,
+        68.23
+      ],
+      "farAnkle": [
+        34.5,
+        71.25
+      ]
+    },
+    {
+      "id": "crouch-5",
+      "rect": [
+        128,
+        320,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        50,
+        46
+      ],
+      "state": "crouch",
+      "events": [],
+      "phase": 0.9167,
+      "nearAnkle": [
+        39.98,
+        69.17
+      ],
+      "farAnkle": [
+        29.5,
+        71.25
+      ]
+    },
+    {
+      "id": "start-0",
+      "rect": [
+        192,
+        320,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        31,
+        50
+      ],
+      "state": "start",
+      "events": []
+    },
+    {
+      "id": "start-1",
+      "rect": [
+        256,
+        320,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        30,
+        51
+      ],
+      "state": "start",
+      "events": []
+    },
+    {
+      "id": "stop-brake",
+      "rect": [
+        320,
+        320,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        42,
+        42
+      ],
+      "state": "stop",
+      "events": []
+    },
+    {
+      "id": "stop-0",
+      "rect": [
+        0,
+        400,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        36,
+        50
+      ],
+      "state": "stop",
+      "events": []
+    },
+    {
+      "id": "stop-1",
+      "rect": [
+        64,
+        400,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        34,
+        51
+      ],
+      "state": "stop",
+      "events": []
+    },
+    {
+      "id": "turn-0",
+      "rect": [
+        128,
+        400,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        31,
+        50
+      ],
+      "state": "turn",
+      "events": []
+    },
+    {
+      "id": "turn-1",
+      "rect": [
+        192,
+        400,
+        64,
+        80
+      ],
+      "anchor": [
+        32,
+        76
+      ],
+      "hand": [
+        33,
+        50
+      ],
+      "state": "turn",
+      "events": []
     }
   ],
-  "sha256": "b53c9e9a3984da2914836dd7bf3b34d20f841a468b78070513c93dce1deef58c",
+  "sha256": "7fc28a9c59d8b21c5873f048eca0ccd7db0f82e66ffd2ec1b958a277caa9e6e1",
   "source": {
-    "file": "work/overhaul/traveller-source/traveller-source.png",
-    "sha256": "481f2170ff5c6625ec63462b5384f19f4825d9ddbd94c64efb3fe15a159f1702",
-    "prompt": "work/overhaul/traveller-source/PROMPT.md",
-    "method": "Exterior-connected neutral checker removal; measured nonuniform cell rows; constant 1:5 anatomy scale; shared16-color palette and measured grips"
+    "file": "assets/art-v2/traveller-parts.png",
+    "sha256": "72cd3dd3723414609eb61cd521f896fc4c085a0a1af2d410f48ad311bfe2f9cb",
+    "script": "scripts/bake-traveller.cjs",
+    "method": "Head and torso+pack cut from the 0.8 illustrated idle cel; limbs and boots rasterised from a two-bone rig in the sprite palette; integer shear for lean, no resampling"
   },
-  "license": "original-generated",
-  "status": "calibration"
+  "license": "original",
+  "status": "rig-v1"
 }
