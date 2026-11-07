@@ -29,17 +29,18 @@ function blit(c,layer,off,dx,dy,shear=0,pivotY=0,lagRows=null){
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*layer.width+x+off)*4;if(layer.data[i+3]<128)continue;
     const lag=lagRows&&lagRows(x,y)||0,sx=Math.round(x+dx+(pivotY-y)*shear);put(c,sx,y+dy+lag,[layer.data[i],layer.data[i+1],layer.data[i+2],255]);}
 }
-function distSeg(px,py,a,b){const vx=b[0]-a[0],vy=b[1]-a[1],l=vx*vx+vy*vy||1e-9;let t=((px-a[0])*vx+(py-a[1])*vy)/l;t=Math.max(0,Math.min(1,t));const qx=a[0]+vx*t-px,qy=a[1]+vy*t-py;return {d:Math.hypot(qx,qy),side:(vx*(py-a[1])-vy*(px-a[0]))};}
+function distSeg(px,py,a,b){const vx=b[0]-a[0],vy=b[1]-a[1],l=vx*vx+vy*vy||1e-9;let t=((px-a[0])*vx+(py-a[1])*vy)/l;t=Math.max(0,Math.min(1,t));const qx=a[0]+vx*t-px,qy=a[1]+vy*t-py;return {d:Math.hypot(qx,qy),side:(vx*(py-a[1])-vy*(px-a[0]))/Math.sqrt(l),t};}
 // A limb: chain of points, fill radius r, 1px ink outline, shade on the underside.
-function limb(c,pts,r,fill,shade,light){
+function limb(c,pts,r,fill,shade,light,tex=null){
+  const lens=pts.slice(1).map((p,k)=>Math.hypot(p[0]-pts[k][0],p[1]-pts[k][1])),cum=lens.reduce((a,l)=>(a.push(a[a.length-1]+l),a),[0]);
   const fillPx=new Set(),xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),x0=Math.floor(Math.min(...xs)-r-2),x1=Math.ceil(Math.max(...xs)+r+2),y0=Math.floor(Math.min(...ys)-r-2),y1=Math.ceil(Math.max(...ys)+r+2);
   const info=new Map();
-  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){let best={d:1e9};for(let k=0;k+1<pts.length;k++){const s=distSeg(x+.5,y+.5,pts[k],pts[k+1]);if(s.d<best.d)best=s;}
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){let best={d:1e9};for(let k=0;k+1<pts.length;k++){const s=distSeg(x+.5,y+.5,pts[k],pts[k+1]);if(s.d<best.d)best={...s,along:cum[k]+s.t*lens[k]};}
     if(best.d<=r)fillPx.add(x+','+y),info.set(x+','+y,best);}
   for(const key of fillPx){const [x,y]=key.split(',').map(Number),edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>!fillPx.has((x+a)+','+(y+b)));
     for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]])if(!fillPx.has((x+a)+','+(y+b)))put(c,x+a,y+b,C.ink);}
   for(const key of fillPx){const [x,y]=key.split(',').map(Number),s=info.get(key);const under=!fillPx.has(x+','+(y+1))||!fillPx.has((x-1)+','+y);
-    put(c,x,y,under?shade:(light&&!fillPx.has(x+','+(y-1))?light:fill));}
+    put(c,x,y,tex?tex(s.along,s.side,under):under?shade:(light&&!fillPx.has(x+','+(y-1))?light:fill));}
 }
 function bootPts(ankle,angle){const ca=Math.cos(angle),sa=Math.sin(angle),pt=(u,v)=>[ankle[0]+u*ca+v*sa,ankle[1]-u*sa+v*ca];return {top:pt(0,-.5),heel:pt(-1,2.2),toe:pt(5,2.6)};}
 // Planted boots: lift the ankle so the lowest boot point rests on the ground row.
@@ -51,6 +52,16 @@ function boot(c,ankle,angle,far){
 }
 function hand(c,p,far){const a=far?C.skinShade:C.skin,b=C.skinShade;put(c,p[0],p[1],a);put(c,p[0]+1,p[1],a);put(c,p[0],p[1]+1,b);put(c,p[0]+1,p[1]+1,b);put(c,p[0]-1,p[1],C.ink);put(c,p[0]+2,p[1],C.ink);put(c,p[0],p[1]+2,C.ink);put(c,p[0]+1,p[1]+2,C.ink);}
 
+// Sleeve texture: jacket pixels from the torso layer, mapped along the arm so the
+// cloth pattern travels with it. Underside uses the next darker jacket tone.
+function sleeveTexture(parts,far){
+  const key=c=>c.slice(0,3).join(','),ink=new Set([key(C.ink),key(C.bootDark),'89,69,50']),darker={};
+  const ramp=['#d0ac73','#bd9458','#9e723f','#79563a','#594532'].map(hex),warm=['#b66a3b','#935133','#633925'].map(hex);
+  for(const r of [ramp,warm])r.forEach((c,i)=>darker[key(c)]=r[Math.min(r.length-1,i+1)]);
+  const swatch=[];for(let y=33;y<=45;y++)for(let x=26;x<=32;x++){const i=(y*parts.width+64+x)*4;if(parts.data[i+3]<128)continue;const c=[parts.data[i],parts.data[i+1],parts.data[i+2],255];if(!ink.has(key(c)))swatch.push({x:x-26,y:y-33,c});}
+  const grid=new Map(swatch.map(p=>[p.x+','+p.y,p.c])),pick=(u,v)=>{for(let k=0;k<6;k++){const g=grid.get(((u+k)%7)+','+v);if(g)return g;}return C.sleeve;};
+  return (along,across,under)=>{const u=((Math.round(across+3))%7+7)%7,v=((Math.round(along))%13+13)%13;let c=pick(u,v);if(under||far)c=darker[key(c)]||c;if(far)c=darker[key(c)]||c;return c;};
+}
 // ---------- IK ----------
 function ik(root,target,a,b,bend){const dx=target[0]-root[0],dy=target[1]-root[1];let d=Math.hypot(dx,dy);const maxd=a+b-.01;let tx=target[0],ty=target[1];
   if(d>maxd){tx=root[0]+dx/d*maxd;ty=root[1]+dy/d*maxd;d=maxd;}
@@ -80,7 +91,9 @@ function pose(g,phase){ // phase 0..1; near leg strikes at 0, far leg at .5
   const bob=g.kick?-Math.round(g.bob*Math.abs(Math.sin(phase*TAU*2-Math.PI*.6))):Math.round(g.bob*Math.max(0,Math.cos(phase*TAU*2)));
   return {near,far,bob,armPhase:phase};
 }
-function draw(g,spec,parts,ctx={}){
+const SLEEVE={};
+function draw(g,spec,parts){
+  const ctx={sleeveNear:SLEEVE.near||(SLEEVE.near=sleeveTexture(parts,false)),sleeveFar:SLEEVE.far||(SLEEVE.far=sleeveTexture(parts,true))};
   const c=cel(),hipX=31+(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0),hipY=g.hip+(spec.bob||0)+(spec.hipDy||0),lean=spec.lean??g.lean,hip=[hipX,hipY];
   const sh=(y)=>(hipY-y)*lean;
   const shoulder=[31+Math.round((49-34)*lean)+(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)+(g.shiftX||0),34+(spec.bob||0)+(spec.hipDy||0)+(g.crouch?g.hip-50:0)];
@@ -88,14 +101,14 @@ function draw(g,spec,parts,ctx={}){
     const s=far?[shoulder[0]-2,shoulder[1]+1]:shoulder;return {pts:[s,[el[0]-(far?2:0),el[1]+(far?1:0)],[wr[0]-(far?2:0),wr[1]+(far?1:0)]]};};
   const legPts=f=>{f=ground(f);const ankle=[hipX+f.x,f.y],k=ik(hip,ankle,THIGH,SHIN,-1);const dx=k.joint[0]-k.end[0],dy=k.joint[1]-k.end[1],d=Math.hypot(dx,dy)||1,cuff=[k.end[0]+dx/d*1.8,k.end[1]+dy/d*1.8];return {pts:[hip,k.joint,cuff],ankle:k.end};};
   const farArm=arm(spec.farSwing,true),nearArm=arm(spec.nearSwing,false),farLeg=legPts(spec.far),nearLeg=legPts(spec.near);
-  limb(c,farArm.pts,1.7,C.sleeveDark,C.sleeveDeep,null);hand(c,farArm.pts[2].map(Math.round),true);
+  limb(c,farArm.pts,2.2,C.sleeveDark,C.sleeveDeep,null,ctx.sleeveFar);hand(c,farArm.pts[2].map(Math.round),true);
   limb(c,farLeg.pts,2.5,C.jeanDark,C.ink,null);boot(c,farLeg.ankle,spec.far.angle,true);
   limb(c,nearLeg.pts,2.6,C.jean,C.jeanDark,C.jeanLight);boot(c,nearLeg.ankle,spec.near.angle,false);
   const dy=(spec.bob||0)+(spec.hipDy||0)+(g.crouch?g.hip-50:0),dx=(spec.hipDx||0)+(g.lean?Math.round(g.lean*6):0)+(g.shiftX||0);
   const packLag=spec.packLag||0;
   blit(c,parts,64,dx,dy,lean,49,(x,y)=>x<=25?packLag:0);
   blit(c,parts,0,dx+(spec.headDx||0),dy+(spec.headDy||0),lean,49);
-  limb(c,nearArm.pts,1.7,C.sleeve,C.sleeveShade,null);const handPx=nearArm.pts[2].map(Math.round);hand(c,handPx,false);
+  limb(c,nearArm.pts,2.4,C.sleeve,C.sleeveShade,null,ctx.sleeveNear);const handPx=nearArm.pts[2].map(Math.round);hand(c,handPx,false);
   return {cel:c,hand:handPx,nearAnkle:nearLeg.ankle,farAnkle:farLeg.ankle};
 }
 function gaitSpec(g,phase,prevBob){const p=pose(g,phase),swing=Math.sin(phase*TAU)*g.swing;
