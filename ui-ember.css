@@ -118,3 +118,31 @@
 #game-shell #modal.journal-shell .item-detail .primary,#game-shell #modal.journal-shell .recipe-detail .primary { justify-content:center; border:0; border-radius:0; background:#3b2c1e; color:#f3e6c4; box-shadow:0 0 0 2px #1b1712,inset 0 -3px 0 rgba(0,0,0,.35); font-family:'Pixelify',monospace; }
 #game-shell #modal.journal-shell .item-detail .primary:hover:not(:disabled) { background:#55402a; }
 #game-shell #modal.pixel-journal .book-material:before,#game-shell #modal.pixel-journal .book-material:after { image-rendering:pixelated; }
+
+/* Ink panels: settings, help, trade, fire, chest and dialogs. One frame, no green slabs. */
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) { border:0 !important; border-radius:0 !important; background:rgba(21,19,15,.94) !important; box-shadow:0 0 0 3px var(--em-ink),inset 0 0 0 1px rgba(239,227,196,.18),0 18px 40px rgba(0,0,0,.45) !important; color:var(--em-paper); font-family:'Pixelify',monospace; filter:none; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) :is(.modal-footer,.book-material,.book-backdrop,.book-animation) { display:none !important; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .modal-header { border:0; background:none; padding-bottom:4px; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .modal-header h2 { font:600 clamp(22px,1.9cqw,28px)/1.1 'Pixelify',monospace; color:var(--em-paper); letter-spacing:0; text-shadow:var(--em-shadow); }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .modal-header .eyebrow { display:none; }
+#game-shell #modal:not(.journal-shell):not([data-panel=home-letter]) .close { width:36px; height:36px; min-width:36px; border:0; border-radius:0; background:none; box-shadow:none; color:var(--em-dim); font:22px/1 'Pixelify',monospace; }
+#game-shell #modal:not(.journal-shell):not([data-panel=home-letter]) .close:hover { color:var(--em-ember); background:none; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) :is(h3,h4,strong,label,p,small,output,.eyebrow) { font-family:'Pixelify',monospace; letter-spacing:0; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) :is(p,small,output) { color:var(--em-dim); }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) :is(.language-options button,.camp-options button,.audio-setting,.storage-pane,.item-slot,.storage-card,.storage-drop-hint,.dialogue-options button,.trade-view button) { border:0 !important; border-radius:0 !important; background:rgba(239,227,196,.05) !important; box-shadow:inset 0 0 0 2px rgba(239,227,196,.14) !important; color:var(--em-paper); }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) :is(.language-options button,.camp-options button,.dialogue-options button,.trade-view button):hover:not(:disabled) { background:rgba(224,160,80,.14) !important; box-shadow:inset 0 0 0 2px var(--em-ember) !important; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) :is(.language-options button[aria-pressed=true],.camp-options button.selected) { background:rgba(224,160,80,.18) !important; box-shadow:inset 0 0 0 2px var(--em-ember) !important; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) :is(button:disabled) { opacity:.45; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .primary { border:0; border-radius:0; background:var(--em-ember) !important; color:var(--em-ink) !important; box-shadow:0 0 0 2px var(--em-ink),inset 0 -3px 0 rgba(0,0,0,.25) !important; font-family:'Pixelify',monospace; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .text-button { color:var(--em-dim); font-family:'Pixelify',monospace; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .text-button:hover { color:var(--em-ember); }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) [role=switch] { border:0; border-radius:0; background:rgba(239,227,196,.1); box-shadow:inset 0 0 0 2px rgba(239,227,196,.2); color:var(--em-dim); font-family:'Pixelify',monospace; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) [role=switch][aria-checked=true] { background:var(--em-ember); color:var(--em-ink); box-shadow:0 0 0 2px var(--em-ink); }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) input[type=range] { accent-color:var(--em-ember); }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .fire-status>span { color:var(--em-ember); }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .storage-capacity { border-radius:0; background:rgba(239,227,196,.08); box-shadow:inset 0 0 0 1px rgba(239,227,196,.16); }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .storage-capacity span { border-radius:0; background:var(--em-ember); }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .storage-detail { border:0; border-radius:0; background:rgba(224,160,80,.12) !important; box-shadow:inset 0 0 0 2px rgba(224,160,80,.4); color:var(--em-paper); }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) canvas { image-rendering:pixelated; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .storage-pane { background:rgba(0,0,0,.18) !important; }
+#game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .storage-card:is(:hover,.selected,[aria-pressed=true]) { box-shadow:inset 0 0 0 2px var(--em-ember) !important; }
