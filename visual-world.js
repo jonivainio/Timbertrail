@@ -443,15 +443,15 @@ function foreground(r,e){const s=e.state,c=r.c;if(s.currentMap==='pond'&&s.playe
 }
 // Ambient life: pure functions of time and camera, never simulation state.
 // Smoke and leaves sit under the night grade; fireflies glow through it.
-function smoke(r,e){const s=e.state,c=r.c,cam=s.camera,t=s.playSeconds;
+function smoke(r,e){const s=e.state,c=r.c,cam=s.camera,t=s.playSeconds,day=ambient(s),tone=[day>.5?'#8f8a7f':'#c9c4b6',day>.5?'#7d796f':'#b7b2a4'];
   for(const fire of state(r).fires||[]){const x0=fire.x-cam,y0=P.ground(fire.x,s.currentMap)-34,power=P.clamp(fire.fuel/30,.25,1);
-    for(let i=0;i<7;i++){const age=(t*.22+i/7)%1,size=Math.round(3+age*9),x=Math.round(x0+Math.sin(age*5+i*1.3)*6+age*26),y=Math.round(y0-age*150);
-      c.globalAlpha=power*.42*(1-age)*Math.min(1,age*4);c.fillStyle=i%2?'#c2bdae':'#aaa597';c.fillRect(x-size/2,y-size/2,size,size);c.fillRect(x-size/2-1,y-size/2+1,size+2,size-2);}}
+    for(let i=0;i<7;i++){const age=(t*.22+i/7)%1,size=Math.round(4+age*10),x=Math.round(x0+Math.sin(age*5+i*1.3)*6+age*26),y=Math.round(y0-age*150);
+      c.globalAlpha=power*.72*(1-age)*Math.min(1,age*4);c.fillStyle=tone[i%2];c.fillRect(x-size/2,y-size/2,size,size);c.fillRect(x-size/2-1,y-size/2+1,size+2,size-2);}}
   c.globalAlpha=1;}
 function leaves(r,e){const s=e.state,c=r.c,cam=s.camera,t=s.playSeconds;if(s.currentMap==='pond'||s.cabinHome?.inside)return;
-  for(let i=0;i<6;i++){const period=9+P.random(i*3.3)*7,age=((t+P.random(i*1.9)*period)%period)/period,wx=Math.floor((t+P.random(i*1.9)*period)/period)*97+i*211;
+  for(let i=0;i<10;i++){const period=12+P.random(i*3.3)*8,age=((t+P.random(i*1.9)*period)%period)/period,wx=Math.floor((t+P.random(i*1.9)*period)/period)*97+i*211;
     const x=Math.round(((wx*7.3)%(W+80))-40+Math.sin(age*9+i)*14+age*30),y=Math.round(90+age*(P.ground(x+cam,s.currentMap)-90)),flip=Math.sin(age*14+i)>0;
-    c.fillStyle=['#b8823d','#9a6b2e','#c9a24a'][i%3];c.globalAlpha=Math.min(1,(1-age)*5);c.fillRect(x,y,flip?2:1,flip?1:2);}
+    c.fillStyle=['#b8823d','#9a6b2e','#c9a24a'][i%3];c.globalAlpha=Math.min(1,(1-age)*5);c.fillRect(x,y,flip?3:2,flip?2:3);}
   c.globalAlpha=1;}
 function fireflies(r,e,night){const s=e.state,c=r.c,cam=s.camera,t=s.playSeconds,k=P.clamp((night-.45)/.4,0,1);if(k<=0||s.weather==='rain'||s.cabinHome?.inside)return;
   for(let i=0;i<24;i++){const span=W+200,x=Math.round(((i*263.7-cam*.9)%span+span)%span-100+Math.sin(t*.35+i*2.1)*22),gy=P.ground(x+cam,s.currentMap),y=Math.round(gy-14-P.random(i*5.1)*60+Math.sin(t*.5+i)*9);
