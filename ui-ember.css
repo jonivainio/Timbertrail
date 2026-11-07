@@ -146,3 +146,7 @@
 #game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) canvas { image-rendering:pixelated; }
 #game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .storage-pane { background:rgba(0,0,0,.18) !important; }
 #game-shell #modal:not(.journal-shell):not([data-panel=pause]):not([data-panel=home-letter]) .storage-card:is(:hover,.selected,[aria-pressed=true]) { box-shadow:inset 0 0 0 2px var(--em-ember) !important; }
+
+/* Settings: credits link in ink style */
+#modal .music-attribution a{color:rgba(239,227,196,.62)!important;text-decoration:none!important;font-family:'Pixelify',monospace}
+#modal .music-attribution a:hover{color:#e0a050!important}
