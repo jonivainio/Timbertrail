@@ -259,9 +259,32 @@ function tree(r,x,y,height,type=0,angle=0,tint=null){const c=r.c;type=((type%3)+
     }}
   c.restore();
 }
+// The lake's side cut reads as a bank, not a ruled curve: a wet band follows
+// the bed, stones sit in it, strata and reeds break up the flat earth.
+function shoreBank(r,s){const c=r.c,pond=root.PERegions.pond,shore=pond.shore,surface=pond.surface;if(shore<s.camera-200||shore-260>s.camera+W)return;
+  const at=y=>shore+65*Math.log(1-Math.min(.995,(y-surface)/170)),pts=[];for(let y=surface;y<=H;y+=2)pts.push([at(y),y]);
+  const band=(o1,o2,color)=>poly(c,[...pts.map(([x,y])=>[x+o1,y]),...pts.slice().reverse().map(([x,y])=>[x+o2,y])],color);
+  // Damp earth darkens toward the water in a few hard pixel steps.
+  band(-2,46,'rgba(58,46,34,.18)');band(-2,26,'rgba(52,41,30,.28)');band(-2,12,'rgba(44,36,27,.45)');band(-2,2,'#2c261e');
+  // Mottled soil: irregular stepped clods, two tones, sparse.
+  for(let i=0;i<70;i++){const y=surface+8+P.random(i*3.3)*(H-surface-8),x0=at(y)+8+P.random(i*7.9)*170,w=6+P.random(i*1.1)*24,h=2+Math.round(P.random(i*2.2)*3),dark=P.random(i*.7)>.45;
+    poly(c,[[x0,y+h],[x0+2,y+1],[x0+w*.3,y],[x0+w*.7,y],[x0+w-1,y+1],[x0+w,y+h]],dark?'rgba(70,56,40,.55)':'rgba(140,118,84,.35)');}
+  for(let i=0;i<7;i++){const y=surface+20+P.random(i*9.1)*(H-surface-30),x0=Math.round(at(y)+14+P.random(i*4.4)*140),w=8+Math.round(P.random(i*5.5)*9),h=4+Math.round(P.random(i*6.6)*4);
+    poly(c,[[x0,y+h],[x0+1,y+1],[x0+3,y],[x0+w-3,y],[x0+w-1,y+1],[x0+w,y+h]],'#6c685d');rect(c,x0+3,y+1,w-6,1,'#99957f');rect(c,x0,y+h,w,1,'#3c372e');}
+  // Stones gather in a few clusters at the water line.
+  for(let i=0;i<pts.length;i++){const [x,y]=pts[i],k=P.random(y*1.7+3);if(k<.86)continue;const n=2+Math.floor(P.random(y*.4)*3);
+    for(let j=0;j<n;j++){const w=4+Math.round(P.random(y+j*7)*7),h=3+Math.round(P.random(y*2+j)*3),xx=Math.round(x+1+j*(w-1)+P.random(y*3+j)*3),yy=Math.round(y-h+2+j%2);
+      rect(c,xx,yy,w,h,'#6f6b61');rect(c,xx+1,yy,w-2,1,'#9b9787');rect(c,xx,yy+h-1,w,1,'#3a362f');}}
+  // Roots hang from the lip of the bank.
+  for(const [dx,len]of [[8,22],[19,34],[31,15]]){let x=shore+dx,y=surface+2;for(let i=0;i<len;i++){rect(c,Math.round(x),Math.round(y),1,1,'#3b2f22');y+=1;x+=Math.sin(i*.45+dx)*.6-.15;}}
+  // Grass overhangs the lip; a reed bed stands at the shoreline.
+  for(let i=0;i<14;i++){const x=shore-3+i*3+Math.round(P.random(i*5.3)*2),h=3+Math.round(P.random(i*1.9)*5),y=surface+1;rect(c,x,y-h,1,h,i%2?'#4d6a3c':'#66854a');if(i<5)rect(c,x-1,y,1,2+i%3,'#4d6a3c');}
+  for(let i=0;i<9;i++){const x=shore-38+i*4+Math.round(P.random(i*4.1)*3),h=12+Math.round(P.random(i*2.7)*14),y=surface;rect(c,x,y-h,1,h,i%3?'#55703f':'#6d8a49');if(i%3===0)rect(c,x-1,y-h-4,2,5,'#6b5232');}
+}
 function mid(r,e){const s=e.state,map=s.currentMap,c=r.c;
   const positions=map==='forest'?[[275,302,0],[1790,290,1],[2460,324,2],[3820,290,0],[4650,334,1],[5650,301,2],[6230,315,0]]:map==='pond'?[[4200,290,0],[6160,315,1]]:[[450,285,0],[1470,292,1],[2170,310,2],[2920,290,0],[4340,315,1],[5830,290,0]];
   sunGround(r,e,positions);
+  if(map==='pond')shoreBank(r,s);
   for(const [x,h,type]of positions){if(x<s.camera-150||x>s.camera+W+150)continue;const y=P.ground(x,map)+3;socket(r,map,x,y,28,false);receiver(r,{x,width:56},()=>tree(r,x,y,h,type));socket(r,map,x,y,28,true);}
   for(const x of [805,2030,2750,3590,4530,5850]){if(x<s.camera-80||x>s.camera+W+80||(map==='pond'&&x<3940))continue;groundRock(r,x,P.ground(x,map));}
 }
