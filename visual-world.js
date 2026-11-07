@@ -197,6 +197,7 @@ function landscape(r,cam){const c=r.c,map=state(r).map,pond=map==='pond',river=m
   for(let layer=0;layer<2;layer++){const points=[[0,H]];for(let x=-8;x<=W+8;x+=8){const wx=x+cam*(.055+layer*.04);points.push([x,265+layer*48+Math.sin(wx*.004+layer)*24+Math.sin(wx*.011+.9)*10]);}points.push([W+8,H]);poly(c,points,layer?mix('#829d8c','#6a7c8c'):mix('#9cb3a5','#8090a2'));}
   // Large cloud banks; finite authored route, not mirrored photographs.
   for(const [x,y,w]of [[220,43,240],[840,80,340],[1440,32,285]]){const xx=x-cam*.08;poly(c,[[xx,y+13],[xx+31,y+3],[xx+83,y+5],[xx+105,y],[xx+171,y+5],[xx+w,y+16],[xx+w-24,y+22],[xx+12,y+23]],mix('#bcc4b6','#727e98'));}
+  birds(c,cam,s);
   const base=pond?315:river?365:395;
   depthTrees(r,cam,.20,mix('#91aaa0','#9aacbc',n*.6),base-38,.63,0);
   depthTrees(r,cam,.43,mix('#688778','#6f8796',n*.5),base-13,pond?.95:1.02,135);
@@ -440,7 +441,29 @@ function water(r,e){const s=e.state,map=s.currentMap,v=state(r),q=r.artScale||.5
 function foreground(r,e){const s=e.state,c=r.c;if(s.currentMap==='pond'&&s.player.x<4150)return;
   for(const world of [130,1850,3530,4780,6310]){const x=world-s.camera*1.05;if(x<-160||x>W+160)continue;poly(c,[[x-130,H],[x-100,H-24],[x-56,H-31],[x-37,H-20],[x+12,H-43],[x+56,H-48],[x+75,H-27],[x+150,H]],'#1c2b30');poly(c,[[x-40,H],[x-20,H-18],[x+22,H-33],[x+55,H-37],[x+37,H-21],[x+9,H-10]],'#2d3c39');}
 }
-function finish(r,e){state(r).frame=V.snapshot(e.state);light(r,e);water(r,e);foreground(r,e);if(e.state.weather==='rain'){const c=r.c,t=e.state.playSeconds;c.save();c.strokeStyle='#a0b1b05c';c.lineWidth=1;for(let i=0;i<50;i++){const x=(i*113+t*37)%W,y=(i*71+t*255)%H;c.beginPath();c.moveTo(x,y);c.lineTo(x-2,y+8);c.stroke();}c.restore();}}
+// Ambient life: pure functions of time and camera, never simulation state.
+// Smoke and leaves sit under the night grade; fireflies glow through it.
+function smoke(r,e){const s=e.state,c=r.c,cam=s.camera,t=s.playSeconds;
+  for(const fire of state(r).fires||[]){const x0=fire.x-cam,y0=P.ground(fire.x,s.currentMap)-34,power=P.clamp(fire.fuel/30,.25,1);
+    for(let i=0;i<7;i++){const age=(t*.22+i/7)%1,size=Math.round(3+age*9),x=Math.round(x0+Math.sin(age*5+i*1.3)*6+age*26),y=Math.round(y0-age*150);
+      c.globalAlpha=power*.42*(1-age)*Math.min(1,age*4);c.fillStyle=i%2?'#c2bdae':'#aaa597';c.fillRect(x-size/2,y-size/2,size,size);c.fillRect(x-size/2-1,y-size/2+1,size+2,size-2);}}
+  c.globalAlpha=1;}
+function leaves(r,e){const s=e.state,c=r.c,cam=s.camera,t=s.playSeconds;if(s.currentMap==='pond'||s.cabinHome?.inside)return;
+  for(let i=0;i<6;i++){const period=9+P.random(i*3.3)*7,age=((t+P.random(i*1.9)*period)%period)/period,wx=Math.floor((t+P.random(i*1.9)*period)/period)*97+i*211;
+    const x=Math.round(((wx*7.3)%(W+80))-40+Math.sin(age*9+i)*14+age*30),y=Math.round(90+age*(P.ground(x+cam,s.currentMap)-90)),flip=Math.sin(age*14+i)>0;
+    c.fillStyle=['#b8823d','#9a6b2e','#c9a24a'][i%3];c.globalAlpha=Math.min(1,(1-age)*5);c.fillRect(x,y,flip?2:1,flip?1:2);}
+  c.globalAlpha=1;}
+function fireflies(r,e,night){const s=e.state,c=r.c,cam=s.camera,t=s.playSeconds,k=P.clamp((night-.45)/.4,0,1);if(k<=0||s.weather==='rain'||s.cabinHome?.inside)return;
+  for(let i=0;i<24;i++){const span=W+200,x=Math.round(((i*263.7-cam*.9)%span+span)%span-100+Math.sin(t*.35+i*2.1)*22),gy=P.ground(x+cam,s.currentMap),y=Math.round(gy-14-P.random(i*5.1)*60+Math.sin(t*.5+i)*9);
+    const blink=Math.pow(Math.max(0,Math.sin(t*(.7+P.random(i)*.6)+i*4.7)),3);if(blink<.05)continue;
+    c.globalAlpha=k*blink*.35;c.fillStyle='#d8f07a';c.fillRect(x-1,y-1,4,4);c.globalAlpha=k*blink;c.fillStyle='#f4ffc0';c.fillRect(x,y,2,2);}
+  c.globalAlpha=1;}
+function birds(c,cam,s){if(!s||ambient(s)<.6||s.weather==='rain')return;const t=s.playSeconds,period=48,phase=t%period;if(phase>16)return;
+  const flock=Math.floor(t/period),dir=P.random(flock)>.5?1:-1,y0=70+P.random(flock*2.7)*80,x0=dir>0?-40+phase*72:W+40-phase*72;
+  c.fillStyle='#3e4b4c';c.globalAlpha=.7;for(let i=0;i<5;i++){const x=Math.round(x0-dir*i*14-dir*(i%2)*6),y=Math.round(y0+i*5-(i%2)*9+Math.sin(t*2+i)*2),up=Math.sin(t*9+i*1.7)>0;
+    c.fillRect(x-1,y,3,1);c.fillRect(x-3,up?y-1:y+1,2,1);c.fillRect(x+2,up?y-1:y+1,2,1);}
+  c.globalAlpha=1;}
+function finish(r,e){state(r).frame=V.snapshot(e.state);smoke(r,e);leaves(r,e);light(r,e);fireflies(r,e,1-ambient(e.state));water(r,e);foreground(r,e);if(e.state.weather==='rain'){const c=r.c,t=e.state.playSeconds;c.save();c.strokeStyle='#a0b1b05c';c.lineWidth=1;for(let i=0;i<50;i++){const x=(i*113+t*37)%W,y=(i*71+t*255)%H;c.beginPath();c.moveTo(x,y);c.lineTo(x-2,y+8);c.stroke();}c.restore();}}
 const base=root.PEWorldArt;for(const [key,fn]of Object.entries({prepare,drawLandscape:landscape,drawMid:mid,drawForeground:foreground,drawLight:()=>{}})){const previous=base[key];base[key]=function(r,...args){return r.visualV2?fn(r,...args):previous?.(r,...args);};}
 const oldSocket=root.PETerrainSurface.socket;root.PETerrainSurface.socket=(r,...args)=>r.visualV2?socket(r,...args):oldSocket(r,...args);
 root.PEVisualWorld={prepare,landscape,mid,tree,rootPlan,socket,pier,finish,state,beginReceivers,receiver,sunState};if(typeof module!=='undefined')module.exports=root.PEVisualWorld;
